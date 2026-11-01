@@ -18,15 +18,17 @@ async function prepareCamera(page, mobile) {
   let browser = launched;
   try {
     if(engine === 'cdp')browser=await pw.chromium.connectOverCDP('http://127.0.0.1:9334');
-    for (const width of (process.argv[5]==='small'?[568]:process.argv[5]==='extra'?[390]:process.argv[5]==='landscape'?[844,568]:[1280,390,320,844,568])) {
+    for (const width of (process.argv[5]==='small'?[568]:process.argv[5]==='extra'?[390]:process.argv[5]==='landscape'?[844,568]:[1280,390,360,393,320,844,568])) {
       const mobile=width!==1280;
-      const context = await browser.newContext({viewport:{width,height:width===320?568:width===390?844:width===844?390:width===568?320:900},hasTouch:mobile,reducedMotion:'no-preference'});
+      const context = await browser.newContext({viewport:{width,height:width===360?640:width===393?690:width===320?568:width===390?844:width===844?390:width===568?320:900},hasTouch:mobile,reducedMotion:'no-preference'});
       await context.addInitScript((engine)=>{
         const addListener=window.addEventListener.bind(window),removeListener=window.removeEventListener.bind(window);
         window.addEventListener=(type,...args)=>{if(type==='devicemotion')window.motionListenerReady=true;return addListener(type,...args);};
         window.removeEventListener=(type,...args)=>{if(type==='devicemotion')window.motionListenerReady=false;return removeListener(type,...args);};
         if(!navigator.mediaDevices)Object.defineProperty(navigator,'mediaDevices',{value:{}});
         window.cameraRequests=0;window.cameraStops=0;
+        window.audioStarts=[];
+        if(window.AudioBufferSourceNode){const start=AudioBufferSourceNode.prototype.start;AudioBufferSourceNode.prototype.start=function(when=0,...args){window.audioStarts.push({duration:this.buffer?.duration,when,now:this.context.currentTime});return start.call(this,when,...args);};}
         Object.defineProperty(navigator.mediaDevices,'getUserMedia',{value:async()=>{
           window.cameraRequests++;
           const canvas=document.createElement('canvas');canvas.width=640;canvas.height=480;
@@ -35,6 +37,7 @@ async function prepareCamera(page, mobile) {
           const paint=()=>ctx.drawImage(photo,0,0,640,480);
           paint();
           if(engine==='webkit'){
+            Object.defineProperty(HTMLVideoElement.prototype,'requestVideoFrameCallback',{configurable:true,value:undefined});
             // Windows WebKit has no camera API; replace only the media boundary.
             const draw=CanvasRenderingContext2D.prototype.drawImage;
             CanvasRenderingContext2D.prototype.drawImage=function(source,...args){return draw.call(this,source instanceof HTMLVideoElement?canvas:source,...args);};
@@ -60,6 +63,7 @@ async function prepareCamera(page, mobile) {
         await page.screenshot({path:path.join(output,`${engine}-${width}-camera.png`)});
       }
       if(mobile){
+        assert.equal(await page.getByRole('link',{name:'Scrapbook',exact:true}).count(),0);
         const requests=await page.evaluate(()=>window.cameraRequests);
         await page.evaluate(()=>{window.cameraVideo=document.querySelector('video');});
         assert.equal(await page.getByRole('button',{name:'Camera settings',exact:true}).count(),0);
@@ -76,11 +80,19 @@ async function prepareCamera(page, mobile) {
         await page.setViewportSize(size);
       }
       assert.equal(await page.getByRole('button',{name:'4-shot strip',exact:true}).count(),0);
+      await page.evaluate(()=>{window.audioStarts=[];document.querySelector('[aria-label="Capture"]').addEventListener('click',()=>{window.captureAt=performance.now();},{once:true});});
       await page.getByRole('button',{name:'Capture',exact:true}).click();
+      await page.locator('.instant-print').waitFor();
+      const sound=await page.evaluate(()=>({starts:window.audioStarts,printDelay:performance.now()-window.captureAt}));
+      assert(sound.printDelay>=450,JSON.stringify(sound));
+      if(sound.starts.length>=2){assert(Math.abs(sound.starts[0].duration-.672)<.01,JSON.stringify(sound));assert(Math.abs(sound.starts[1].when-sound.starts[0].now-.48)<.04,JSON.stringify(sound));}
+      console.log(JSON.stringify({engine,width,sound}));
+      await page.screenshot({path:path.join(output,`${engine}-${width}-ejecting.png`)});
       const reveal=page.getByRole('button',{name:'Shake to reveal',exact:true});
       await page.waitForFunction(()=>{const button=document.querySelector('.shake-reveal');return button&&!button.disabled;});
       const outlet=await page.evaluate(()=>{const surface=document.querySelector('.mobile-camera')||document.querySelector('.camera-modal');const slot=surface.querySelector('.ejection-slot').getBoundingClientRect(),paper=surface.querySelector('.instant-paper').getBoundingClientRect();return {slot:{x:slot.x,width:slot.width,bottom:slot.bottom},paper:{x:paper.x,width:paper.width,top:paper.top}};});
       assert(Math.abs(outlet.slot.x-outlet.paper.x)<3&&Math.abs(outlet.slot.width-outlet.paper.width)<3&&Math.abs(outlet.slot.bottom-outlet.paper.top)<12,JSON.stringify(outlet));
+      if(mobile)assert(await page.locator('.instant-paper').evaluate(e=>{const r=e.getBoundingClientRect();return document.elementFromPoint(r.x+r.width/2,r.y+2)?.closest('.instant-paper')===e;}),'Paper must be in front of the camera at the slot');
       await page.screenshot({path:path.join(output,`${engine}-${width}-blank.png`)});
       await reveal.scrollIntoViewIfNeeded();
       await page.evaluate(()=>{
@@ -185,7 +197,7 @@ async function prepareCamera(page, mobile) {
       const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth);assert.equal(overflow,false);
       await page.screenshot({path:path.join(output,`${engine}-${permission}.png`),fullPage:true});
       if(permission==='pending'){
-        await page.getByRole('link',{name:'Scrapbook',exact:true}).click();await page.waitForURL('**/scrapbook');
+        const chooser=page.waitForEvent('filechooser');await page.getByRole('button',{name:'Upload photos',exact:true}).click();await (await chooser).setFiles(path.resolve('public/sample-coast.png'));await page.waitForURL('**/edit');
         await page.locator('.mobile-camera').waitFor({state:'detached'});
         await page.evaluate(()=>window.pendingCameras.forEach(resolve=>resolve({getTracks:()=>[{stop(){window.cameraStops++;}}]})));
         await page.waitForFunction(()=>window.cameraStops===window.cameraRequests);

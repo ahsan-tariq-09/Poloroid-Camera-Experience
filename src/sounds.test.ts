@@ -7,7 +7,7 @@ let visibility: () => void;
 let saved: string | null;
 const sources: { start: ReturnType<typeof vi.fn>; stop: ReturnType<typeof vi.fn>; disconnect: ReturnType<typeof vi.fn>; buffer: unknown }[] = [];
 const ctx = {
-  state: "suspended", destination: {},
+  state: "suspended", destination: {}, currentTime: 10,
   resume: vi.fn(), decodeAudioData: vi.fn(),
   createBufferSource: vi.fn(() => {
     const source = { start: vi.fn(), stop: vi.fn(), disconnect: vi.fn(), connect: vi.fn(), buffer: null as unknown, onended: null };
@@ -45,19 +45,21 @@ it("defaults on, preserves persisted mute, and stores changes", async () => {
   expect(ctx.resume).not.toHaveBeenCalled(); expect(sources).toHaveLength(0);
   sounds.setSoundEnabled(true); expect(saved).toBe("on");
 });
-it("preloads both recordings once without starting audio", async () => {
+it("preloads all recordings once without starting audio", async () => {
   await sounds.preloadSounds(); await sounds.preloadSounds();
-  expect(fetch).toHaveBeenCalledTimes(2);
+  expect(fetch).toHaveBeenCalledTimes(3);
+  expect(fetch).toHaveBeenCalledWith("/audio/camera-shutter.mp3");
   expect(fetch).toHaveBeenCalledWith("/audio/film-load.mp3");
   expect(fetch).toHaveBeenCalledWith("/audio/shutter.mp3");
   expect(ctx.resume).not.toHaveBeenCalled(); expect(sources).toHaveLength(0);
   expect(sounds.FILM_LOAD_MS).toBe(2800); expect(sounds.SHUTTER_SOUND_MS).toBe(2490);
 });
-it("plays both trimmed recordings from the beginning", async () => {
+it("plays the click immediately and schedules printing 480ms later", async () => {
   await sounds.playSound("load");
   expect(sources[0].start).toHaveBeenCalledWith();
   await sounds.playSound("shutter");
   expect(sources[1].start).toHaveBeenCalledWith();
+  expect(sources[2].start).toHaveBeenCalledWith(10.48);
 });
 it("resumes inside the gesture and awaits both resume and asynchronous decoding", async () => {
   const resume = deferred<void>(), decode = deferred<AudioBuffer>();
@@ -74,7 +76,8 @@ it.each(["mute", "hidden", "cancel"])("stops active recordings immediately on %s
   if (reason === "mute") sounds.setSoundEnabled(false);
   else if (reason === "hidden") { hidden = true; visibility(); }
   else sounds.stopSounds();
-  expect(sources[0].stop).toHaveBeenCalledOnce(); expect(sources[0].disconnect).toHaveBeenCalledOnce();
+  expect(sources).toHaveLength(2);
+  for(const source of sources){expect(source.stop).toHaveBeenCalledOnce();expect(source.disconnect).toHaveBeenCalledOnce();}
 });
 it.each(["mute", "hidden", "cancel"])("settles pending startup on %s and never plays after decode", async reason => {
   const decode = deferred<AudioBuffer>(); ctx.decodeAudioData.mockReturnValue(decode.promise);
@@ -91,7 +94,7 @@ it("supersedes pending loads with the next camera recording", async () => {
   const old = sounds.playSound("load"); await flush();
   await sounds.playSound("shutter"); await old;
   decode.resolve(decoded); await flush();
-  expect(sources).toHaveLength(1); expect(sources[0].start).toHaveBeenCalledOnce();
+  expect(sources).toHaveLength(2); expect(sources[0].start).toHaveBeenCalledOnce();
 });
 it("bounds startup to two seconds and does not play a timed-out recording later", async () => {
   vi.useFakeTimers(); const decode = deferred<AudioBuffer>(); ctx.decodeAudioData.mockReturnValue(decode.promise);

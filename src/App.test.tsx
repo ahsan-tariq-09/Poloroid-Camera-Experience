@@ -157,7 +157,8 @@ it("opens mobile home directly into the camera and preserves the stream on resiz
   await act(async()=>window.dispatchEvent(new Event("resize")));
   expect(host.querySelector("video")).toBe(video);
   expect(getUserMedia).toHaveBeenCalledOnce();
-  await click('a[href="/scrapbook"]');
+  expect(host.querySelector('a[href="/scrapbook"]')).toBeNull();
+  await act(async()=>{window.history.pushState({},'', '/scrapbook');window.dispatchEvent(new PopStateEvent('popstate'));});
   expect(stop).toHaveBeenCalled();
   expect(window.location.pathname).toBe("/scrapbook");
 });
@@ -811,7 +812,7 @@ describe("photo-first navigation and sessions", () => {
       expect(capture.disabled).toBe(false);
       await act(async () => capture.click());
       expect(host.textContent).toContain("3");
-      await act(async () => vi.advanceTimersByTimeAsync(3000));
+      await act(async () => vi.advanceTimersByTimeAsync(3480));
       expect(window.location.pathname).toBe("/");
       expect(host.querySelector(".capture-decisions")).toBeNull();
       const capturedCaption=host.querySelector('.instant-caption')!.textContent;

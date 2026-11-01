@@ -266,7 +266,7 @@ it.each([0,3,5,10])("uses the %s-second dial setting and captures only one Polar
   }finally{vi.useRealTimers();await act(async()=>root.unmount());host.remove();vi.restoreAllMocks();}
 });
 
-it("discards an unfinished capture after hiding, even when a new capture starts",async()=>{
+it.each([false,true])("discards unfinished captures when hidden (during shutter lead: %s)",async hideDuringLead=>{
   Object.assign(globalThis,{IS_REACT_ACT_ENVIRONMENT:true});const host=document.createElement("div"),root=createRoot(host);document.body.append(host);
   const stop=vi.fn();Object.defineProperty(navigator,"mediaDevices",{configurable:true,value:{getUserMedia:vi.fn().mockResolvedValue({getTracks:()=>[{stop}]})}});
   Object.defineProperty(HTMLVideoElement.prototype,"videoWidth",{configurable:true,value:640});Object.defineProperty(HTMLVideoElement.prototype,"videoHeight",{configurable:true,value:480});
@@ -278,6 +278,9 @@ it("discards an unfinished capture after hiding, even when a new capture starts"
     vi.useFakeTimers();await click("Timer off");await click("Roll film");await act(async()=>vi.advanceTimersByTimeAsync(2800));await click("Capture");expect(pending).toHaveLength(1);
     hidden.mockReturnValue(true);await act(async()=>document.dispatchEvent(new Event("visibilitychange")));hidden.mockReturnValue(false);await act(async()=>document.dispatchEvent(new Event("visibilitychange")));
     await click("Capture");expect(pending).toHaveLength(2);await act(async()=>pending[0](new Blob(["old"])));expect(host.querySelector(".instant-print")).toBeNull();expect(stop).not.toHaveBeenCalled();
-    await act(async()=>pending[1](new Blob(["new"])));expect(host.querySelector(".instant-print")).not.toBeNull();expect(stop).toHaveBeenCalled();
+    await act(async()=>pending[1](new Blob(["new"])));expect(host.querySelector(".instant-print")).toBeNull();
+    if(hideDuringLead){hidden.mockReturnValue(true);await act(async()=>document.dispatchEvent(new Event("visibilitychange")));await act(async()=>vi.advanceTimersByTimeAsync(480));expect(host.querySelector(".instant-print")).toBeNull();expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:new");return;}
+    await act(async()=>vi.advanceTimersByTimeAsync(479));expect(host.querySelector(".instant-print")).toBeNull();
+    await act(async()=>vi.advanceTimersByTimeAsync(1));expect(host.querySelector(".instant-print")).not.toBeNull();expect(stop).toHaveBeenCalled();
   }finally{await act(async()=>root.unmount());vi.useRealTimers();host.remove();vi.restoreAllMocks();}
 });

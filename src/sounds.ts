@@ -1,7 +1,8 @@
 // Measured from the decoded recordings, including the shutter's film-ejection tail.
 export const FILM_LOAD_MS = 2800;
 export const SHUTTER_SOUND_MS = 2490;
-const clips = { load: "/audio/film-load.mp3", shutter: "/audio/shutter.mp3" };
+export const SHUTTER_LEAD_MS = 480;
+const clips = { load: "/audio/film-load.mp3", shutter: "/audio/shutter.mp3", click: "/audio/camera-shutter.mp3" };
 type Clip = keyof typeof clips;
 let audio: AudioContext | undefined;
 let enabled = true, generation = 0;
@@ -25,7 +26,7 @@ function loadClip(kind: Clip, ctx: AudioContext) {
 }
 export async function preloadSounds() {
   const ctx = context();
-  if (ctx) await Promise.all([loadClip("load", ctx), loadClip("shutter", ctx)]);
+  if (ctx) await Promise.all([loadClip("load", ctx), loadClip("shutter", ctx), loadClip("click", ctx)]);
 }
 export function stopSounds() {
   generation++;
@@ -52,7 +53,7 @@ function track(source: AudioScheduledSourceNode, nodes: AudioNode[]) {
   active.set(source, clean);
   source.onended = clean;
 }
-export async function playSound(kind: Clip | "paper" | "tick") {
+export async function playSound(kind: Exclude<Clip, "click"> | "paper" | "tick") {
   if (!enabled || document.hidden) return;
   if (kind === "load" || kind === "shutter") stopSounds();
   const token = generation, requested = performance.now(), resumed = unlockSound(), ctx = audio;
@@ -61,16 +62,22 @@ export async function playSound(kind: Clip | "paper" | "tick") {
   const cancelled = new Promise<undefined>(resolve => { cancel = () => resolve(undefined); pending.add(cancel); });
   const timeout = setTimeout(cancel, 2000);
   try {
-    const ready = await Promise.race([Promise.all([resumed, kind === "load" || kind === "shutter" ? loadClip(kind, ctx) : undefined]), cancelled]);
+    const ready = await Promise.race([Promise.all([resumed, kind === "load" || kind === "shutter" ? loadClip(kind, ctx) : undefined, kind === "shutter" ? loadClip("click", ctx) : undefined]), cancelled]);
     // A late decode/resume must not attach an old effect to a newer camera action.
     if (!ready || !enabled || document.hidden || token !== generation || ctx.state !== "running") return;
     if ((kind === "tick" || kind === "paper") && performance.now() - requested > 250) return;
     const buffer = ready[1];
     if (kind === "load" || kind === "shutter") {
+      const click = ready[2];
+      if (click) {
+        const source = ctx.createBufferSource(); source.buffer = click;
+        source.connect(ctx.destination); track(source, []); source.start();
+      }
       if (!buffer) return;
       const source = ctx.createBufferSource(); source.buffer = buffer;
       source.connect(ctx.destination); track(source, []);
-      source.start();
+      if (kind === "shutter") source.start(ctx.currentTime + SHUTTER_LEAD_MS / 1000);
+      else source.start();
       return;
     }
     const duration = kind === "paper" ? .45 : .06;

@@ -229,7 +229,6 @@ function StudioApp() {
             onCapture={(files,destination)=>importFiles(files,"replace",destination === "finish" ? "/finish" : "/edit",true)}
             navigation={<>
               {s.hasSession && <Link to="/edit" aria-label="Continue your Polaroid"><ArrowRight size={21}/></Link>}
-              <Link to="/scrapbook" aria-label="Scrapbook"><BookOpen size={21}/></Link>
               <button aria-label={sound ? "Mute sound effects" : "Enable sound effects"} aria-pressed={sound} onClick={()=>{setSound(!sound);setSoundEnabled(!sound);}}>{sound?<Volume2 size={20}/>:<VolumeX size={20}/>}</button>
             </>}
           />}/>

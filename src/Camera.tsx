@@ -8,7 +8,7 @@ import CameraPreview from "./studio/CameraPreview";
 import MobileCameraScreen from "./studio/MobileCameraScreen";
 import { applyCameraFilm } from "./studio/cameraFilm";
 import { captureDate } from "./studio/captureDate";
-import { playSound, unlockSound, stopSounds, FILM_LOAD_MS } from "./sounds";
+import { playSound, preloadSounds, unlockSound, stopSounds, FILM_LOAD_MS, SHUTTER_LEAD_MS } from "./sounds";
 
 export type CaptureDestination = "edit" | "finish";
 export default function Camera({onClose, onCapture, onUpload, enabled, initialSettings, presentation="dialog", navigation, busy=false}: {
@@ -61,6 +61,7 @@ export default function Camera({onClose, onCapture, onUpload, enabled, initialSe
     return ()=>{disposed=true;alive.current=false;generation.current++;captureRunning.current=false;owned?.getTracks().forEach(t=>t.stop());if(target?.srcObject===owned)target.srcObject=null;if(stream.current===owned)stream.current=null;if(timer.current)clearTimeout(timer.current);};
   },[facing,restart,present]);
   useEffect(()=>{
+    void preloadSounds();
     const previous=document.activeElement as HTMLElement|null;container.current?.focus();
     return ()=>{queueMicrotask(()=>{if(!alive.current)stopSounds();});urls.current.forEach(url=>URL.revokeObjectURL(url));previous?.focus();};
   },[]);
@@ -101,11 +102,15 @@ export default function Camera({onClose, onCapture, onUpload, enabled, initialSe
       await playSound("shutter");
       if(!alive.current||!captureRunning.current||generation.current!==token)return;
       setCount(null);if(flash&&motionEnabled.current)setFlashFrame(n=>n+1);
+      const printAt=performance.now()+SHUTTER_LEAD_MS;
       canvas.toBlob(blob=>{
         if(!alive.current||!captureRunning.current||generation.current!==token)return;
         if(!blob){fail("That photo could not be captured. Try again.");return;}
         const url=URL.createObjectURL(blob);urls.current.push(url);results.push({file:new File([blob],`camera-photo-${results.length+1}.png`,{type:"image/png",lastModified:capturedAt}),url});
-        captureRunning.current=false;setPrints(results);setFilmLoaded(false);setShot(0);stop();setReady(false);
+        timer.current=setTimeout(()=>{
+          if(!alive.current||!captureRunning.current||generation.current!==token)return;
+          captureRunning.current=false;setPrints(results);setFilmLoaded(false);setShot(0);stop();setReady(false);
+        },Math.max(0,printAt-performance.now()));
       },"image/png");
     };
     const countdown=(n:number)=>{

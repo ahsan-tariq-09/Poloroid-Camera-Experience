@@ -52,7 +52,7 @@ export default function CameraSettings({seconds,onSeconds,preset,onPreset,flash,
           if(step||event.key==='Home'||event.key==='End'){
             event.preventDefault();onISO(isoStops[event.key==='Home'?0:event.key==='End'?isoStops.length-1:Math.max(0,Math.min(isoStops.length-1,isoIndex+step))]);
           }
-        }}><i className="dial-hub" aria-hidden="true"/></button>
+        }}><i className="dial-hub" aria-hidden="true"/><span className="compact-iso-value" aria-hidden="true">{iso}</span></button>
       </div>
     </fieldset>
     </div>
