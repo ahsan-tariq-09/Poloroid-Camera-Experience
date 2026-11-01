@@ -1,21 +1,46 @@
-.git
-.vercel
-node_modules
-dist
-.sites-runtime
-.sites-checkout
-.openai
-.agents
-.impeccable
-AGENTS.md
-docs
-test-results
-playwright-report
-.testmuai
-.playwright-mcp
-coverage
+# Dependencies, caches, and build output (rebuilt on Vercel)
+node_modules/
+dist/
+.pnpm-store/
+.vite/
+*.tsbuildinfo
+
+# Local deployment and agent tooling
+.git/
+.vercel/
+.sites-runtime/
+.sites-checkout/
+.openai/
+.agents/
+.codex/
+.impeccable/
+
+# Repository-only documentation, tests, and Docker tooling
+/AGENTS.md
+/docs/
+/.github/
+/tests/
+/docker/
+/Dockerfile
+/compose.yaml
+/.dockerignore
+
+# Test artifacts and logs
+test-results/
+camera-browser-results/
+playwright-report/
+blob-report/
+.testmuai/
+.playwright-mcp/
+coverage/
 *.evidence
 *.log
-*.tsbuildinfo
+
+# Local credentials; keep the shareable example
 .env*
 !.env.example
+
+# Operating-system metadata
+.DS_Store
+Thumbs.db
+Desktop.ini

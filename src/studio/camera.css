@@ -221,3 +221,35 @@
 .film-loading svg { animation:film-loading 1s linear infinite; }
 @keyframes film-loading { to { transform:rotate(360deg); } }
 @media(prefers-reduced-motion:reduce) { .film-loading svg { animation:none; } }
+/* The home camera is the hero: a larger object on a quieter linen surface. */
+@media(min-width:800px) {
+  body:has(.start-screen) { background:#fdfbf7; }
+  .start-screen .camera-intro { gap:18px; padding:22px 0 32px; }
+  .start-screen .camera-demo { max-width:980px; }
+  .start-screen .intro-copy h1 { font-size:clamp(36px,3.4vw,46px); }
+  .start-screen .demo-instruction { margin-bottom:14px; }
+  .start-screen .camera-assembly { --camera-pad:clamp(24px,3vw,36px); }
+  .start-screen .instant-camera {
+    column-gap:clamp(28px,4vw,56px);
+    padding-block:24px 20px;
+    border-color:#53564d;
+    background-image:linear-gradient(125deg,#ffffff12,transparent 38%,#00000014),url('/textures/leather.webp');
+    background-size:auto,340px;
+    box-shadow:inset 0 1px 2px #fff9,inset 1px 0 2px #ffffff36,inset 0 -3px 6px #000b,0 3px 6px #211e1826,0 16px 30px -10px #211e1866,0 42px 64px -28px #211e1866;
+  }
+  .start-screen .camera-nameplate { padding-bottom:20px; }
+  .start-screen .camera-nameplate > span:first-child { font-size:22px; }
+  .start-screen .viewfinder-bezel { box-shadow:inset 0 1px 2px #dce1cf99,0 4px 8px #000a; }
+  .start-screen .camera-settings { grid-template-columns:minmax(100px,1fr) 144px 48px; gap:16px; }
+  .start-screen .iso-dial { width:144px; height:144px; --iso-radius:52px; }
+  .start-screen .iso-stop { width:40px; height:40px; min-height:40px; margin:-20px 0 0 -20px; }
+  .start-screen .camera-settings .film-presets button { font-size:13px; min-height:48px; gap:8px; }
+  .start-screen .camera-settings legend { font-size:13px; }
+  .start-screen .shutter { width:76px; height:76px; min-height:76px; background:radial-gradient(circle at 35% 25%,#ff6f61,#ff1e27 48%,#b6111c); box-shadow:0 5px 8px #000b,inset 0 2px 3px #ffd2b8; }
+  .start-screen .shutter:hover:not(:disabled) { background:#d91b25; }
+  .start-screen .film-stripes { width:42px; height:24px; }
+  .start-screen .film-stripes i:first-child { background:#0076a3; }
+  .start-screen .film-stripes i:nth-child(2) { background:#ffbf36; }
+  .start-screen .film-stripes i:last-child { background:#ff1e27; }
+  .start-screen .camera-start { padding-top:8px; }
+}

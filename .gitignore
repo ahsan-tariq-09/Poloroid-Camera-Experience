@@ -1,12 +1,15 @@
 # Dependencies and build output
 node_modules/
 dist/
+.pnpm-store/
+.vite/
 *.tsbuildinfo
 
 # Test output and local Kane recordings
 test-results/
 camera-browser-results/
 playwright-report/
+blob-report/
 .testmuai/
 *.evidence
 .playwright-mcp/
@@ -24,6 +27,7 @@ coverage/
 .openai/
 .impeccable/
 .agents/
+.codex/
 
 # Local documentation and editor AI rules
 /.github/instructions/codacy.instructions.md
