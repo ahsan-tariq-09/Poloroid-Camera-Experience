@@ -8,7 +8,6 @@
 .camera-start { text-align:center; }
 .camera-start .start-actions { margin-top:0; justify-content:center; }
 .camera-start .import-hint { margin-top:8px; }
-.camera-start .local-note { margin-top:8px; }
 .camera-start .resume-link { justify-content:center; }
 .instant-camera { padding:22px 24px 18px; border:2px solid #474943; border-radius:9px; background:#252622 url('/textures/leather.webp') repeat; background-size:340px; box-shadow:inset 0 1px 1px #fff5, inset 0 -3px 6px #000, 0 16px 26px -14px #24231d80; }
 .camera-nameplate { padding:0 0 18px; align-items:center; gap:12px; }
@@ -156,7 +155,7 @@
 /* Give the desktop camera a landscape body while preserving its paper outlet. */
 @media(min-width:800px) {
   .camera-demo { max-width:720px; }
-  .camera-experience { width:768px; }
+  .camera-experience { width:1028px; }
   .camera-assembly { --desktop-print-width:410px; }
   .camera-assembly .instant-camera { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); column-gap:24px; }
   .camera-nameplate,.camera-hardware,.ejection-slot { grid-column:1 / -1; }
@@ -199,7 +198,7 @@
 .viewfinder-status { top:auto; bottom:8px; max-width:calc(100% - 16px); }
 .viewfinder-corners { inset:4px; }
 .camera-backdrop { overflow:hidden; padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left)); }
-.camera-modal.camera-experience { width:min(768px,100%); max-height:calc(100dvh - 20px); overflow-y:auto; overscroll-behavior:contain; scrollbar-gutter:stable; -webkit-text-size-adjust:100%; }
+.camera-modal.camera-experience { width:min(1028px,100%); max-height:calc(100dvh - 20px); overflow-y:auto; overscroll-behavior:contain; scrollbar-gutter:stable; -webkit-text-size-adjust:100%; }
 @media(max-width:799px) {
   .camera-modal.camera-experience { padding:8px; }
   .camera-demo,.camera-experience .camera-assembly { width:min(320px,calc(100vw - 36px)); max-width:100%; margin-inline:auto; }
@@ -223,7 +222,7 @@
 @media(prefers-reduced-motion:reduce) { .film-loading svg { animation:none; } }
 /* The home camera is the hero: a larger object on a quieter linen surface. */
 @media(min-width:800px) {
-  body:has(.start-screen) { background:#fdfbf7; }
+  body:has(.start-screen) { background:#fefdfb; }
   .start-screen .camera-intro { gap:18px; padding:22px 0 32px; }
   .start-screen .camera-demo { max-width:980px; }
   .start-screen .intro-copy h1 { font-size:clamp(36px,3.4vw,46px); }

@@ -42,7 +42,6 @@
 .camera-page > .error-banner,.camera-notice { position:fixed; top:68px; left:16px; right:16px; z-index:10; margin:0; }
 .camera-page > .modal-backdrop { color:#292c26; }
 
-.mobile-camera .viewfinder-readout { background:#142012e6; }
 .mobile-camera-recovery { padding:12px 16px; background:#141713; color:#f5f1e5; text-align:center; }
 .mobile-camera-recovery p { max-width:48ch; margin:0 auto 8px; color:inherit; font-size:14px; line-height:1.5; }
 .mobile-camera-recovery p:last-child { margin-bottom:0; }
@@ -58,7 +57,7 @@
   .mobile-camera .iso-dial { width:108px; height:108px; margin:auto; }
   .mobile-camera .iso-stop { display:none; }
   .mobile-camera .iso-knob { width:64px; height:64px; min-height:64px; top:22px; left:22px; }
-  .mobile-camera .iso-knob .dial-hub { display:none; }
+  .mobile-camera .iso-dial .dial-hub { display:none; }
   .mobile-camera .compact-iso-value { display:block; font:600 13px/1 ui-monospace,monospace; color:#ffdb98; }
   .mobile-camera .flash-control > span:first-child { margin-bottom:4px; }
   .mobile-camera .film-roll { width:44px; height:44px; min-height:44px; }

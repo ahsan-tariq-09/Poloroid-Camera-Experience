@@ -79,6 +79,27 @@ async function prepareCamera(page, mobile) {
         assert.match(await page.locator('.viewfinder-readout').innerText(),/B&W/);
         await page.setViewportSize(size);
       }
+      const cameraSurface=page.locator(mobile?'.mobile-camera':'.camera-modal');
+      assert.equal(await cameraSurface.locator('.viewfinder-readout').evaluate(e=>getComputedStyle(e).backgroundColor),'rgba(0, 0, 0, 0)');
+      await page.waitForTimeout(650);
+      const initialWheel=await cameraSurface.locator('.iso-markings').evaluate(e=>getComputedStyle(e).transform);
+      await cameraSurface.getByRole('slider',{name:'ISO effect',exact:true}).focus();
+      await page.keyboard.press('ArrowLeft');
+      const dialFrames=await cameraSurface.evaluate(async surface=>{
+        const frames=[];
+        for(let i=0;i<12;i++){
+          await new Promise(resolve=>requestAnimationFrame(resolve));
+          const wheel=getComputedStyle(surface.querySelector('.iso-markings')).transform;
+          const hub=surface.querySelector('.iso-dial .dial-hub');
+          const matrix=new DOMMatrixReadOnly(wheel);
+          frames.push({wheel,hubWidth:hub.getBoundingClientRect().width,rotatedWidth:hub.offsetWidth*(Math.abs(matrix.a)+Math.abs(matrix.b))});
+        }
+        return frames;
+      });
+      assert(dialFrames.every(({hubWidth,rotatedWidth})=>Math.abs(hubWidth-rotatedWidth)<.1),'ISO center must rotate with its wheel');
+      assert(dialFrames.some(({wheel})=>wheel!==initialWheel),'ISO must turn between settings');
+      assert.equal(await cameraSurface.locator('.iso-markings').evaluate(e=>getComputedStyle(e).transitionDuration),'0.6s');
+      await page.keyboard.press('ArrowRight');
       assert.equal(await page.getByRole('button',{name:'4-shot strip',exact:true}).count(),0);
       await page.evaluate(()=>{window.audioStarts=[];document.querySelector('[aria-label="Capture"]').addEventListener('click',()=>{window.captureAt=performance.now();},{once:true});});
       await page.getByRole('button',{name:'Capture',exact:true}).click();

@@ -43,7 +43,7 @@ export default function CameraSettings({seconds,onSeconds,preset,onPreset,flash,
     </fieldset>
     <fieldset className="iso-control" disabled={disabled}><legend>ISO effect</legend>
       <div className="iso-dial" style={{"--dial-duration":`${isoRotation.duration}ms`} as CSSProperties}><i className="timer-pointer" aria-hidden="true"/>
-        <div className="iso-wheel"><div className="iso-markings" style={{transform:`rotate(${isoRotation.angle}deg)`}}>{isoStops.map((value,index)=>{
+        <div className="iso-wheel"><div className="iso-markings" style={{transform:`rotate(${isoRotation.angle}deg)`}}><i className="dial-hub" aria-hidden="true"/>{isoStops.map((value,index)=>{
           const angle=index*Math.PI/3;
           return <button key={value} type="button" className="iso-stop" aria-label={`ISO ${value}`} aria-pressed={value===iso} onClick={()=>onISO(value)} style={{transform:`translate(calc(${Math.sin(angle)} * var(--iso-radius, 43px)),calc(${-Math.cos(angle)} * var(--iso-radius, 43px)))`}}><span style={{transform:`rotate(${-isoRotation.angle}deg)`}}>{value}</span></button>;
         })}</div></div>
@@ -52,7 +52,7 @@ export default function CameraSettings({seconds,onSeconds,preset,onPreset,flash,
           if(step||event.key==='Home'||event.key==='End'){
             event.preventDefault();onISO(isoStops[event.key==='Home'?0:event.key==='End'?isoStops.length-1:Math.max(0,Math.min(isoStops.length-1,isoIndex+step))]);
           }
-        }}><i className="dial-hub" aria-hidden="true"/><span className="compact-iso-value" aria-hidden="true">{iso}</span></button>
+        }}><span className="compact-iso-value" aria-hidden="true">{iso}</span></button>
       </div>
     </fieldset>
     </div>
