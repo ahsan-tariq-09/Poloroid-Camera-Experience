@@ -39,7 +39,6 @@ export default function EditScreen({
       <div className="page-heading">
         <div>
           <h1 ref={heading} tabIndex={-1}>Edit your Polaroid</h1>
-          <p>Arrange photos, add pieces, or adjust the look.</p>
         </div>
         <div className="editor-actions">
           <div className="history-actions">

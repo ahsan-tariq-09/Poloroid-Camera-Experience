@@ -144,7 +144,7 @@
 .flash-switch[aria-checked=true] .flash-lever::after { transform:translateY(-28px); }
 .flash-led { position:absolute;right:3px;bottom:6px;width:7px;height:7px;border-radius:50%;background:#bd5745; }
 .flash-switch[aria-checked=true] .flash-led { background:#9bdea4; }
-.capture-flash { position:fixed;inset:0;background:#fff6df;pointer-events:none;z-index:20; }
+.capture-flash { position:fixed;inset:0;background:#fff;pointer-events:none;z-index:1000; }
 .camera-experience .camera-settings { grid-template-columns:minmax(86px,1fr) 120px 44px; justify-content:space-between; }
 
 @media(prefers-reduced-motion:reduce) { .timer-rotor,.timer-stop > span,.flash-lever::after { transition:none; } }

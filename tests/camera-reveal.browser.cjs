@@ -27,6 +27,14 @@ async function prepareCamera(page, mobile) {
         window.removeEventListener=(type,...args)=>{if(type==='devicemotion')window.motionListenerReady=false;return removeListener(type,...args);};
         if(!navigator.mediaDevices)Object.defineProperty(navigator,'mediaDevices',{value:{}});
         window.cameraRequests=0;window.cameraStops=0;
+        const captureDraw=CanvasRenderingContext2D.prototype.drawImage;
+        CanvasRenderingContext2D.prototype.drawImage=function(source,...args){
+          if(source instanceof HTMLVideoElement&&this.canvas.width===480){
+            const flash=document.querySelector('.capture-flash');
+            window.flashAtCapture=flash?{opacity:Number(getComputedStyle(flash).opacity),color:getComputedStyle(flash).backgroundColor,width:flash.getBoundingClientRect().width,height:flash.getBoundingClientRect().height}:null;
+          }
+          return captureDraw.call(this,source,...args);
+        };
         window.audioStarts=[];
         if(window.AudioBufferSourceNode){const start=AudioBufferSourceNode.prototype.start;AudioBufferSourceNode.prototype.start=function(when=0,...args){window.audioStarts.push({duration:this.buffer?.duration,when,now:this.context.currentTime});return start.call(this,when,...args);};}
         Object.defineProperty(navigator.mediaDevices,'getUserMedia',{value:async()=>{
@@ -40,7 +48,10 @@ async function prepareCamera(page, mobile) {
             Object.defineProperty(HTMLVideoElement.prototype,'requestVideoFrameCallback',{configurable:true,value:undefined});
             // Windows WebKit has no camera API; replace only the media boundary.
             const draw=CanvasRenderingContext2D.prototype.drawImage;
-            CanvasRenderingContext2D.prototype.drawImage=function(source,...args){return draw.call(this,source instanceof HTMLVideoElement?canvas:source,...args);};
+            CanvasRenderingContext2D.prototype.drawImage=function(source,...args){
+              if(source instanceof HTMLVideoElement&&this.canvas.width===480){const flash=document.querySelector('.capture-flash');window.flashAtCapture=flash?{opacity:Number(getComputedStyle(flash).opacity),color:getComputedStyle(flash).backgroundColor,width:flash.getBoundingClientRect().width,height:flash.getBoundingClientRect().height}:null;}
+              return draw.call(this,source instanceof HTMLVideoElement?canvas:source,...args);
+            };
             Object.defineProperties(HTMLVideoElement.prototype,{videoWidth:{configurable:true,get:()=>640},videoHeight:{configurable:true,get:()=>480},readyState:{configurable:true,get:()=>4},paused:{configurable:true,get:()=>false},srcObject:{configurable:true,writable:true,value:null}});
             HTMLVideoElement.prototype.play=async()=>{};
             return {getTracks:()=>[{stop(){window.cameraStops++;},readyState:'live'}]};
@@ -110,9 +121,15 @@ async function prepareCamera(page, mobile) {
       assert.equal(await cameraSurface.locator('.iso-markings').evaluate(e=>getComputedStyle(e).transitionDuration),'0.6s');
       await page.keyboard.press('ArrowRight');
       assert.equal(await page.getByRole('button',{name:'4-shot strip',exact:true}).count(),0);
+      await cameraSurface.getByRole('switch',{name:'Flash effect',exact:true}).focus();
+      await page.keyboard.press('Space');
+      assert.equal(await cameraSurface.getByRole('switch',{name:'Flash effect',exact:true}).getAttribute('aria-checked'),'true');
       await page.evaluate(()=>{window.audioStarts=[];document.querySelector('[aria-label="Capture"]').addEventListener('click',()=>{window.captureAt=performance.now();},{once:true});});
       await page.getByRole('button',{name:'Capture',exact:true}).click();
       await page.locator('.instant-print').waitFor();
+      const flash=await page.evaluate(()=>window.flashAtCapture);
+      assert(flash&&flash.opacity>.95&&flash.color==='rgb(255, 255, 255)'&&flash.width===page.viewportSize().width&&flash.height===page.viewportSize().height,JSON.stringify(flash));
+      await page.locator('.capture-flash').waitFor({state:'detached'});
       const sound=await page.evaluate(()=>({starts:window.audioStarts,printDelay:performance.now()-window.captureAt}));
       assert(sound.printDelay>=450,JSON.stringify(sound));
       if(sound.starts.length>=2){assert(Math.abs(sound.starts[0].duration-.672)<.01,JSON.stringify(sound));assert(Math.abs(sound.starts[1].when-sound.starts[0].now-.48)<.04,JSON.stringify(sound));}
@@ -147,6 +164,12 @@ async function prepareCamera(page, mobile) {
       const downloadPromise=page.waitForEvent('download');await page.getByRole('button',{name:'Download',exact:true}).click();
       const download=await downloadPromise;assert.equal(await download.failure(),null);await download.saveAs(path.join(output,`${engine}-${width}.png`));
       await page.getByRole('link',{name:'Back to editing'}).click();await page.waitForURL('**/edit');
+      await page.getByRole('heading',{name:'Edit your Polaroid',exact:true}).waitFor();
+      assert.equal(await page.getByText('Arrange photos, add pieces, or adjust the look.',{exact:true}).count(),0);
+      assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Editor overflows horizontally');
+      assert(await page.getByRole('button',{name:'Continue',exact:true}).isVisible());
+      await page.screenshot({path:path.join(output,`${engine}-${width}-edit.png`),fullPage:true});
+      await page.getByRole('button',{name:'Continue',exact:true}).click();await page.waitForURL('**/finish');
       assert.deepEqual(errors,[]);
       if(width===390){
         for(const method of ['pointer','sensor']){
@@ -192,7 +215,8 @@ async function prepareCamera(page, mobile) {
           console.log(JSON.stringify({engine,method,noExtraShake:true,hiddenPageSettles:true}));
         }
         await page.emulateMedia({reducedMotion:'reduce'});await page.goto(baseURL+'/');
-        await prepareCamera(page,true);await page.getByRole('button',{name:'Capture',exact:true}).click();
+        await prepareCamera(page,true);await page.getByRole('switch',{name:'Flash effect',exact:true}).click();await page.getByRole('button',{name:'Capture',exact:true}).click();
+        assert.equal(await page.locator('.capture-flash').count(),0);
         await page.getByRole('button',{name:'Retake photo',exact:true}).click();
         await page.getByRole('button',{name:'Capture',exact:true}).click();
         await page.getByRole('button',{name:'Shake to reveal',exact:true}).focus();await page.keyboard.press('Enter');

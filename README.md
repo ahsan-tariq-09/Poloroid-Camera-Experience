@@ -66,6 +66,8 @@ Print prepares one Polaroid with an outer frame of **88 × 107 mm**, centered on
 
 ## Interface interactions
 
+With Flash on, supported rear cameras briefly enable their camera light before capture and switch it off afterward. Front cameras and cameras without usable light control use a full-page white screen pulse held through capture, then a short fade. Reduced motion suppresses that screen pulse. Leaving or hiding the camera cancels capture and releases an active light. Hardware light support and exposure timing still need verification on physical phones.
+
 Motion for React animates tool selection, panel changes, dialogs, camera countdown, print ejection and download confirmation. The Polaroid enters the workspace and reveals its photo; dragged pieces lift and settle, inserted collage elements land on the paper, and cuts briefly show their seam. Shake and sound are optional presentation effects, separate from composition state and undo history. Downloads and printing use the final framed composition. Warm film, Original and Black & white offer distinct photo treatments alongside Copy shop.
 
 Reduced-motion settings are respected, and animations settle when the page is hidden. The stage reuses processed photo textures during animation and layer movement rather than running photo effects each frame. Preset thumbnails now render the current uploaded photo.
@@ -106,7 +108,7 @@ Install roid uses the browser's install prompt when available and otherwise show
 
 ## Validation
 
-Run `pnpm test`, `pnpm typecheck`, and `pnpm build` to check a change. The latest camera update passed all 166 automated tests, typecheck, and the production build.
+Run `pnpm test`, `pnpm typecheck`, and `pnpm build` to check a change. The latest camera update passed all 182 automated tests, typecheck, and the production build. Flash tests cover rear-light support, rejected or ignored requests, capture failure, cancellation, cleanup, front-camera fallback and reduced motion.
 
 Browser checks used Chromium over CDP and Windows WebKit at 1280×900, 390×844, 393×690, 360×640, 320×568, 844×390, and 568×320. Coverage included responsive layout, keyboard controls, bottom-slot print alignment, rotation without restarting the stream, capture/reveal/retake, reduced motion, hidden-page settling, Edit/Finish navigation, PNG downloads, camera permission recovery, upload fallback, and session resume.
 

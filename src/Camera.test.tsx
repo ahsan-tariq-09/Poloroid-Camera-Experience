@@ -14,6 +14,61 @@ beforeEach(()=>{
   Object.defineProperty(HTMLVideoElement.prototype,"videoHeight",{configurable:true,value:480});
 });
 
+it.each(["front","front-reduced","rear","unsupported","rejected","ignored","reduced","off","wrong-facing","draw-failure","off-failure","off-ignored","hidden","hidden-screen","unmount","late-enable"])("captures with safe flash illumination: %s",async scenario=>{
+  Object.assign(globalThis,{IS_REACT_ACT_ENVIRONMENT:true});
+  vi.useFakeTimers();
+  let lit=false,finishEnable:(()=>void)|undefined;
+  const events:string[]=[],stop=vi.fn(()=>{lit=false;events.push("stop");});
+  const track={stop,readyState:"live",getConstraints:()=>({facingMode:{ideal:"environment"}}),getCapabilities:()=>({torch:scenario==="unsupported"?false:[false,true]}),getSettings:()=>({facingMode:scenario==="wrong-facing"?"user":"environment",torch:lit}),applyConstraints:vi.fn(async(constraints:MediaTrackConstraints)=>{
+    expect(constraints.facingMode).toEqual({ideal:"environment"});
+    const value=(constraints.advanced![0] as MediaTrackConstraintSet & {torch:boolean}).torch;
+    events.push(value?"on":"off");
+    if(value&&scenario==="rejected"||!value&&scenario==="off-failure")throw new Error("unsupported");
+    if(value&&scenario==="late-enable")await new Promise<void>(resolve=>{finishEnable=resolve;});
+    if(!value&&scenario==="off-ignored")return;
+    lit=value&&scenario!=="ignored";
+  })};
+  Object.defineProperty(navigator,"mediaDevices",{configurable:true,value:{getUserMedia:vi.fn(async()=>({getTracks:()=>[track],getVideoTracks:()=>[track]}))}});
+  const draw=vi.fn(()=>{events.push("draw");if(scenario==="draw-failure")throw new Error("frame unavailable");});
+  vi.spyOn(HTMLCanvasElement.prototype,"getContext").mockReturnValue({drawImage:draw,translate:vi.fn(),scale:vi.fn(),getImageData:()=>({data:new Uint8ClampedArray([80,100,120,255]),width:1,height:1}),putImageData:vi.fn()} as never);
+  const blob=vi.spyOn(HTMLCanvasElement.prototype,"toBlob").mockImplementation(cb=>cb(new Blob(["frame"])));
+  vi.spyOn(sounds,"playSound").mockResolvedValue();
+  URL.createObjectURL=vi.fn(()=>"blob:flash");URL.revokeObjectURL=vi.fn();
+  const hidden=vi.spyOn(document,"hidden","get").mockReturnValue(false);
+  const host=document.createElement("div"),root=createRoot(host);document.body.append(host);
+  const click=async(label:string)=>act(async()=>host.querySelector<HTMLButtonElement>(`[aria-label="${label}"]`)!.click());
+  try{
+    await act(async()=>root.render(<Camera presentation="screen" enabled={!scenario.includes("reduced")} initialSettings={{seconds:0,preset:"Classic",flash:scenario!=="off",iso:800}} onClose={()=>{}} onUpload={()=>{}} onCapture={()=>{}}/>));
+    if(!["front","front-reduced","hidden-screen"].includes(scenario))await click("Flip camera");
+    events.length=0;stop.mockClear();
+    await click("Capture");
+    const screen=["front","unsupported","rejected","ignored","wrong-facing","hidden-screen"].includes(scenario);
+    expect(Boolean(document.querySelector(".capture-flash"))).toBe(screen);
+    if(screen)expect(document.querySelector(".capture-flash")!.parentElement).toBe(document.body);
+    if(scenario==="hidden"||scenario==="hidden-screen"||scenario==="late-enable"){
+      hidden.mockReturnValue(true);await act(async()=>document.dispatchEvent(new Event("visibilitychange")));
+      if(scenario!=="hidden-screen")expect(stop).toHaveBeenCalled();expect(document.querySelector(".capture-flash")).toBeNull();
+    }
+    if(scenario==="unmount")await act(async()=>root.unmount());
+    if(scenario==="late-enable")await act(async()=>finishEnable!());
+    if(scenario!=="off"&&scenario!=="front-reduced"){
+      expect(draw).not.toHaveBeenCalled();
+      await act(async()=>vi.advanceTimersByTimeAsync(199));expect(draw).not.toHaveBeenCalled();
+      await act(async()=>vi.advanceTimersByTimeAsync(1));
+    }
+    expect(lit).toBe(false);
+    if(["hidden","hidden-screen","unmount","late-enable"].includes(scenario)){expect(draw).not.toHaveBeenCalled();expect(blob).not.toHaveBeenCalled();}
+    else{
+      expect(draw).toHaveBeenCalledOnce();
+      if(["front","front-reduced","off","unsupported","wrong-facing"].includes(scenario))expect(track.applyConstraints).not.toHaveBeenCalled();
+      else expect(events.indexOf("off")).toBeGreaterThan(events.indexOf("draw"));
+      if(scenario==="draw-failure"){expect(blob).not.toHaveBeenCalled();expect(host.textContent).toContain("could not be captured");}
+      else expect(blob).toHaveBeenCalledOnce();
+      if(scenario==="off-failure"||scenario==="off-ignored")expect(stop).toHaveBeenCalled();
+    }
+  }finally{await act(async()=>root.unmount());host.remove();vi.useRealTimers();vi.restoreAllMocks();}
+});
+
 it("opens the camera screen ready to capture and keeps its stream while using visible controls",async()=>{
   Object.assign(globalThis,{IS_REACT_ACT_ENVIRONMENT:true});
   vi.stubGlobal("matchMedia",()=>({matches:true,addEventListener(){},removeEventListener(){}}));
