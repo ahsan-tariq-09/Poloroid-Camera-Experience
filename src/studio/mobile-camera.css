@@ -54,11 +54,7 @@
   .mobile-camera .film-presets legend { margin-bottom:0; }
   .mobile-camera .film-presets button { min-height:44px; padding:2px 0; }
   .mobile-camera .film-cartridge { height:20px; }
-  .mobile-camera .iso-dial { width:108px; height:108px; margin:auto; }
-  .mobile-camera .iso-stop { display:none; }
-  .mobile-camera .iso-knob { width:64px; height:64px; min-height:64px; top:22px; left:22px; }
-  .mobile-camera .iso-dial .dial-hub { display:none; }
-  .mobile-camera .compact-iso-value { display:block; font:600 13px/1 ui-monospace,monospace; color:#ffdb98; }
+  .mobile-camera .iso-dial { --iso-radius:37px; width:108px; height:108px; margin:auto; }
   .mobile-camera .flash-control > span:first-child { margin-bottom:4px; }
   .mobile-camera .film-roll { width:44px; height:44px; min-height:44px; }
   .mobile-camera .hardware-control { gap:6px; }

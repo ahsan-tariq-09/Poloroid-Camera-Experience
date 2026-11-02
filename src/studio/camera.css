@@ -190,7 +190,6 @@
 .iso-stop { position:absolute; top:50%; left:50%; width:36px; height:36px; min-height:36px; margin:-18px 0 0 -18px; padding:0; border:0; border-radius:50%; background:transparent; text-align:center; color:#f8f6ed; font:11px/1.4 var(--font); }
 .iso-knob { position:absolute; top:calc(50% - 14px); left:calc(50% - 14px); width:28px; height:28px; min-height:28px; padding:0; border:0; border-radius:50%; background:transparent; color:#fff9e9; cursor:pointer; }
 .iso-knob:hover:not(:disabled) { background:transparent; }
-.compact-iso-value { display:none; }
 .viewfinder-readout { position:absolute; inset:0 0 auto; z-index:2; display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:8px; padding:8px; color:#d5f3af; background:transparent; text-shadow:0 1px 2px #000,0 0 4px #000,0 0 6px #000; font:10px/1.4 ui-monospace,monospace; font-variant-numeric:tabular-nums; }
 .viewfinder-readout > span { display:flex; flex-wrap:wrap; gap:0 4px; align-content:start; }
 .viewfinder-readout > span:nth-child(2) { justify-content:center; }

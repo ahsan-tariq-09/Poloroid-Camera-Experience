@@ -64,6 +64,15 @@ async function prepareCamera(page, mobile) {
       }
       if(mobile){
         assert.equal(await page.getByRole('link',{name:'Scrapbook',exact:true}).count(),0);
+        assert(await page.locator('.iso-dial .dial-hub').isVisible(),'ISO metal center must stay visible on short screens');
+        assert.equal(await page.getByRole('slider',{name:'ISO effect',exact:true}).innerText(),'');
+        for(const value of [100,200,400,800,1600,3200,800]){
+          const stop=page.getByRole('button',{name:`ISO ${value}`,exact:true});
+          assert(await stop.isVisible(),`ISO ${value} must stay on the ring`);
+          await stop.tap();
+          assert.equal(await stop.getAttribute('aria-pressed'),'true');
+          assert.equal(await page.getByRole('slider',{name:'ISO effect',exact:true}).getAttribute('aria-valuenow'),String(value));
+        }
         const requests=await page.evaluate(()=>window.cameraRequests);
         await page.evaluate(()=>{window.cameraVideo=document.querySelector('video');});
         assert.equal(await page.getByRole('button',{name:'Camera settings',exact:true}).count(),0);
@@ -111,6 +120,7 @@ async function prepareCamera(page, mobile) {
       await page.screenshot({path:path.join(output,`${engine}-${width}-ejecting.png`)});
       const reveal=page.getByRole('button',{name:'Shake to reveal',exact:true});
       await page.waitForFunction(()=>{const button=document.querySelector('.shake-reveal');return button&&!button.disabled;});
+      await page.waitForFunction(()=>Math.abs(new DOMMatrixReadOnly(getComputedStyle(document.querySelector('.instant-print')).transform).m42)<.1);
       const outlet=await page.evaluate(()=>{const surface=document.querySelector('.mobile-camera')||document.querySelector('.camera-modal');const slot=surface.querySelector('.ejection-slot').getBoundingClientRect(),paper=surface.querySelector('.instant-paper').getBoundingClientRect();return {slot:{x:slot.x,width:slot.width,bottom:slot.bottom},paper:{x:paper.x,width:paper.width,top:paper.top}};});
       assert(Math.abs(outlet.slot.x-outlet.paper.x)<3&&Math.abs(outlet.slot.width-outlet.paper.width)<3&&Math.abs(outlet.slot.bottom-outlet.paper.top)<12,JSON.stringify(outlet));
       if(mobile)assert(await page.locator('.instant-paper').evaluate(e=>{const r=e.getBoundingClientRect();return document.elementFromPoint(r.x+r.width/2,r.y+2)?.closest('.instant-paper')===e;}),'Paper must be in front of the camera at the slot');
