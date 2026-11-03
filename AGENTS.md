@@ -44,8 +44,8 @@ See `docs/DESIGN-SKILLS.md` for usage examples, source revisions, and licenses.
 ## Validation
 
 Use pnpm and the scripts in `package.json`. For application changes run
-`pnpm test`, `pnpm typecheck`, and `pnpm build`. CI runs these plus the camera
-browser test in Chromium and WebKit (`.github/workflows/ci.yml`); run it locally
-with `pnpm test:browser` as described in `README.md`. For interface changes also
+`pnpm test`, `pnpm typecheck`, and `pnpm build`. CI runs these
+(`.github/workflows/ci.yml`). The camera browser test is not in CI for now; run
+it locally with `pnpm test:browser` as described in `README.md`. For interface changes also
 inspect the affected screens and states at desktop and mobile widths, including
 keyboard interaction and reduced motion. Keep uploaded photos on the device.
