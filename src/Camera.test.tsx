@@ -17,10 +17,11 @@ beforeEach(()=>{
 it.each(["front","front-reduced","rear","unsupported","rejected","ignored","reduced","off","wrong-facing","draw-failure","off-failure","off-ignored","hidden","hidden-screen","unmount","late-enable"])("captures with safe flash illumination: %s",async scenario=>{
   Object.assign(globalThis,{IS_REACT_ACT_ENVIRONMENT:true});
   vi.useFakeTimers();
-  let lit=false,finishEnable:(()=>void)|undefined;
+  let lit=false,actualFacing="user",finishEnable:(()=>void)|undefined;
   const events:string[]=[],stop=vi.fn(()=>{lit=false;events.push("stop");});
-  const track={stop,readyState:"live",getConstraints:()=>({facingMode:{ideal:"environment"}}),getCapabilities:()=>({torch:scenario==="unsupported"?false:[false,true]}),getSettings:()=>({facingMode:scenario==="wrong-facing"?"user":"environment",torch:lit}),applyConstraints:vi.fn(async(constraints:MediaTrackConstraints)=>{
-    expect(constraints.facingMode).toEqual({ideal:"environment"});
+  const track={stop,readyState:"live",getConstraints:()=>({facingMode:{ideal:"environment"}}),getCapabilities:()=>({torch:scenario==="unsupported"?false:[false,true]}),getSettings:()=>({facingMode:scenario==="wrong-facing"?"user":actualFacing,torch:lit}),applyConstraints:vi.fn(async(constraints:MediaTrackConstraints)=>{
+    // Chrome rejects mixed camera-selection and image-capture constraints.
+    if(constraints.facingMode)throw new DOMException("Mixed camera and image constraints","OverconstrainedError");
     const value=(constraints.advanced![0] as MediaTrackConstraintSet & {torch:boolean}).torch;
     events.push(value?"on":"off");
     if(value&&scenario==="rejected"||!value&&scenario==="off-failure")throw new Error("unsupported");
@@ -28,8 +29,8 @@ it.each(["front","front-reduced","rear","unsupported","rejected","ignored","redu
     if(!value&&scenario==="off-ignored")return;
     lit=value&&scenario!=="ignored";
   })};
-  Object.defineProperty(navigator,"mediaDevices",{configurable:true,value:{getUserMedia:vi.fn(async()=>({getTracks:()=>[track],getVideoTracks:()=>[track]}))}});
-  const draw=vi.fn(()=>{events.push("draw");if(scenario==="draw-failure")throw new Error("frame unavailable");});
+  Object.defineProperty(navigator,"mediaDevices",{configurable:true,value:{getUserMedia:vi.fn(async(options)=>{actualFacing=options.video.facingMode.ideal;return {getTracks:()=>[track],getVideoTracks:()=>[track]};})}});
+  const draw=vi.fn(()=>{expect(document.querySelector(".capture-flash")).toBeNull();events.push("draw");if(scenario==="draw-failure")throw new Error("frame unavailable");});
   vi.spyOn(HTMLCanvasElement.prototype,"getContext").mockReturnValue({drawImage:draw,translate:vi.fn(),scale:vi.fn(),getImageData:()=>({data:new Uint8ClampedArray([80,100,120,255]),width:1,height:1}),putImageData:vi.fn()} as never);
   const blob=vi.spyOn(HTMLCanvasElement.prototype,"toBlob").mockImplementation(cb=>cb(new Blob(["frame"])));
   vi.spyOn(sounds,"playSound").mockResolvedValue();
@@ -42,25 +43,30 @@ it.each(["front","front-reduced","rear","unsupported","rejected","ignored","redu
     if(!["front","front-reduced","hidden-screen"].includes(scenario))await click("Flip camera");
     events.length=0;stop.mockClear();
     await click("Capture");
-    const screen=["front","unsupported","rejected","ignored","wrong-facing","hidden-screen"].includes(scenario);
+    const screen=["front","wrong-facing","hidden-screen"].includes(scenario);
     expect(Boolean(document.querySelector(".capture-flash"))).toBe(screen);
-    if(screen)expect(document.querySelector(".capture-flash")!.parentElement).toBe(document.body);
+    if(screen){expect(draw).toHaveBeenCalledOnce();expect(document.querySelector(".capture-flash")!.parentElement).toBe(document.body);expect((document.querySelector(".capture-flash") as HTMLElement).style.opacity).toBe("0.35");}
     if(scenario==="hidden"||scenario==="hidden-screen"||scenario==="late-enable"){
       hidden.mockReturnValue(true);await act(async()=>document.dispatchEvent(new Event("visibilitychange")));
       if(scenario!=="hidden-screen")expect(stop).toHaveBeenCalled();expect(document.querySelector(".capture-flash")).toBeNull();
     }
     if(scenario==="unmount")await act(async()=>root.unmount());
     if(scenario==="late-enable")await act(async()=>finishEnable!());
-    if(scenario!=="off"&&scenario!=="front-reduced"){
+    const unavailable=["unsupported","rejected","ignored"].includes(scenario);
+    if(!screen&&!unavailable&&scenario!=="off"&&scenario!=="front-reduced"){
       expect(draw).not.toHaveBeenCalled();
       await act(async()=>vi.advanceTimersByTimeAsync(199));expect(draw).not.toHaveBeenCalled();
       await act(async()=>vi.advanceTimersByTimeAsync(1));
     }
     expect(lit).toBe(false);
-    if(["hidden","hidden-screen","unmount","late-enable"].includes(scenario)){expect(draw).not.toHaveBeenCalled();expect(blob).not.toHaveBeenCalled();}
+    if(unavailable){
+      expect(draw).not.toHaveBeenCalled();expect(blob).not.toHaveBeenCalled();expect(host.textContent).toContain("Turn Flash off");
+      await click("Flash effect");await click("Capture");expect(blob).toHaveBeenCalledOnce();
+    }
+    else if(["hidden","unmount","late-enable"].includes(scenario)){expect(draw).not.toHaveBeenCalled();expect(blob).not.toHaveBeenCalled();}
     else{
       expect(draw).toHaveBeenCalledOnce();
-      if(["front","front-reduced","off","unsupported","wrong-facing"].includes(scenario))expect(track.applyConstraints).not.toHaveBeenCalled();
+      if(["front","front-reduced","off","wrong-facing","hidden-screen"].includes(scenario))expect(track.applyConstraints).not.toHaveBeenCalled();
       else expect(events.indexOf("off")).toBeGreaterThan(events.indexOf("draw"));
       if(scenario==="draw-failure"){expect(blob).not.toHaveBeenCalled();expect(host.textContent).toContain("could not be captured");}
       else expect(blob).toHaveBeenCalledOnce();

@@ -4,7 +4,8 @@ import { Hand } from "lucide-react";
 import { createPhoneShakeDetector } from "./phoneShake";
 
 type MotionAccess = typeof DeviceMotionEvent & { requestPermission?: () => Promise<"granted" | "denied"> };
-export const PHOTO_DEVELOPMENT_MS = 10000;
+export const PHOTO_DEVELOPMENT_MS = 11000;
+const PHOTO_DEVELOPMENT_DELAY_MS = 2000;
 export const PRINT_EJECTION_MS = 3000;
 
 /** Owns the blank-to-developed print, gestures, and optional phone sensor access. */
@@ -80,7 +81,7 @@ export default function InstantPrint({ photos, caption, enabled, onReveal, onRet
       }} onPointerMove={move} onPointerUp={end} onPointerCancel={end} onLostPointerCapture={end}>
         <div className="instant-paper">
           {photos.map((photo,index)=><div className="instant-photo-window" key={photo.src}>
-            {phase==="developing"||phase==="revealed" ? <motion.img src={photo.src} alt={photo.alt} initial={enabled?{opacity:0}:false} animate={{opacity:1}} transition={{duration:enabled?PHOTO_DEVELOPMENT_MS/1000:0,ease:"linear"}} draggable={false}/> : <div className="undeveloped-photo" aria-label={`Unrevealed photo ${index+1}`}>{index===0&&<><Hand size={25} strokeWidth={1.4}/><span>Shake to reveal</span></>}</div>}
+            {phase==="developing"||phase==="revealed" ? <motion.img src={photo.src} alt={photo.alt} initial={enabled?{opacity:0}:false} animate={{opacity:1}} transition={{delay:enabled?PHOTO_DEVELOPMENT_DELAY_MS/1000:0,duration:enabled?(PHOTO_DEVELOPMENT_MS-PHOTO_DEVELOPMENT_DELAY_MS)/1000:0,ease:"linear"}} draggable={false}/> : <div className="undeveloped-photo" aria-label={`Unrevealed photo ${index+1}`}>{index===0&&<><Hand size={25} strokeWidth={1.4}/><span>Shake to reveal</span></>}</div>}
           </div>)}
           <span className="instant-caption">{caption}</span>
         </div>

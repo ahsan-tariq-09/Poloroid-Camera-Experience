@@ -27,9 +27,17 @@ async function prepareCamera(page, mobile) {
         window.removeEventListener=(type,...args)=>{if(type==='devicemotion')window.motionListenerReady=false;return removeListener(type,...args);};
         if(!navigator.mediaDevices)Object.defineProperty(navigator,'mediaDevices',{value:{}});
         window.cameraRequests=0;window.cameraStops=0;
+        window.frameCaptured=false;window.torchActive=false;window.torchEvents=[];
+        new MutationObserver(()=>{
+          const flash=document.querySelector('.capture-flash');
+          if(flash&&!window.flashAfterCapture){
+            window.flashAfterCapture={opacity:Number(getComputedStyle(flash).opacity),color:getComputedStyle(flash).backgroundColor,width:flash.getBoundingClientRect().width,height:flash.getBoundingClientRect().height,afterFrame:window.frameCaptured};
+          }
+        }).observe(document,{childList:true,subtree:true});
         const captureDraw=CanvasRenderingContext2D.prototype.drawImage;
         CanvasRenderingContext2D.prototype.drawImage=function(source,...args){
           if(source instanceof HTMLVideoElement&&this.canvas.width===480){
+            window.frameCaptured=true;window.torchEvents.push({event:'capture',lit:window.torchActive});
             const flash=document.querySelector('.capture-flash');
             window.flashAtCapture=flash?{opacity:Number(getComputedStyle(flash).opacity),color:getComputedStyle(flash).backgroundColor,width:flash.getBoundingClientRect().width,height:flash.getBoundingClientRect().height}:null;
           }
@@ -37,8 +45,19 @@ async function prepareCamera(page, mobile) {
         };
         window.audioStarts=[];
         if(window.AudioBufferSourceNode){const start=AudioBufferSourceNode.prototype.start;AudioBufferSourceNode.prototype.start=function(when=0,...args){window.audioStarts.push({duration:this.buffer?.duration,when,now:this.context.currentTime});return start.call(this,when,...args);};}
-        Object.defineProperty(navigator.mediaDevices,'getUserMedia',{value:async()=>{
+        Object.defineProperty(navigator.mediaDevices,'getUserMedia',{value:async(options)=>{
           window.cameraRequests++;
+          const facing=options.video.facingMode.ideal;
+          const lightControls=track=>{
+            track.getConstraints=()=>({facingMode:{ideal:facing}});
+            track.getCapabilities=()=>({torch:facing==='environment'&&!window.disableTorch});
+            track.getSettings=()=>({facingMode:facing,torch:window.torchActive});
+            track.applyConstraints=async constraints=>{
+              if(constraints.facingMode)throw new DOMException('Mixed constraints','OverconstrainedError');
+              window.torchActive=constraints.advanced[0].torch;window.torchEvents.push({event:window.torchActive?'on':'off'});
+            };
+            return track;
+          };
           const canvas=document.createElement('canvas');canvas.width=640;canvas.height=480;
           const ctx=canvas.getContext('2d');
           const photo=new Image();photo.src='/sample-flash.webp';await photo.decode();
@@ -49,15 +68,16 @@ async function prepareCamera(page, mobile) {
             // Windows WebKit has no camera API; replace only the media boundary.
             const draw=CanvasRenderingContext2D.prototype.drawImage;
             CanvasRenderingContext2D.prototype.drawImage=function(source,...args){
-              if(source instanceof HTMLVideoElement&&this.canvas.width===480){const flash=document.querySelector('.capture-flash');window.flashAtCapture=flash?{opacity:Number(getComputedStyle(flash).opacity),color:getComputedStyle(flash).backgroundColor,width:flash.getBoundingClientRect().width,height:flash.getBoundingClientRect().height}:null;}
+              if(source instanceof HTMLVideoElement&&this.canvas.width===480){window.frameCaptured=true;window.torchEvents.push({event:'capture',lit:window.torchActive});const flash=document.querySelector('.capture-flash');window.flashAtCapture=flash?{opacity:Number(getComputedStyle(flash).opacity),color:getComputedStyle(flash).backgroundColor,width:flash.getBoundingClientRect().width,height:flash.getBoundingClientRect().height}:null;}
               return draw.call(this,source instanceof HTMLVideoElement?canvas:source,...args);
             };
             Object.defineProperties(HTMLVideoElement.prototype,{videoWidth:{configurable:true,get:()=>640},videoHeight:{configurable:true,get:()=>480},readyState:{configurable:true,get:()=>4},paused:{configurable:true,get:()=>false},srcObject:{configurable:true,writable:true,value:null}});
             HTMLVideoElement.prototype.play=async()=>{};
-            return {getTracks:()=>[{stop(){window.cameraStops++;},readyState:'live'}]};
+            const track=lightControls({stop(){window.cameraStops++;window.torchActive=false;},readyState:'live'});
+            return {getTracks:()=>[track],getVideoTracks:()=>[track]};
           }
           const stream=canvas.captureStream(15);const timer=setInterval(paint,60);
-          const track=stream.getTracks()[0],stop=track.stop.bind(track);track.stop=()=>{window.cameraStops++;clearInterval(timer);stop();};return stream;
+          const track=lightControls(stream.getTracks()[0]),stop=track.stop.bind(track);track.stop=()=>{window.cameraStops++;window.torchActive=false;clearInterval(timer);stop();};return stream;
         }});
       },engine);
       const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
@@ -127,8 +147,9 @@ async function prepareCamera(page, mobile) {
       await page.evaluate(()=>{window.audioStarts=[];document.querySelector('[aria-label="Capture"]').addEventListener('click',()=>{window.captureAt=performance.now();},{once:true});});
       await page.getByRole('button',{name:'Capture',exact:true}).click();
       await page.locator('.instant-print').waitFor();
-      const flash=await page.evaluate(()=>window.flashAtCapture);
-      assert(flash&&flash.opacity>.95&&flash.color==='rgb(255, 255, 255)'&&flash.width===page.viewportSize().width&&flash.height===page.viewportSize().height,JSON.stringify(flash));
+      assert.equal(await page.evaluate(()=>window.flashAtCapture),null,'Screen flash must start after capture');
+      const flash=await page.evaluate(()=>window.flashAfterCapture);
+      assert(flash&&flash.afterFrame&&flash.opacity>.30&&flash.opacity<=.35&&flash.color==='rgb(255, 246, 223)'&&flash.width===page.viewportSize().width&&flash.height===page.viewportSize().height,JSON.stringify(flash));
       await page.locator('.capture-flash').waitFor({state:'detached'});
       const sound=await page.evaluate(()=>({starts:window.audioStarts,printDelay:performance.now()-window.captureAt}));
       assert(sound.printDelay>=450,JSON.stringify(sound));
@@ -147,11 +168,24 @@ async function prepareCamera(page, mobile) {
         window.shakeSamples=[];window.shakeSampling=setInterval(()=>window.shakeSamples.push(getComputedStyle(document.querySelector('.print-drag')).transform),16);
       });
       await reveal.click();
+      const developmentStarted=await page.evaluate(()=>performance.now());
       await page.waitForTimeout(850);
+      assert.equal(await page.locator('.instant-photo-window img').evaluate(e=>Number(getComputedStyle(e).opacity)),0,'photo must remain blank for the first two seconds');
       const transforms=await page.evaluate(()=>{clearInterval(window.shakeSampling);return [...new Set(window.shakeSamples)];});
       assert(transforms.some(t=>t!=='none'&&t!=='matrix(1, 0, 0, 1, 0, 0)'),`button did not shake: ${transforms}`);
       assert.equal(await page.getByRole('button',{name:'4-shot strip',exact:true}).count(),0);
+      const development=[];
+      for(const sampleAt of [3300,6500]){
+        await page.waitForTimeout(Math.max(0,sampleAt-(await page.evaluate(()=>performance.now())-developmentStarted)));
+        const sample=await page.locator('.instant-photo-window img').evaluate(e=>({time:performance.now(),opacity:Number(getComputedStyle(e).opacity)}));
+        const elapsed=sample.time-developmentStarted,expected=(elapsed-2000)/9000;
+        assert(Math.abs(sample.opacity-expected)<.08,`development should fade evenly: ${JSON.stringify({elapsed,expected,...sample})}`);
+        development.push({elapsed,opacity:sample.opacity});
+      }
+      await page.screenshot({path:path.join(output,`${engine}-${width}-developing.png`)});
       await page.getByRole('button',{name:'Photo revealed',exact:true}).waitFor({timeout:15000});
+      assert.equal(await page.locator('.instant-photo-window img').evaluate(e=>Number(getComputedStyle(e).opacity)),1);
+      console.log(JSON.stringify({engine,width,development}));
       assert.equal(await page.locator('.instant-photo-window').count(),1);
       assert.equal(await page.locator('.print-drag').evaluate(e=>getComputedStyle(e).transform),'none');
       const layout=await page.evaluate(()=>{const surface=document.querySelector('main.mobile-camera')||document.querySelector('[role="dialog"]');return {viewport:innerWidth,page:document.documentElement.scrollWidth,dialog:surface.scrollWidth,dialogWidth:surface.clientWidth};});
@@ -172,6 +206,23 @@ async function prepareCamera(page, mobile) {
       await page.getByRole('button',{name:'Continue',exact:true}).click();await page.waitForURL('**/finish');
       assert.deepEqual(errors,[]);
       if(width===390){
+        await page.goto(baseURL+'/');await prepareCamera(page,true);
+        await page.getByRole('button',{name:'Flip camera',exact:true}).click();
+        await page.getByRole('switch',{name:'Flash effect',exact:true}).click();
+        await page.getByRole('button',{name:'Capture',exact:true}).click();
+        await page.locator('.instant-print').waitFor();
+        assert.deepEqual(await page.evaluate(()=>window.torchEvents),[{event:'on'},{event:'capture',lit:true},{event:'off'}]);
+        assert.equal(await page.evaluate(()=>window.flashAfterCapture),undefined,'Rear camera must not use a screen flash');
+        await page.goto(baseURL+'/');await page.evaluate(()=>window.disableTorch=true);await prepareCamera(page,true);
+        await page.getByRole('button',{name:'Flip camera',exact:true}).click();
+        await page.getByRole('switch',{name:'Flash effect',exact:true}).click();
+        await page.getByRole('button',{name:'Capture',exact:true}).click();
+        await page.getByText('Rear-camera flash is unavailable. Turn Flash off to take a photo.',{exact:true}).waitFor();
+        assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Flash notice overflows');
+        await page.screenshot({path:path.join(output,`${engine}-rear-flash-unavailable.png`),fullPage:true});
+        await page.getByRole('switch',{name:'Flash effect',exact:true}).click();
+        await page.getByRole('button',{name:'Capture',exact:true}).click();await page.locator('.instant-print').waitFor();
+        console.log(JSON.stringify({engine,rearLightSequence:true,unsupportedRearRecovery:true}));
         for(const method of ['pointer','sensor']){
           await page.goto(baseURL+'/');
           await page.evaluate(()=>{if(!window.DeviceMotionEvent)window.DeviceMotionEvent=Event;});

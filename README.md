@@ -66,9 +66,9 @@ Print prepares one Polaroid with an outer frame of **88 × 107 mm**, centered on
 
 ## Interface interactions
 
-With Flash on, supported rear cameras briefly enable their camera light before capture and switch it off afterward. Front cameras and cameras without usable light control use a full-page white screen pulse held through capture, then a short fade. Reduced motion suppresses that screen pulse. Leaving or hiding the camera cancels capture and releases an active light. Hardware light support and exposure timing still need verification on physical phones.
+With Flash on, supported rear cameras briefly enable their camera light before capture and switch it off afterward. If the default rear lens has no light control, camera selection checks the other rear lenses and prefers one with LED support. Light commands are sent separately from camera-selection constraints for Chrome compatibility. If the rear light is unavailable, the camera asks you to turn Flash off to continue. Front cameras show a warm-white (#fff6df) screen pulse after capture, starting at 35% opacity and fading out over 320 ms. Reduced motion suppresses that screen pulse. Leaving or hiding the camera cancels capture and releases an active light.
 
-Motion for React animates tool selection, panel changes, dialogs, camera countdown, print ejection and download confirmation. The Polaroid enters the workspace and reveals its photo; dragged pieces lift and settle, inserted collage elements land on the paper, and cuts briefly show their seam. Shake and sound are optional presentation effects, separate from composition state and undo history. Downloads and printing use the final framed composition. Warm film, Original and Black & white offer distinct photo treatments alongside Copy shop.
+Motion for React animates tool selection, panel changes, dialogs, camera countdown, print ejection and download confirmation. After shaking, the captured Polaroid stays blank for 2 seconds, then fades in evenly over 9 seconds, reaching full visibility at 11 seconds. Reduced motion reveals it immediately. The Polaroid enters the workspace and reveals its photo; dragged pieces lift and settle, inserted collage elements land on the paper, and cuts briefly show their seam. Shake and sound are optional presentation effects, separate from composition state and undo history. Downloads and printing use the final framed composition. Warm film, Original and Black & white offer distinct photo treatments alongside Copy shop.
 
 Reduced-motion settings are respected, and animations settle when the page is hidden. The stage reuses processed photo textures during animation and layer movement rather than running photo effects each frame. Preset thumbnails now render the current uploaded photo.
 
@@ -108,13 +108,13 @@ Install roid uses the browser's install prompt when available and otherwise show
 
 ## Validation
 
-Run `pnpm test`, `pnpm typecheck`, and `pnpm build` to check a change. The latest camera update passed all 182 automated tests, typecheck, and the production build. Flash tests cover rear-light support, rejected or ignored requests, capture failure, cancellation, cleanup, front-camera fallback and reduced motion.
+Run `pnpm test`, `pnpm typecheck`, and `pnpm build` to check a change. The latest camera update passed all 188 automated tests, typecheck, and the production build. Flash tests cover rear-lens selection and fallback, rear-light support, rejected or ignored requests, capture failure, cancellation, cleanup, front-camera post-capture effects and reduced motion.
 
 Browser checks used Chromium over CDP and Windows WebKit at 1280×900, 390×844, 393×690, 360×640, 320×568, 844×390, and 568×320. Coverage included responsive layout, keyboard controls, bottom-slot print alignment, rotation without restarting the stream, capture/reveal/retake, reduced motion, hidden-page settling, Edit/Finish navigation, PNG downloads, camera permission recovery, upload fallback, and session resume.
 
 The live film preview processes 256px frames using video-frame callbacks, with a 30 fps animation-frame fallback; saved captures retain the source resolution.
 
-Browser camera tests use sample imagery through a simulated media boundary. Physical iOS/Android camera, motion-sensor, and installation behavior remains unverified.
+Browser matrix tests use sample imagery through a simulated media boundary. A physical Samsung A15 (SM-A155M) was also tested through CDP against the local server: its default rear camera 2 lacked torch control, while camera 0 exposed it. The revised app selected camera 0, reported the LED on while sampling the photo about 202 ms later, and reported it off afterward. Front capture verified the post-capture 35% warm-white pulse and 320 ms animation. Infinix, iOS, physical motion-sensor, and installation behavior remain unverified.
 
 ## References and credits
 

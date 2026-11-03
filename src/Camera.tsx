@@ -9,6 +9,7 @@ import CameraPreview from "./studio/CameraPreview";
 import MobileCameraScreen from "./studio/MobileCameraScreen";
 import { applyCameraFilm } from "./studio/cameraFilm";
 import { captureDate } from "./studio/captureDate";
+import { openCamera, supportsTorch } from "./cameraMedia";
 import { playSound, preloadSounds, unlockSound, stopSounds, FILM_LOAD_MS, SHUTTER_LEAD_MS } from "./sounds";
 
 export type CaptureDestination = "edit" | "finish";
@@ -28,11 +29,11 @@ export default function Camera({onClose, onCapture, onUpload, enabled, initialSe
   const [facing,setFacing]=useState<"user"|"environment">("user"), [shot,setShot]=useState(0);
   const [prints,setPrints]=useState<{file:File;url:string}[]>([]), [revealed,setRevealed]=useState(false), [restart,setRestart]=useState(0);
   const [seconds,setSeconds]=useState<TimerSeconds>(initialSettings?.seconds ?? 3), [preset,setPreset]=useState<FilmPreset>(initialSettings?.preset ?? "Classic"), [flash,setFlash]=useState(initialSettings?.flash ?? false);
-  const [screenFlash,setScreenFlash]=useState<"off"|"lit"|"fading">("off");
+  const [screenFlash,setScreenFlash]=useState(false);
   const [iso,setISO]=useState<CameraISO>(initialSettings?.iso ?? 800);
   const motionEnabled=useRef(enabled);motionEnabled.current=enabled;
   const captured=prints.length>0;
-  useEffect(()=>{if(!enabled)setScreenFlash("off");},[enabled]);
+  useEffect(()=>{if(!enabled)setScreenFlash(false);},[enabled]);
   const [filmLoaded,setFilmLoaded]=useState(presentation==="screen" || Boolean(initialSettings)&&initialSettings?.loadStartedAt===undefined);
   const [loadingUntil,setLoadingUntil]=useState(initialSettings?.loadStartedAt===undefined?0:initialSettings.loadStartedAt+FILM_LOAD_MS);
   const loading=loadingUntil>0;
@@ -45,7 +46,7 @@ export default function Camera({onClose, onCapture, onUpload, enabled, initialSe
   const stop=()=>{stream.current?.getTracks().forEach(t=>t.stop());stream.current=null;if(timer.current)clearTimeout(timer.current);};
   const releaseTorch=async(track:MediaStreamTrack)=>{
     try{
-      await track.applyConstraints({...track.getConstraints(),advanced:[{torch:false} as MediaTrackConstraintSet]});
+      await track.applyConstraints({advanced:[{torch:false} as MediaTrackConstraintSet]});
       if((track.getSettings() as MediaTrackSettings & {torch?:boolean}).torch)throw new Error("Camera light is still on");
     }
     catch{
@@ -67,7 +68,8 @@ export default function Camera({onClose, onCapture, onUpload, enabled, initialSe
   useEffect(()=>{
     alive.current=present; setReady(false); setError(""); if (!present) return; let disposed=false; let owned:MediaStream|null=null;
     if(!navigator.mediaDevices?.getUserMedia){setError("Camera capture needs HTTPS or localhost. Upload a photo to keep creating."); return()=>{alive.current=false;};}
-    void navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:facing}},audio:false}).then(value=>{
+    void openCamera(facing,()=>disposed || !alive.current).then(value=>{
+      if(!value)return;
       if(disposed || !alive.current){value.getTracks().forEach(t=>t.stop());return;}
       owned=value;stream.current=value;if(video.current){video.current.srcObject=value;void playVideo();}
     }).catch(reason=>{if(!disposed)setError(reason?.name==="NotAllowedError"?"Camera permission was declined. Allow camera access in your browser settings, then retry.":reason?.name==="NotFoundError"?"No camera was found. Connect a camera and retry, or upload a photo.":"Your camera is unavailable. Close other apps using it and retry, or upload a photo.");});
@@ -90,7 +92,7 @@ export default function Camera({onClose, onCapture, onUpload, enabled, initialSe
       if(e.shiftKey&&(document.activeElement===first||document.activeElement===container.current)){e.preventDefault();last.focus();}
       else if(!e.shiftKey&&(document.activeElement===last||document.activeElement===container.current)){e.preventDefault();first.focus();}
     };
-    const hide=()=>{if(document.hidden&&captureRunning.current){generation.current++;setScreenFlash("off");if(torch.current){stop();setReady(false);}urls.current.forEach(url=>URL.revokeObjectURL(url));urls.current=[];if(timer.current)clearTimeout(timer.current);captureRunning.current=false;setCount(null);setShot(0);setError("Capture paused while this page was hidden. "+(torch.current?"Tap Retry camera to reconnect.":"Press the shutter to try again."));}};
+    const hide=()=>{if(document.hidden&&captureRunning.current){generation.current++;setScreenFlash(false);if(torch.current){stop();setReady(false);}urls.current.forEach(url=>URL.revokeObjectURL(url));urls.current=[];if(timer.current)clearTimeout(timer.current);captureRunning.current=false;setCount(null);setShot(0);setError("Capture paused while this page was hidden. "+(torch.current?"Tap Retry camera to reconnect.":"Press the shutter to try again."));}};
     document.addEventListener("keydown",key);document.addEventListener("visibilitychange",hide);
     return ()=>{document.removeEventListener("keydown",key);document.removeEventListener("visibilitychange",hide);};
   },[onClose,presentation]);
@@ -98,7 +100,7 @@ export default function Camera({onClose, onCapture, onUpload, enabled, initialSe
     if(captureRunning.current||!ready||!filmLoaded)return;
     unlockSound();setError("");captureRunning.current=true;setShot(1);const token=++generation.current;
     const results:{file:File;url:string}[]=[];
-    const fail=(message:string)=>{captureRunning.current=false;setScreenFlash("off");setCount(null);setShot(0);setError(message);results.forEach(p=>{URL.revokeObjectURL(p.url);urls.current=urls.current.filter(url=>url!==p.url);});};
+    const fail=(message:string)=>{captureRunning.current=false;setScreenFlash(false);setCount(null);setShot(0);setError(message);results.forEach(p=>{URL.revokeObjectURL(p.url);urls.current=urls.current.filter(url=>url!==p.url);});};
     const captureFrame=async()=>{
       if(!alive.current||!captureRunning.current||generation.current!==token)return;
       const v=video.current;
@@ -108,35 +110,35 @@ export default function Camera({onClose, onCapture, onUpload, enabled, initialSe
       const ctx=canvas.getContext("2d");
       if(!ctx){fail("That photo could not be captured. Try again.");return;}
       const capturedAt=Date.now();
+      const track=stream.current?.getVideoTracks?.()[0];
+      const rearCamera=(track?.getSettings?.().facingMode??facing)==="environment";
       let lightTrack:MediaStreamTrack|null=null;
       try{
         let lit=false;
-        if(flash&&facing==="environment"){
-          const track=stream.current?.getVideoTracks()[0];
+        if(flash&&rearCamera){
           try{
-            const capability=(track?.getCapabilities?.() as MediaTrackCapabilities & {torch?:boolean|boolean[]})?.torch;
-            if(track&&track.getSettings().facingMode!=="user"&&(capability===true||Array.isArray(capability)&&capability.includes(true))){
+            if(track&&track.getSettings().facingMode!=="user"&&supportsTorch(track)){
               lightTrack=track;torch.current=track;
-              await track.applyConstraints({...track.getConstraints(),advanced:[{torch:true} as MediaTrackConstraintSet]});
+              // Chrome rejects torch commands mixed with camera-selection constraints.
+              await track.applyConstraints({advanced:[{torch:true} as MediaTrackConstraintSet]});
               lit=(track.getSettings() as MediaTrackSettings & {torch?:boolean}).torch===true;
             }
-          }catch{/* Unsupported camera lights fall back to screen illumination. */}
+          }catch{/* Report unsupported or rejected light requests below. */}
         }
         if(!alive.current||!captureRunning.current||generation.current!==token)return;
-        const lightScreen=flash&&!lit&&motionEnabled.current;
-        if(lightScreen)setScreenFlash("lit");
+        if(flash&&rearCamera&&!lit){fail("Rear-camera flash is unavailable. Turn Flash off to take a photo.");return;}
         // Let the light reach the next camera frame before sampling it.
-        if(lit||lightScreen)await new Promise(resolve=>setTimeout(resolve,200));
+        if(lit)await new Promise(resolve=>setTimeout(resolve,200));
         if(!alive.current||!captureRunning.current||generation.current!==token)return;
         if(facing==="user"){ctx.translate(canvas.width,0);ctx.scale(-1,1);}
         ctx.drawImage(v,(v.videoWidth-canvas.width)/2,(v.videoHeight-canvas.height)/2,canvas.width,canvas.height,0,0,canvas.width,canvas.height);
         ctx.putImageData(applyCameraFilm(ctx.getImageData(0,0,canvas.width,canvas.height),preset,flash,iso),0,0);
-        if(lightScreen&&motionEnabled.current)setScreenFlash(current=>current==="lit"?"fading":current);
       }catch{fail("That photo could not be captured. Try again.");return;}
       finally{if(lightTrack)await releaseTorch(lightTrack);}
       if(!alive.current||!captureRunning.current||generation.current!==token)return;
       await playSound("shutter");
       if(!alive.current||!captureRunning.current||generation.current!==token)return;
+      if(flash&&!rearCamera&&motionEnabled.current)setScreenFlash(true);
       setCount(null);
       const printAt=performance.now()+SHUTTER_LEAD_MS;
       canvas.toBlob(blob=>{
@@ -166,7 +168,7 @@ export default function Camera({onClose, onCapture, onUpload, enabled, initialSe
     {count!==null&&<span className="countdown" aria-live="assertive">{count}</span>}
   </>;
   const decisions=captured&&revealed&&<div className="capture-decisions"><button className="primary-button" disabled={busy} onClick={()=>onCapture(prints.map(p=>p.file),"edit")}>Develop <ArrowRight size={17}/></button><button className="secondary-button" disabled={busy} onClick={()=>onCapture(prints.map(p=>p.file),"finish")}><Check size={17}/> Done</button></div>;
-  const captureFlash=enabled&&screenFlash!=="off"&&createPortal(<motion.div className="capture-flash" aria-hidden="true" initial={{opacity:1}} animate={{opacity:screenFlash==="lit"?1:0}} transition={{duration:.18,ease:"easeOut"}} onAnimationComplete={()=>{if(screenFlash==="fading")setScreenFlash("off");}}/>,document.body);
+  const captureFlash=enabled&&screenFlash&&createPortal(<motion.div className="capture-flash" aria-hidden="true" initial={{opacity:.35}} animate={{opacity:0}} transition={{duration:.32,ease:"easeOut"}} onAnimationComplete={()=>setScreenFlash(false)}/>,document.body);
   const retry=!captured&&error&&!ready&&<button className="secondary-button" onClick={()=>{if(stream.current&&!stream.current.getTracks().some(track=>track.readyState==="ended"))void playVideo();else setRestart(n=>n+1);}}>Retry camera</button>;
   if(presentation==="screen")return <MobileCameraScreen containerRef={container} navigation={navigation} viewfinder={viewfinder} settings={settings} print={print} decisions={decisions} flash={captureFlash} retry={retry}
     captured={captured} disabled={!ready||!filmLoaded||shot>0||captured||busy} taking={shot>0} loading={loading} loaded={filmLoaded} onRoll={roll}
