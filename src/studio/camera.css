@@ -151,12 +151,6 @@
   .viewfinder-bezel { align-self:center; }
   .camera-settings,.camera-experience .camera-settings { margin-top:0; grid-template-columns:minmax(86px,1fr) 120px 44px; align-self:center; }
   .camera-assembly .ejection-slot { width:var(--desktop-print-width); max-width:100%; margin-inline:auto; }
-  /* Presets run as one cartridge strip above the dials instead of a stacked form. */
-  .camera-experience .camera-settings { grid-template-columns:minmax(0,1fr) 44px; grid-template-areas:"film film" "dials flash"; gap:16px 12px; }
-  .camera-experience .film-presets { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:4px; }
-  .camera-experience .film-presets legend { grid-column:1 / -1; }
-  .camera-experience .camera-dials { grid-template-columns:repeat(2,auto); justify-content:center; column-gap:32px; }
-  .camera-experience .camera-settings .film-presets button { flex-direction:column; justify-content:center; text-align:center; }
   .print-outlet { padding-inline:0; }
   .instant-print { width:var(--desktop-print-width); max-width:100%; }
 }
@@ -217,9 +211,8 @@
 .film-loading svg { animation:film-loading 1s linear infinite; }
 @keyframes film-loading { to { transform:rotate(360deg); } }
 @media(prefers-reduced-motion:reduce) { .film-loading svg { animation:none; } }
-/* The home camera is the hero: a larger object on a quieter linen surface. */
+/* The home camera is the hero: a larger object on the camera-green page. */
 @media(min-width:800px) {
-  body:has(.start-screen) { background:#fefdfb; }
   .start-screen .camera-intro { gap:18px; padding:22px 0 32px; }
   .start-screen .intro-copy h1 { font-size:clamp(36px,3.4vw,46px); }
   .start-screen .camera-assembly { --camera-pad:clamp(24px,3vw,36px); }

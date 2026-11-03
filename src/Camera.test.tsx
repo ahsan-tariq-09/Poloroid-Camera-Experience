@@ -30,7 +30,7 @@ it.each(["front","front-reduced","rear","unsupported","rejected","ignored","redu
     lit=value&&scenario!=="ignored";
   })};
   Object.defineProperty(navigator,"mediaDevices",{configurable:true,value:{getUserMedia:vi.fn(async(options)=>{actualFacing=options.video.facingMode.ideal;return {getTracks:()=>[track],getVideoTracks:()=>[track]};})}});
-  const draw=vi.fn(()=>{expect(document.querySelector(".capture-flash")).toBeNull();events.push("draw");if(scenario==="draw-failure")throw new Error("frame unavailable");});
+  const draw=vi.fn(()=>{expect(Boolean(document.querySelector(".capture-flash"))).toBe(scenario==="front-reduced");events.push("draw");if(scenario==="draw-failure")throw new Error("frame unavailable");});
   vi.spyOn(HTMLCanvasElement.prototype,"getContext").mockReturnValue({drawImage:draw,translate:vi.fn(),scale:vi.fn(),getImageData:()=>({data:new Uint8ClampedArray([80,100,120,255]),width:1,height:1}),putImageData:vi.fn()} as never);
   const blob=vi.spyOn(HTMLCanvasElement.prototype,"toBlob").mockImplementation(cb=>cb(new Blob(["frame"])));
   vi.spyOn(sounds,"playSound").mockResolvedValue();
@@ -44,7 +44,7 @@ it.each(["front","front-reduced","rear","unsupported","rejected","ignored","redu
     events.length=0;stop.mockClear();
     await click("Capture");
     const screen=["front","wrong-facing","hidden-screen"].includes(scenario);
-    expect(Boolean(document.querySelector(".capture-flash"))).toBe(screen);
+    expect(Boolean(document.querySelector(".capture-flash"))).toBe(screen||scenario==="front-reduced");
     if(screen){expect(draw).toHaveBeenCalledOnce();expect(document.querySelector(".capture-flash")!.parentElement).toBe(document.body);expect((document.querySelector(".capture-flash") as HTMLElement).style.opacity).toBe("0.35");}
     if(scenario==="hidden"||scenario==="hidden-screen"||scenario==="late-enable"){
       hidden.mockReturnValue(true);await act(async()=>document.dispatchEvent(new Event("visibilitychange")));
@@ -53,11 +53,12 @@ it.each(["front","front-reduced","rear","unsupported","rejected","ignored","redu
     if(scenario==="unmount")await act(async()=>root.unmount());
     if(scenario==="late-enable")await act(async()=>finishEnable!());
     const unavailable=["unsupported","rejected","ignored"].includes(scenario);
-    if(!screen&&!unavailable&&scenario!=="off"&&scenario!=="front-reduced"){
+    if(!screen&&!unavailable&&scenario!=="off"){
       expect(draw).not.toHaveBeenCalled();
       await act(async()=>vi.advanceTimersByTimeAsync(199));expect(draw).not.toHaveBeenCalled();
       await act(async()=>vi.advanceTimersByTimeAsync(1));
     }
+    if(scenario==="front-reduced")expect(document.querySelector(".capture-flash")).toBeNull();
     expect(lit).toBe(false);
     if(unavailable){
       expect(draw).not.toHaveBeenCalled();expect(blob).not.toHaveBeenCalled();expect(host.textContent).toContain("Turn Flash off");
@@ -320,6 +321,8 @@ it.each([0,3,5,10])("uses the %s-second dial setting and captures only one Polar
     await act(async()=>vi.advanceTimersByTimeAsync(2800));await act(async()=>button("Capture").click());
     if(seconds===3)await act(async()=>root.render(<Camera enabled={false} onClose={()=>{}} onUpload={()=>{}} onCapture={()=>{}}/>));
     if(seconds){await act(async()=>vi.advanceTimersByTimeAsync(seconds*1000-1));expect(blob).not.toHaveBeenCalled();expect(button("Timer off").closest("fieldset")!.disabled).toBe(true);await act(async()=>vi.advanceTimersByTimeAsync(1));}
+    // Reduced motion holds the steady front light for 200 ms before sampling.
+    expect(blob).not.toHaveBeenCalled();await act(async()=>vi.advanceTimersByTimeAsync(200));
     expect(blob).toHaveBeenCalledTimes(1);
     await act(async()=>vi.advanceTimersByTimeAsync(2489));expect(blob).toHaveBeenCalledTimes(1);
     await act(async()=>vi.advanceTimersByTimeAsync(3*(seconds*1000+2490)-2489));expect(blob).toHaveBeenCalledTimes(1);expect(write).toHaveBeenCalledTimes(1);
