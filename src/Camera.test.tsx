@@ -316,7 +316,7 @@ it.each([0,3,5,10])("uses the %s-second dial setting and captures only one Polar
   const button=(name:string)=>[...host.querySelectorAll<HTMLButtonElement>("button")].find(b=>b.getAttribute("aria-label")===name||b.textContent===name)!;
   try{
     await act(async()=>root.render(<Camera enabled={seconds===3} onClose={()=>{}} onUpload={()=>{}} onCapture={()=>{}}/>));await act(async()=>host.querySelector("video")!.dispatchEvent(new Event("loadeddata",{bubbles:true})));
-    expect(button("Timer 3 seconds").getAttribute("aria-pressed")).toBe("true");expect(button("Capture").disabled).toBe(true);
+    expect(button("Timer off").getAttribute("aria-pressed")).toBe("true");expect(button("Capture").disabled).toBe(true);
     vi.useFakeTimers();await act(async()=>{button(seconds?`Timer ${seconds} seconds`:"Timer off").click();button("B&W").click();button("Flash effect").click();button("Roll film").click();});
     await act(async()=>vi.advanceTimersByTimeAsync(2800));await act(async()=>button("Capture").click());
     if(seconds===3)await act(async()=>root.render(<Camera enabled={false} onClose={()=>{}} onUpload={()=>{}} onCapture={()=>{}}/>));

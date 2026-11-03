@@ -625,7 +625,7 @@ export default function Stage({
               height={target.height + 6}
               className="selection"
             />
-            <text className="target-label" x="0" y="-13">
+            <text className="target-label" x="0" y="18" transform={`scale(${1 / screenScale})`}>
               {grid
                 ? "Repeat · 3 × 3"
                 : tool === "crop"

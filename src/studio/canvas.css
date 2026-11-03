@@ -1,3 +1,4 @@
+.workspace { overflow:clip; }
 .artboard {
   position: relative;
   width: 100%;
@@ -11,6 +12,7 @@
   display: block;
 }
 .interaction {
+  overflow:visible;
   position: absolute;
   inset: 0;
   width: 100%;
@@ -174,11 +176,12 @@
   cursor: grabbing;
 }
 .target-label {
-  font: 10px var(--font);
-  fill: #9c321d;
+  font: 600 14px var(--font);
+  fill: #292c26;
   paint-order: stroke;
-  stroke: #3e4538;
-  stroke-width: 3px;
+  stroke: #fff9e9;
+  stroke-width: 4px;
+  stroke-linejoin: round;
   pointer-events: none;
 }
 .rotation-stem {

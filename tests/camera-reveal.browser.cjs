@@ -8,7 +8,11 @@ const output = path.resolve(process.argv[4] || 'camera-browser-results');
 const baseURL = process.env.CAMERA_TEST_URL || 'http://127.0.0.1:5174';
 fs.mkdirSync(output, {recursive:true});
 async function prepareCamera(page, mobile) {
-  await page.getByRole('button',{name:'Timer off',exact:true}).click();
+  assert.equal(await page.getByRole('button',{name:'Timer off',exact:true}).getAttribute('aria-pressed'),'true','New cameras must start with the timer off');
+  assert.equal(await page.locator('.film-stripes').count(),1);
+  assert.deepEqual(await page.locator('.camera-signature .film-stripes i').evaluateAll(elements=>elements.map(e=>getComputedStyle(e).backgroundColor)),['rgb(0, 118, 163)','rgb(255, 191, 54)','rgb(255, 30, 39)']);
+  assert(await page.locator('.camera-tagline').isVisible());
+  assert(await page.locator('.ejection-slot').evaluate(e=>e.getBoundingClientRect().height>=28));
   if(!mobile)await page.getByRole('button',{name:'Roll film',exact:true}).click();
 }
 (async()=>{
@@ -159,8 +163,8 @@ async function prepareCamera(page, mobile) {
       const reveal=page.getByRole('button',{name:'Shake to reveal',exact:true});
       await page.waitForFunction(()=>{const button=document.querySelector('.shake-reveal');return button&&!button.disabled;});
       await page.waitForFunction(()=>Math.abs(new DOMMatrixReadOnly(getComputedStyle(document.querySelector('.instant-print')).transform).m42)<.1);
-      const outlet=await page.evaluate(()=>{const surface=document.querySelector('.mobile-camera')||document.querySelector('.camera-modal');const slot=surface.querySelector('.ejection-slot').getBoundingClientRect(),paper=surface.querySelector('.instant-paper').getBoundingClientRect();return {slot:{x:slot.x,width:slot.width,bottom:slot.bottom},paper:{x:paper.x,width:paper.width,top:paper.top}};});
-      assert(Math.abs(outlet.slot.x-outlet.paper.x)<3&&Math.abs(outlet.slot.width-outlet.paper.width)<3&&Math.abs(outlet.slot.bottom-outlet.paper.top)<12,JSON.stringify(outlet));
+      const outlet=await page.evaluate(()=>{const surface=document.querySelector('.mobile-camera')||document.querySelector('.camera-modal');const slot=surface.querySelector('.ejection-slot').getBoundingClientRect(),paper=surface.querySelector('.instant-paper').getBoundingClientRect();return {slot:{x:slot.x,width:slot.width,top:slot.top,bottom:slot.bottom},paper:{x:paper.x,width:paper.width,top:paper.top}};});
+      assert(Math.abs(outlet.slot.x-outlet.paper.x)<3&&Math.abs(outlet.slot.width-outlet.paper.width)<3&&outlet.paper.top>outlet.slot.top&&outlet.paper.top<outlet.slot.bottom-6,JSON.stringify(outlet));
       if(mobile)assert(await page.locator('.instant-paper').evaluate(e=>{const r=e.getBoundingClientRect();return document.elementFromPoint(r.x+r.width/2,r.y+2)?.closest('.instant-paper')===e;}),'Paper must be in front of the camera at the slot');
       await page.screenshot({path:path.join(output,`${engine}-${width}-blank.png`)});
       await reveal.scrollIntoViewIfNeeded();
@@ -190,8 +194,8 @@ async function prepareCamera(page, mobile) {
       assert.equal(await page.locator('.print-drag').evaluate(e=>getComputedStyle(e).transform),'none');
       const layout=await page.evaluate(()=>{const surface=document.querySelector('main.mobile-camera')||document.querySelector('.camera-experience');return {viewport:innerWidth,page:document.documentElement.scrollWidth,dialog:surface.scrollWidth,dialogWidth:surface.clientWidth};});
       assert(layout.page<=layout.viewport&&layout.dialog<=layout.dialogWidth,JSON.stringify(layout));
-      if(mobile)assert(await page.evaluate(()=>{const button=[...document.querySelectorAll('button')].find(e=>e.textContent.trim()==='Done');return button.getBoundingClientRect().bottom<=innerHeight;}),'Finish actions exceed the viewport');
       await page.screenshot({path:path.join(output,`${engine}-${width}-revealed.png`)});
+      if(mobile)assert(await page.evaluate(()=>{const button=[...document.querySelectorAll('button')].find(e=>e.textContent.trim()==='Done');return button.getBoundingClientRect().bottom<=innerHeight;}),'Finish actions exceed the viewport');
       const contrast=await page.getByRole('button',{name:'Done',exact:true}).evaluate(e=>({color:getComputedStyle(e).color,background:getComputedStyle(e).backgroundColor}));
       if(mobile)assert.deepEqual(contrast,{color:'rgb(41, 44, 38)',background:'rgb(250, 246, 236)'});
       await page.getByRole('button',{name:'Done',exact:true}).click();await page.waitForURL('**/finish');
@@ -202,6 +206,10 @@ async function prepareCamera(page, mobile) {
       assert.equal(await page.getByText('Arrange photos, add pieces, or adjust the look.',{exact:true}).count(),0);
       assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Editor overflows horizontally');
       assert(await page.getByRole('button',{name:'Continue',exact:true}).isVisible());
+      await page.waitForFunction(()=>Math.abs(new DOMMatrixReadOnly(getComputedStyle(document.querySelector('.artboard')).transform).m42)<.1);
+      const labelSize=await page.locator('.target-label').evaluate(e=>{const matrix=e.getScreenCTM();return parseFloat(getComputedStyle(e).fontSize)*Math.hypot(matrix.a,matrix.b);});
+      assert(Math.abs(labelSize-14)<.1,`Selected filename must remain readable at every viewport: ${labelSize}px`);
+      assert(await page.locator('.target-label').evaluate(e=>e.getBoundingClientRect().top>=document.querySelector('.canvas-toolbar').getBoundingClientRect().bottom),'Selected filename must clear the toolbar');
       await page.screenshot({path:path.join(output,`${engine}-${width}-edit.png`),fullPage:true});
       await page.getByRole('button',{name:'Continue',exact:true}).click();await page.waitForURL('**/finish');
       assert.deepEqual(errors,[]);
@@ -267,6 +275,8 @@ async function prepareCamera(page, mobile) {
         }
         await page.emulateMedia({reducedMotion:'reduce'});await page.goto(baseURL+'/');
         await prepareCamera(page,true);await page.getByRole('switch',{name:'Flash effect',exact:true}).click();await page.getByRole('button',{name:'Capture',exact:true}).click();
+        await page.locator('.instant-print').waitFor();
+        assert.equal(await page.evaluate(()=>window.flashAtCapture?.opacity),1,'Reduced motion keeps a steady light before capture');
         assert.equal(await page.locator('.capture-flash').count(),0);
         await page.getByRole('button',{name:'Retake photo',exact:true}).click();
         await page.getByRole('button',{name:'Capture',exact:true}).click();
@@ -277,6 +287,12 @@ async function prepareCamera(page, mobile) {
         console.log(JSON.stringify({engine,reducedMotion:true,keyboardReveal:true,develop:true}));
       }
       assert.deepEqual(errors,[]);
+      if(mobile){
+        await page.getByRole('button',{name:/^(1 )?Start$/}).click();await page.waitForURL('**/camera');
+        await page.getByRole('link',{name:'Continue your Polaroid',exact:true}).waitFor();
+        assert(await page.locator('.camera-nameplate').evaluate(e=>{const box=e.getBoundingClientRect();return [...e.children].every(child=>{const r=child.getBoundingClientRect();return r.left>=box.left-1&&r.right<=box.right+1;});}),'Camera header must fit with the resume link');
+        await page.screenshot({path:path.join(output,`${engine}-${width}-resume.png`)});
+      }
       console.log(JSON.stringify({engine,width,shakeSamples:transforms.length,layout,finish:true,edit:true,errors}));
       await context.close();
     }

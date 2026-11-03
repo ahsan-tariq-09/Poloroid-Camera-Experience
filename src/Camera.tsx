@@ -29,7 +29,7 @@ export default function Camera({onClose, onCapture, onUpload, enabled, initialSe
   const [error,setError]=useState(""), [ready,setReady]=useState(false), [count,setCount]=useState<number|null>(null);
   const [facing,setFacing]=useState<"user"|"environment">("user"), [shot,setShot]=useState(0);
   const [prints,setPrints]=useState<{file:File;url:string}[]>([]), [revealed,setRevealed]=useState(false), [restart,setRestart]=useState(0);
-  const [seconds,setSeconds]=useState<TimerSeconds>(initialSettings?.seconds ?? 3), [preset,setPreset]=useState<FilmPreset>(initialSettings?.preset ?? "Classic"), [flash,setFlash]=useState(initialSettings?.flash ?? false);
+  const [seconds,setSeconds]=useState<TimerSeconds>(initialSettings?.seconds ?? 0), [preset,setPreset]=useState<FilmPreset>(initialSettings?.preset ?? "Classic"), [flash,setFlash]=useState(initialSettings?.flash ?? false);
   const [screenFlash,setScreenFlash]=useState<false|"fade"|"steady">(false);
   const [iso,setISO]=useState<CameraISO>(initialSettings?.iso ?? 800);
   const motionEnabled=useRef(enabled);motionEnabled.current=enabled;
