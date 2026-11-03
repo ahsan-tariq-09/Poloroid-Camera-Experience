@@ -31,7 +31,12 @@ coverage/
 
 # Local documentation and editor AI rules
 /.github/instructions/codacy.instructions.md
-/docs/
+/docs/*
+# Keep the design guide and skill provenance that AGENTS.md references.
+!/docs/DESIGN.md
+!/docs/DESIGN-SKILLS.md
+!/docs/design-skills.lock.json
+!/docs/design-skill-licenses/
 
 # Operating-system metadata
 .DS_Store

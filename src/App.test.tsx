@@ -562,7 +562,7 @@ describe("existing editor regression", () => {
     expect(host.querySelector(".project-about")?.textContent).not.toMatch(/CS\s*335/i);
   });
 
-  it("stops the camera stream on close and handles permission failure", async () => {
+  it("stops the home camera stream when leaving and handles permission failure", async () => {
     const stop = vi.fn(),
       getUserMedia = vi.fn().mockResolvedValue({ getTracks: () => [{ stop }] });
 
@@ -572,23 +572,19 @@ describe("existing editor regression", () => {
       value: { getUserMedia },
     });
 
-    if (!host.querySelector('.camera-demo')) await click(".wordmark");
-    await click('.camera-demo [aria-label="Roll film"]');
-
+    // Remount the home so its camera opens with this mock.
+    await click(".scrapbook-nav");
+    await click(".wordmark");
     expect(getUserMedia).toHaveBeenCalledOnce();
+    expect(host.querySelector('[aria-label="Close camera"]')).toBeNull();
 
-    await click('[aria-label="Close camera"]');
-
+    await click(".scrapbook-nav");
     expect(stop).toHaveBeenCalled();
 
     getUserMedia.mockRejectedValueOnce(new DOMException("Permission denied", "NotAllowedError"));
-
-    if (!host.querySelector('.camera-demo')) await click(".wordmark");
-    await click('.camera-demo [aria-label="Roll film"]');
-
+    await click(".wordmark");
+    await flush();
     expect(host.textContent).toContain("permission was declined");
-
-    await click('[aria-label="Close camera"]');
   });
 });
 
@@ -613,7 +609,7 @@ describe("photo-first navigation and sessions", () => {
   });
 
   it("starts without editing controls, and guards direct Edit and Finish routes", async () => {
-    expect(host.textContent).toContain("Keep a little");
+    expect(host.querySelector(".camera-home h1")?.textContent).toBe("Take a photo");
     expect(host.querySelector(".editor-controls")).toBeNull();
     expect(host.querySelectorAll(".example-card")).toHaveLength(3);
     for (const path of ["/edit", "/finish"]) {
@@ -798,9 +794,11 @@ describe("photo-first navigation and sessions", () => {
     Object.defineProperty(HTMLVideoElement.prototype,"videoWidth",{configurable:true,value:640});
     Object.defineProperty(HTMLVideoElement.prototype,"videoHeight",{configurable:true,value:480});
     URL.createObjectURL = vi.fn(()=>"blob:captured");
+    await click(".scrapbook-nav");
+    await click(".wordmark");
     vi.useFakeTimers();
     try {
-      await act(async()=>host.querySelector<HTMLButtonElement>('.camera-demo [aria-label="Roll film"]')!.click());
+      await act(async()=>host.querySelector<HTMLButtonElement>('.camera-home [aria-label="Roll film"]')!.click());
       await act(async () =>
         host
           .querySelector("video")!

@@ -95,6 +95,7 @@ it("opens the camera screen ready to capture and keeps its stream while using vi
     expect(close).not.toHaveBeenCalled();
     expect(host.querySelector("video")).toBe(video);
     expect(getUserMedia).toHaveBeenCalledOnce();
+    expect(host.querySelector('[aria-label="Close camera"]')).toBeNull();
     await act(async()=>root.unmount());expect(stop).toHaveBeenCalled();
   }finally{await act(async()=>root.unmount());host.remove();vi.restoreAllMocks();vi.unstubAllGlobals();}
 });

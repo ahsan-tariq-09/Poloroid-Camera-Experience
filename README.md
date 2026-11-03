@@ -110,6 +110,8 @@ Install roid uses the browser's install prompt when available and otherwise show
 
 Run `pnpm test`, `pnpm typecheck`, and `pnpm build` to check a change. The latest camera update passed all 188 automated tests, typecheck, and the production build. Flash tests cover rear-lens selection and fallback, rear-light support, rejected or ignored requests, capture failure, cancellation, cleanup, front-camera post-capture effects and reduced motion.
 
+To run the browser camera test locally, start `pnpm preview --port 5174 --strictPort` and run `pnpm test:browser cdp` (installed Google Chrome) or `pnpm test:browser webkit` (after `pnpm exec playwright install webkit`). Screenshots go to `camera-browser-results`, or to the directory passed as a second argument. CI runs both engines on every pull request.
+
 Browser checks used Chromium over CDP and Windows WebKit at 1280×900, 390×844, 393×690, 360×640, 320×568, 844×390, and 568×320. Coverage included responsive layout, keyboard controls, bottom-slot print alignment, rotation without restarting the stream, capture/reveal/retake, reduced motion, hidden-page settling, Edit/Finish navigation, PNG downloads, camera permission recovery, upload fallback, and session resume.
 
 The live film preview processes 256px frames using video-frame callbacks, with a 30 fps animation-frame fallback; saved captures retain the source resolution.

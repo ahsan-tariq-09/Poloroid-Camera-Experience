@@ -17,7 +17,8 @@ export default function Camera({onClose, onCapture, onUpload, enabled, initialSe
   onClose: () => void; onCapture: (files: File[], destination: CaptureDestination) => void;
   onUpload: () => void; enabled: boolean;
   initialSettings?: CameraPreferences;
-  presentation?: "dialog" | "screen";
+  /** dialog: modal over a page; screen: full-screen mobile camera; page: the desktop home. */
+  presentation?: "dialog" | "screen" | "page";
   navigation?: ReactNode;
   busy?: boolean;
 }) {
@@ -71,7 +72,10 @@ export default function Camera({onClose, onCapture, onUpload, enabled, initialSe
     void openCamera(facing,()=>disposed || !alive.current).then(value=>{
       if(!value)return;
       if(disposed || !alive.current){value.getTracks().forEach(t=>t.stop());return;}
-      owned=value;stream.current=value;if(video.current){video.current.srcObject=value;void playVideo();}
+      owned=value;stream.current=value;
+      // An unplugged or reclaimed camera ends its track without rejecting anything.
+      value.getTracks().forEach(track=>{track.onended=()=>{if(alive.current&&stream.current===value){setReady(false);setError("The camera stopped. Tap Retry camera to reconnect.");}};});
+      if(video.current){video.current.srcObject=value;void playVideo();}
     }).catch(reason=>{if(!disposed)setError(reason?.name==="NotAllowedError"?"Camera permission was declined. Allow camera access in your browser settings, then retry.":reason?.name==="NotFoundError"?"No camera was found. Connect a camera and retry, or upload a photo.":"Your camera is unavailable. Close other apps using it and retry, or upload a photo.");});
     const target=video.current;
     return ()=>{disposed=true;alive.current=false;generation.current++;captureRunning.current=false;owned?.getTracks().forEach(t=>t.stop());if(target?.srcObject===owned)target.srcObject=null;if(stream.current===owned)stream.current=null;if(timer.current)clearTimeout(timer.current);};
@@ -84,7 +88,7 @@ export default function Camera({onClose, onCapture, onUpload, enabled, initialSe
   useEffect(()=>{if(!present){alive.current=false;stop();}},[present]);
   useEffect(()=>{
     const key=(e:KeyboardEvent)=>{
-      if(presentation==="screen")return;
+      if(presentation!=="dialog")return;
       if(e.key==="Escape"){e.preventDefault();onClose();}
       if(e.key!=="Tab")return;
       const controls=container.current?.querySelectorAll<HTMLElement>('button:not(:disabled),select,[tabindex="0"]');
@@ -164,29 +168,31 @@ export default function Camera({onClose, onCapture, onUpload, enabled, initialSe
     <video ref={video} autoPlay playsInline muted style={{transform:facing==="user"?"scaleX(-1)":undefined}} onLoadedData={markReady} onPlaying={markReady}/>
     {ready&&!captured&&<CameraPreview video={video} preset={preset} iso={iso} flash={flash} mirrored={facing==="user"}/>}
     <CameraReadout seconds={seconds} preset={preset} iso={iso}/>
-    {!captured&&presentation!=="screen"&&<span className={!ready||error?"camera-message":"sr-only"} role="status">{error||(!ready?"Waiting for camera permission…":loading?"Loading film…":filmLoaded?"Film loaded. Click the shutter.":"Camera ready. Roll the film, then click the shutter.")}</span>}
+    {!captured&&presentation!=="screen"&&<span className={!ready||error?"camera-message":"sr-only"} role="status">{error||(!ready?"Waiting for the camera. Allow access if your browser asks.":loading?"Loading film…":filmLoaded?"Film loaded. Click the shutter.":"Camera ready. Roll the film, then click the shutter.")}</span>}
     {count!==null&&<span className="countdown" aria-live="assertive">{count}</span>}
   </>;
   const decisions=captured&&revealed&&<div className="capture-decisions"><button className="primary-button" disabled={busy} onClick={()=>onCapture(prints.map(p=>p.file),"edit")}>Develop <ArrowRight size={17}/></button><button className="secondary-button" disabled={busy} onClick={()=>onCapture(prints.map(p=>p.file),"finish")}><Check size={17}/> Done</button></div>;
   const captureFlash=enabled&&screenFlash&&createPortal(<motion.div className="capture-flash" aria-hidden="true" initial={{opacity:.35}} animate={{opacity:0}} transition={{duration:.32,ease:"easeOut"}} onAnimationComplete={()=>setScreenFlash(false)}/>,document.body);
   const retry=!captured&&error&&!ready&&<button className="secondary-button" onClick={()=>{if(stream.current&&!stream.current.getTracks().some(track=>track.readyState==="ended"))void playVideo();else setRestart(n=>n+1);}}>Retry camera</button>;
   if(presentation==="screen")return <MobileCameraScreen containerRef={container} navigation={navigation} viewfinder={viewfinder} settings={settings} print={print} decisions={decisions} flash={captureFlash} retry={retry}
-    captured={captured} disabled={!ready||!filmLoaded||shot>0||captured||busy} taking={shot>0} loading={loading} loaded={filmLoaded} onRoll={roll}
-    notice={!captured ? error || (!ready ? "Waiting for camera permission…" : "") : ""}
-    status={loading?"LOADING FILM":shot?"HOLD STILL":ready?"READY":error?"CAMERA UNAVAILABLE":"CONNECTING"}
+    captured={captured} disabled={!ready||!filmLoaded||shot>0||captured||busy} taking={shot>0} loading={loading} loaded={filmLoaded} ready={ready} onRoll={roll}
+    notice={!captured ? error || (!ready ? "Waiting for the camera. Allow access if your browser asks." : "") : ""}
+    status={error&&!ready?"CAMERA UNAVAILABLE":loading?"LOADING FILM":shot?"HOLD STILL":ready?"READY":error?"CAMERA UNAVAILABLE":"CONNECTING"}
     onShutter={take} onFlip={()=>setFacing(f=>f==="user"?"environment":"user")} onUpload={onUpload}/>;
-  return <motion.div className="modal-backdrop camera-backdrop" initial={enabled?{opacity:0}:false} animate={{opacity:1}} exit={enabled?{opacity:0,transition:{duration:.15}}:undefined} transition={{duration:enabled?.25:0,ease:[.22,1,.36,1]}} onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
-    <div ref={container} tabIndex={-1} className={`camera-modal camera-experience ${captured?"has-print":""}`} role="dialog" aria-modal="true" aria-labelledby="camera-title">
-      <div className="capture-heading"><div><h2 id="camera-title">{captured?"A moment, on paper.":"Take a photo"}</h2>{!captured&&<p>Roll the film, choose your settings, then click.</p>}</div><button className="icon-button" aria-label="Close camera" onClick={onClose}><X size={20}/></button></div>
+  const page=presentation==="page", Heading=page?"h1":"h2";
+  const experience=<div ref={container} tabIndex={-1} className={`camera-modal camera-experience ${captured?"has-print":""}`} role={page?undefined:"dialog"} aria-modal={page?undefined:"true"} aria-labelledby="camera-title">
+      <div className="capture-heading"><div><Heading id="camera-title" tabIndex={page?-1:undefined}>{captured?"A moment, on paper.":"Take a photo"}</Heading>{!captured&&<p>{filmLoaded?"Film loaded. Choose your settings, then press the shutter.":"Choose your settings, roll the film, then press the shutter."}</p>}</div>{!page&&<button className="icon-button" aria-label="Close camera" onClick={onClose}><X size={20}/></button>}</div>
       <InstantCamera printed={captured} print={print}
         settings={settings}
-        onRoll={roll} rollDisabled={loading||shot>0||(!ready&&!captured)} loading={loading} loaded={filmLoaded} onShutter={take} disabled={!ready||!filmLoaded||shot>0||captured} label="Capture" status={loading?"LOADING FILM":captured?"PRINT READY":shot?"TAKING PHOTO":ready?(filmLoaded?"READY":"ROLL TO LOAD FILM"):error?"CAMERA UNAVAILABLE":"CONNECTING CAMERA"} controls={!captured?<button className="camera-flip" aria-label="Flip camera" disabled={shot>0} onClick={()=>setFacing(f=>f==="user"?"environment":"user")}><RefreshCw size={18}/></button>:undefined}>
+        onRoll={roll} rollDisabled={loading||shot>0||(!ready&&!captured)} loading={loading} loaded={filmLoaded} ready={ready} onShutter={take} disabled={!ready||!filmLoaded||shot>0||captured} label="Capture" status={error&&!ready&&!captured?"CAMERA UNAVAILABLE":loading?"LOADING FILM":captured?"PRINT READY":shot?"TAKING PHOTO":ready?(filmLoaded?"READY":"ROLL TO LOAD FILM"):error?"CAMERA UNAVAILABLE":"CONNECTING CAMERA"} controls={!captured?<button className="camera-flip" aria-label="Flip camera" disabled={shot>0} onClick={()=>setFacing(f=>f==="user"?"environment":"user")}><RefreshCw size={18}/></button>:undefined}>
         {viewfinder}
       </InstantCamera>
       {decisions}
       {captureFlash}
-      {retry}
-      {!captured&&<button className="text-button camera-upload" onClick={onUpload}><Upload size={15}/> Upload a photo instead</button>}
-    </div>
+      {!captured&&<div className="camera-alternatives">{retry}<button className="text-button camera-upload" onClick={onUpload}><Upload size={15}/> Upload a photo instead</button></div>}
+    </div>;
+  if(page)return <div className="camera-home">{experience}</div>;
+  return <motion.div className="modal-backdrop camera-backdrop" initial={enabled?{opacity:0}:false} animate={{opacity:1}} exit={enabled?{opacity:0,transition:{duration:.15}}:undefined} transition={{duration:enabled?.25:0,ease:[.22,1,.36,1]}} onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
+    {experience}
   </motion.div>;
 }

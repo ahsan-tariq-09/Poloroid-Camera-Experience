@@ -17,13 +17,13 @@ import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import { X, Volume2, VolumeX, BookOpen, ArrowRight } from "lucide-react";
 import { ACCEPT } from "./imports";
 import Camera from "./Camera";
+import StartScreen from "./studio/StartScreen";
 import type { CameraPreferences } from "./studio/CameraSettings";
+import type { ExampleDefinition } from "./studio/examples";
 import { useStudioMotion } from "./useStudioMotion";
 import { useStudioSession, type Screen } from "./studio/useStudioSession";
 import { Dialog } from "./studio/shared";
-import StartScreen from "./studio/StartScreen";
 import FinishScreen from "./studio/FinishScreen";
-import type { ExampleDefinition } from "./studio/examples";
 import EditorLoader from "./studio/EditorLoader";
 import ScrapbookScreen from "./studio/ScrapbookScreen";
 import { useScrapbook } from "./studio/useScrapbook";
@@ -210,12 +210,14 @@ function StudioApp() {
               mobileCamera ? <Navigate to="/camera" replace state={location.state}/> : <StartScreen
                 busy={s.busy}
                 hasSession={s.hasSession}
-                onUpload={() => openUpload("replace")}
-                onCamera={(settings) => {
-                  intent.current = "replace";
-                  cameraForBook.current = false;
-                  setCamera(settings ?? true);
-                }}
+                camera={<Camera
+                  presentation="page"
+                  enabled={enabled}
+                  busy={s.busy}
+                  onClose={() => {}}
+                  onUpload={() => openUpload("replace")}
+                  onCapture={(files,destination)=>importFiles(files,"replace",destination === "finish" ? "/finish" : "/edit",true)}
+                />}
                 onExample={tryExample}
               />
             }
@@ -285,7 +287,7 @@ function StudioApp() {
               {s.message}
             </motion.div>
           )}
-          {camera && (
+          {camera && path !== "/" && (
             <Camera
               enabled={enabled}
               initialSettings={camera === true ? undefined : camera}

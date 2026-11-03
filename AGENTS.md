@@ -6,8 +6,12 @@ palette, upright frame, photo-first layout, and Start → Edit → Finish flow.
 
 ## Installed design and animation skills
 
-Project-local skills live in `.agents/skills/`. Read the relevant `SKILL.md`
-and only the references required by the current request:
+Project-local skills live in `.agents/skills/`. That folder is local tooling
+and is excluded from Git, so a fresh clone does not include it. When it is
+missing, reinstall the skills from the revisions recorded in
+`docs/design-skills.lock.json`, or continue without them. When it is present,
+read the relevant `SKILL.md` and only the references required by the current
+request:
 
 - `impeccable`: design direction, UX reviews, accessibility, responsive layout,
   typography, and polish. On Windows use its `scripts/impeccable.cmd` launcher.
@@ -40,6 +44,8 @@ See `docs/DESIGN-SKILLS.md` for usage examples, source revisions, and licenses.
 ## Validation
 
 Use pnpm and the scripts in `package.json`. For application changes run
-`pnpm test`, `pnpm typecheck`, and `pnpm build`. For interface changes also
+`pnpm test`, `pnpm typecheck`, and `pnpm build`. CI runs these plus the camera
+browser test in Chromium and WebKit (`.github/workflows/ci.yml`); run it locally
+with `pnpm test:browser` as described in `README.md`. For interface changes also
 inspect the affected screens and states at desktop and mobile widths, including
 keyboard interaction and reduced motion. Keep uploaded photos on the device.

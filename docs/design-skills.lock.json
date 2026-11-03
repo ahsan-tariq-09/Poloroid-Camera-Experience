@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Project-local agent skills for Poloroid design and animation development",
+  "sources": [
+    {
+      "repository": "https://github.com/Jakubantalik/transitions.dev",
+      "revision": "7ec0b0b0b8beb15788a9de68a40ec6be2d5e84b5",
+      "licenseDirectory": "docs/design-skill-licenses/transitions.dev",
+      "skills": [
+        {
+          "name": "transitions-dev",
+          "sourcePath": "skills/transitions-dev",
+          "installedPath": ".agents/skills/transitions-dev",
+          "skillSha256": "558bc963743b1bac98529617d22c4266a0602eadcb0797848c5a82906e1d7608"
+        },
+        {
+          "name": "transitions-polish",
+          "sourcePath": "skills/transitions-polish",
+          "installedPath": ".agents/skills/transitions-polish",
+          "skillSha256": "cd7ca4bb79acb72fa1951bb79f5251570e2ef9d290c0ddf9a83a097067226cfa"
+        },
+        {
+          "name": "transitions-ui-generation",
+          "sourcePath": "skills/transitions-ui-generation",
+          "installedPath": ".agents/skills/transitions-ui-generation",
+          "skillSha256": "3adcf2383602801e2c60f4477b635d0fdc46a680d5d276145a3ee3429edfa781"
+        }
+      ]
+    },
+    {
+      "repository": "https://github.com/pbakaus/impeccable",
+      "revision": "0665bd812ae0908fcab17b96fd4f840defb882d9",
+      "licenseDirectory": "docs/design-skill-licenses/impeccable",
+      "skills": [
+        {
+          "name": "impeccable",
+          "sourcePath": ".agents/skills/impeccable",
+          "installedPath": ".agents/skills/impeccable",
+          "skillSha256": "5fb0d412928c03e62d2536adfd878ad6aad6f9ce343956aa4f7164da06da3459"
+        }
+      ]
+    },
+    {
+      "repository": "https://github.com/greensock/gsap-skills",
+      "revision": "aed9cfd3277740755f6bfc1155c7aa645403b760",
+      "licenseDirectory": "docs/design-skill-licenses/gsap-skills",
+      "skills": [
+        {
+          "name": "gsap-core",
+          "sourcePath": "skills/gsap-core",
+          "installedPath": ".agents/skills/gsap-core",
+          "skillSha256": "3887b47e050ab5afbe2a9a820f23d39fa02ab785e06a343be44c6f91d84d12b3"
+        },
+        {
+          "name": "gsap-frameworks",
+          "sourcePath": "skills/gsap-frameworks",
+          "installedPath": ".agents/skills/gsap-frameworks",
+          "skillSha256": "842d9d3659ec3ddc8abbdc524708f8facf81f468ac25d0577f48c759c4fa31e6"
+        },
+        {
+          "name": "gsap-performance",
+          "sourcePath": "skills/gsap-performance",
+          "installedPath": ".agents/skills/gsap-performance",
+          "skillSha256": "cb5408d6fba707aabcbfe3320317a14c1f8fca6070074e5261047930f50d441e"
+        },
+        {
+          "name": "gsap-plugins",
+          "sourcePath": "skills/gsap-plugins",
+          "installedPath": ".agents/skills/gsap-plugins",
+          "skillSha256": "5838b856c74c07fbc9fa99b6dfd1eee34ea554c3e530c30e0d58014b707d70a4"
+        },
+        {
+          "name": "gsap-react",
+          "sourcePath": "skills/gsap-react",
+          "installedPath": ".agents/skills/gsap-react",
+          "skillSha256": "88e2a5312b45e8cc7b3c496637ff5bc9af2ae9c925b555c8b235b34cbc989d74"
+        },
+        {
+          "name": "gsap-scrolltrigger",
+          "sourcePath": "skills/gsap-scrolltrigger",
+          "installedPath": ".agents/skills/gsap-scrolltrigger",
+          "skillSha256": "9351b6666a4749c0740406ea363aaccb99a087ff45cc5e8b99a0f367facf3ef4"
+        },
+        {
+          "name": "gsap-timeline",
+          "sourcePath": "skills/gsap-timeline",
+          "installedPath": ".agents/skills/gsap-timeline",
+          "skillSha256": "1a8b0f39cc4be3ed3d834b89672e4ae2f151b901dc3450bebf10bbc45379fe02"
+        },
+        {
+          "name": "gsap-utils",
+          "sourcePath": "skills/gsap-utils",
+          "installedPath": ".agents/skills/gsap-utils",
+          "skillSha256": "1927bcc4ea95b38203404ad5ea1d060b15c4a886c65ae53e885ff1793aabe0ba"
+        }
+      ]
+    },
+    {
+      "repository": "https://github.com/jakubkrehel/make-interfaces-feel-better",
+      "revision": "35545ea1512ad59fa463e6b1f95ca9c052981fe6",
+      "licenseDirectory": "docs/design-skill-licenses/make-interfaces-feel-better",
+      "skills": [
+        {
+          "name": "make-interfaces-feel-better",
+          "sourcePath": "skills/make-interfaces-feel-better",
+          "installedPath": ".agents/skills/make-interfaces-feel-better",
+          "skillSha256": "c1d508fa7bef8e47ee682b4f214c7a4ed1416b91d05a97285e555bad1c41a23e"
+        }
+      ]
+    }
+  ]
+}

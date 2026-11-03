@@ -6,6 +6,7 @@
 .mobile-camera .camera-nameplate { padding:0; }
 .mobile-camera .camera-nameplate > span:first-child { font-size:22px; letter-spacing:-.02em; }
 .mobile-camera nav { display:flex; gap:4px; }
+.mobile-camera .camera-tagline { display:none; }
 .mobile-camera nav :is(a,button) { display:grid; place-items:center; width:44px; height:44px; padding:0; border:1px solid #707267; border-radius:4px; color:#f5f1e5; background:#141713; }
 .mobile-camera :is(button,a):focus-visible { outline:3px solid #d9edb6; outline-offset:3px; }
 .mobile-camera .viewfinder-bezel { width:min(100%,calc(100dvh - 426px)); min-width:150px; justify-self:center; align-self:center; }
@@ -24,9 +25,7 @@
 .mobile-camera .iso-dial { --iso-radius:54px; width:152px; height:152px; }
 .mobile-camera .iso-stop { width:44px; height:44px; min-height:44px; margin:-22px 0 0 -22px; }
 .mobile-camera .iso-knob { width:44px; height:44px; min-height:44px; top:calc(50% - 22px); left:calc(50% - 22px); }
-.mobile-camera .iso-stop:focus-visible { outline-offset:-3px; }
 .mobile-camera .camera-hardware { width:min(100%,440px); justify-self:center; padding:0; }
-.mobile-camera .camera-hardware-copy > span:last-child { min-height:0; }
 .mobile-camera .shutter-control { align-self:center; }
 .mobile-camera .ejection-slot { width:100%; max-width:440px; margin:0; justify-self:center; }
 .mobile-camera.has-print .instant-camera { min-height:0; grid-template-rows:auto auto auto; }
@@ -42,9 +41,10 @@
 .camera-page > .error-banner,.camera-notice { position:fixed; top:68px; left:16px; right:16px; z-index:10; margin:0; }
 .camera-page > .modal-backdrop { color:#292c26; }
 
-.mobile-camera-recovery { padding:12px 16px; background:#141713; color:#f5f1e5; text-align:center; }
-.mobile-camera-recovery p { max-width:48ch; margin:0 auto 8px; color:inherit; font-size:14px; line-height:1.5; }
-.mobile-camera-recovery p:last-child { margin-bottom:0; }
+/* Recovery sits inside the finder so the shutter row never moves off screen. */
+.mobile-camera-recovery { position:absolute; inset:0; z-index:2; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:14px; overflow:auto; background:#141713e6; color:#f5f1e5; text-align:center; }
+.mobile-camera-recovery p { max-width:36ch; margin:0; color:inherit; font-size:13px; line-height:1.45; }
+.mobile-camera-recovery .secondary-button { min-height:44px; }
 /* Compact hardware leaves the full-width finder dominant on short phones. */
 @media(max-height:740px), (orientation:landscape) {
   .mobile-camera .instant-camera { gap:4px; padding-top:max(8px,env(safe-area-inset-top)); padding-bottom:max(8px,env(safe-area-inset-bottom)); }
@@ -58,7 +58,6 @@
   .mobile-camera .flash-control > span:first-child { margin-bottom:4px; }
   .mobile-camera .film-roll { width:44px; height:44px; min-height:44px; }
   .mobile-camera .hardware-control { gap:6px; }
-  .mobile-camera .camera-hardware-copy > span:last-child { display:none; }
 }
 @media(max-width:370px) {
   .mobile-camera .camera-assembly { --camera-pad:max(8px,env(safe-area-inset-left),env(safe-area-inset-right)); }

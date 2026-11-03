@@ -1,14 +1,13 @@
-import { useEffect, useState } from "react";
-import { Upload, ArrowRight, BookOpen } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
+import { ArrowRight, BookOpen } from "lucide-react";
 import { Link, useLocation } from "react-router";
 import { examples, loadSample, type ExampleDefinition } from "./examples";
 import type { Assets } from "../model";
 import CompositionPreview from "./CompositionPreview";
-import DemoCamera from "./DemoCamera";
-import type { CameraPreferences } from "./CameraSettings";
 
-export default function StartScreen({busy, hasSession, onUpload, onCamera, onExample}: {
-  busy: boolean; hasSession: boolean; onUpload: () => void; onCamera: (settings?:CameraPreferences) => void;
+/** The desktop home: the live camera first, then examples to start from. */
+export default function StartScreen({busy, hasSession, camera, onExample}: {
+  busy: boolean; hasSession: boolean; camera: ReactNode;
   onExample: (example: ExampleDefinition) => void;
 }) {
   const [assets, setAssets] = useState<Assets | null>(null);
@@ -21,17 +20,8 @@ export default function StartScreen({busy, hasSession, onUpload, onCamera, onExa
   return <main className="start-screen">
     {location.state?.notice && <p className="notice" role="status">{location.state.notice}</p>}
     <section className="camera-intro" aria-label="Create a Polaroid" aria-busy={busy}>
-      <div className="intro-copy">
-        <h1 tabIndex={-1}>Keep a little <em>of the moment.</em></h1>
-      </div>
-      <DemoCamera busy={busy} onCamera={onCamera}/>
-      <div className="camera-start">
-        <div className="start-actions">
-          <button className="text-button upload-secondary" disabled={busy} onClick={onUpload}><Upload size={17}/>{busy ? "Opening photos…" : "Upload photos"}</button>
-        </div>
-        <p className="import-hint">Or drop photos here. JPG, PNG, HEIC and SVG.</p>
-        {hasSession && <Link className="resume-link" to="/edit">Continue your Polaroid <ArrowRight size={16}/></Link>}
-      </div>
+      {camera}
+      {hasSession && <div className="camera-start"><Link className="resume-link" to="/edit">Continue your Polaroid <ArrowRight size={16}/></Link></div>}
     </section>
     <section className="examples" aria-labelledby="examples-title">
       <div className="section-heading"><div><h2 id="examples-title">A few ways to make it yours.</h2><p>Open an example and move things around.</p></div></div>

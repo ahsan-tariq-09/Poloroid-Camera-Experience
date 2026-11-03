@@ -188,7 +188,7 @@ async function prepareCamera(page, mobile) {
       console.log(JSON.stringify({engine,width,development}));
       assert.equal(await page.locator('.instant-photo-window').count(),1);
       assert.equal(await page.locator('.print-drag').evaluate(e=>getComputedStyle(e).transform),'none');
-      const layout=await page.evaluate(()=>{const surface=document.querySelector('main.mobile-camera')||document.querySelector('[role="dialog"]');return {viewport:innerWidth,page:document.documentElement.scrollWidth,dialog:surface.scrollWidth,dialogWidth:surface.clientWidth};});
+      const layout=await page.evaluate(()=>{const surface=document.querySelector('main.mobile-camera')||document.querySelector('.camera-experience');return {viewport:innerWidth,page:document.documentElement.scrollWidth,dialog:surface.scrollWidth,dialogWidth:surface.clientWidth};});
       assert(layout.page<=layout.viewport&&layout.dialog<=layout.dialogWidth,JSON.stringify(layout));
       if(mobile)assert(await page.evaluate(()=>{const button=[...document.querySelectorAll('button')].find(e=>e.textContent.trim()==='Done');return button.getBoundingClientRect().bottom<=innerHeight;}),'Finish actions exceed the viewport');
       await page.screenshot({path:path.join(output,`${engine}-${width}-revealed.png`)});
@@ -267,6 +267,10 @@ async function prepareCamera(page, mobile) {
         }
         await page.emulateMedia({reducedMotion:'reduce'});await page.goto(baseURL+'/');
         await prepareCamera(page,true);await page.getByRole('switch',{name:'Flash effect',exact:true}).click();await page.getByRole('button',{name:'Capture',exact:true}).click();
+        // Reduced motion keeps the front light but removes it without a fade.
+        await page.locator('.instant-print').waitFor();
+        const reducedFlash=await page.evaluate(()=>window.flashAtCapture);
+        assert(reducedFlash&&reducedFlash.opacity>.95,JSON.stringify(reducedFlash));
         assert.equal(await page.locator('.capture-flash').count(),0);
         await page.getByRole('button',{name:'Retake photo',exact:true}).click();
         await page.getByRole('button',{name:'Capture',exact:true}).click();
@@ -292,7 +296,7 @@ async function prepareCamera(page, mobile) {
         }});
       },permission);
       const page=await context.newPage();await page.goto(baseURL+'/');await page.waitForURL('**/camera');
-      await page.getByText(permission==='pending'?'Waiting for camera permission…':/Camera permission was declined/).waitFor();
+      await page.getByText(permission==='pending'?'Waiting for the camera. Allow access if your browser asks.':/Camera permission was declined/).waitFor();
       assert(await page.getByRole('button',{name:'Capture',exact:true}).isDisabled());
       assert(await page.getByRole('button',{name:'Upload photos',exact:true}).isEnabled());
       if(permission==='denied'){
