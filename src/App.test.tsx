@@ -432,6 +432,13 @@ describe("existing editor regression", () => {
     const select = host.querySelector<HTMLSelectElement>(
       '[aria-label="Download format"]',
     )!;
+    expect(select.value).toBe("jpeg");
+    await click(".download-main");
+    expect(mocks.exportFile).toHaveBeenLastCalledWith(
+      mocks.current!.assets,
+      comp(),
+      "jpeg",
+    );
 
     for (const format of ["png", "jpeg", "heic", "svg"]) {
       await act(async () => {

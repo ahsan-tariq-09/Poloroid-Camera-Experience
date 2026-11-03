@@ -64,7 +64,7 @@ export function useStudioSession() {
   const [grid, setGrid] = useState<{ box: Layer; ids: string[] } | null>(null);
   const gridRef = useRef(grid);
   gridRef.current = grid;
-  const [format, setFormat] = useState<ExportFormat>("png");
+  const [format, setFormat] = useState<ExportFormat>("jpeg");
   const [cutAngle, setCutAngle] = useState(0);
   const [tool, setTool] = useState<Tool>("move"),
     [selected, setSelected] = useState<string | null>(null),

@@ -200,7 +200,7 @@ async function prepareCamera(page, mobile) {
       if(mobile)assert.deepEqual(contrast,{color:'rgb(41, 44, 38)',background:'rgb(250, 246, 236)'});
       await page.getByRole('button',{name:'Done',exact:true}).click();await page.waitForURL('**/finish');
       const downloadPromise=page.waitForEvent('download');await page.getByRole('button',{name:'Download',exact:true}).click();
-      const download=await downloadPromise;assert.equal(await download.failure(),null);await download.saveAs(path.join(output,`${engine}-${width}.png`));
+      const download=await downloadPromise;assert.equal(await download.failure(),null);await download.saveAs(path.join(output,`${engine}-${width}.jpg`));
       await page.getByRole('link',{name:'Back to editing'}).click();await page.waitForURL('**/edit');
       await page.getByRole('heading',{name:'Edit your Polaroid',exact:true}).waitFor();
       assert.equal(await page.getByText('Arrange photos, add pieces, or adjust the look.',{exact:true}).count(),0);
