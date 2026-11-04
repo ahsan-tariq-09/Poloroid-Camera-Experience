@@ -135,7 +135,7 @@ export default function Camera({onClose, onCapture, onUpload, enabled, initialSe
         if(flash&&rearCamera&&!lit){fail("Rear-camera flash is unavailable. Turn Flash off to take a photo.");return;}
         // Let the light reach the next camera frame before sampling it.
         if(frontLight)setScreenFlash("steady");
-        if(lit||frontLight)await new Promise(resolve=>setTimeout(resolve,200));
+        if(lit||frontLight)await new Promise(resolve=>setTimeout(resolve,frontLight?300:200));
         if(!alive.current||!captureRunning.current||generation.current!==token)return;
         if(facing==="user"){ctx.translate(canvas.width,0);ctx.scale(-1,1);}
         ctx.drawImage(v,(v.videoWidth-canvas.width)/2,(v.videoHeight-canvas.height)/2,canvas.width,canvas.height,0,0,canvas.width,canvas.height);
@@ -175,7 +175,7 @@ export default function Camera({onClose, onCapture, onUpload, enabled, initialSe
     {count!==null&&<span className="countdown" aria-live="assertive">{count}</span>}
   </>;
   const decisions=captured&&revealed&&<div className="capture-decisions"><button className="primary-button" disabled={busy} onClick={()=>onCapture(prints.map(p=>p.file),"edit")}>Develop <ArrowRight size={17}/></button><button className="secondary-button" disabled={busy} onClick={()=>onCapture(prints.map(p=>p.file),"finish")}><Check size={17}/> Done</button></div>;
-  const captureFlash=screenFlash==="steady"?createPortal(<div className="capture-flash" aria-hidden="true"/>,document.body):enabled&&screenFlash&&createPortal(<motion.div className="capture-flash" aria-hidden="true" initial={{opacity:.35}} animate={{opacity:0}} transition={{duration:.32,ease:"easeOut"}} onAnimationComplete={()=>setScreenFlash(false)}/>,document.body);
+  const captureFlash=screenFlash==="steady"?createPortal(<div className="capture-flash" aria-hidden="true"/>,document.body):enabled&&screenFlash&&createPortal(<motion.div className="capture-flash" aria-hidden="true" initial={{opacity:.35}} animate={{opacity:0}} transition={{duration:.3,ease:"easeOut"}} onAnimationComplete={()=>setScreenFlash(false)}/>,document.body);
   const retry=!captured&&error&&!ready&&<button className="secondary-button" onClick={()=>{if(stream.current&&!stream.current.getTracks().some(track=>track.readyState==="ended"))void playVideo();else setRestart(n=>n+1);}}>Retry camera</button>;
   if(presentation==="screen")return <MobileCameraScreen containerRef={container} navigation={navigation} viewfinder={viewfinder} settings={settings} print={print} decisions={decisions} flash={captureFlash} retry={retry}
     captured={captured} disabled={!ready||!filmLoaded||shot>0||captured||busy} taking={shot>0} loading={loading} loaded={filmLoaded} ready={ready} onRoll={roll}

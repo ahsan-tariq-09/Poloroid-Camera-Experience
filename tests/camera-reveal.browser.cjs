@@ -199,7 +199,7 @@ async function prepareCamera(page, mobile) {
       const contrast=await page.getByRole('button',{name:'Done',exact:true}).evaluate(e=>({color:getComputedStyle(e).color,background:getComputedStyle(e).backgroundColor}));
       if(mobile)assert.deepEqual(contrast,{color:'rgb(41, 44, 38)',background:'rgb(250, 246, 236)'});
       await page.getByRole('button',{name:'Done',exact:true}).click();await page.waitForURL('**/finish');
-      const downloadPromise=page.waitForEvent('download');await page.getByRole('button',{name:'Download',exact:true}).click();
+      const downloadPromise=page.waitForEvent('download');await page.getByRole('button',{name:'Save Photo',exact:true}).click();
       const download=await downloadPromise;assert.equal(await download.failure(),null);await download.saveAs(path.join(output,`${engine}-${width}.jpg`));
       await page.getByRole('link',{name:'Back to editing'}).click();await page.waitForURL('**/edit');
       await page.getByRole('heading',{name:'Edit your Polaroid',exact:true}).waitFor();

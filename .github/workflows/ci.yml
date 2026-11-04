@@ -27,3 +27,29 @@ jobs:
           name: dist
           path: dist
 
+  notify-vercel:
+    needs: checks
+    if: ${{ always() && github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      statuses: write
+    steps:
+      - name: Notify Vercel
+        if: ${{ needs.checks.result == 'success' }}
+        uses: vercel/repository-dispatch/actions/status@30f760c6640485cd92f8c785ef361382555fb712 # v1
+        with:
+          name: 'Vercel - poloroid-photobooth: lint'
+      # The action treats cancellation as success, so report unsuccessful CI explicitly.
+      - name: Report unsuccessful CI to Vercel
+        if: ${{ needs.checks.result != 'success' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          gh api --method POST "repos/$GH_REPO/statuses/$COMMIT_SHA" \
+            -f state=failure \
+            -f context='Vercel - poloroid-photobooth: lint' \
+            -f description='CI did not pass'
+

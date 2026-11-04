@@ -474,17 +474,17 @@ export function canvasBlob(output: HTMLCanvasElement, type: string) {
     ),
   );
 }
-export async function exportFile(
+export async function prepareExport(
   assets: Assets,
   c: Composition,
   format: ExportFormat,
 ) {
   if (format === "svg") {
-    download(
-      new Blob([await serializeSvg(assets, c)], { type: "image/svg+xml" }),
+    return new File(
+      [await serializeSvg(assets, c)],
       "my-polaroid.svg",
+      { type: "image/svg+xml" },
     );
-    return;
   }
   const out = await renderComposition(canvas(1, 1), assets, c, FRAME, 3);
   if (format !== "png") flatten(out);
@@ -492,7 +492,15 @@ export async function exportFile(
     format === "heic"
       ? await (await import("./heicExport")).encodeHeic(out)
       : await canvasBlob(out, format === "jpeg" ? "image/jpeg" : "image/png");
-  download(blob, "my-polaroid." + (format === "jpeg" ? "jpg" : format));
+  return new File([blob], "my-polaroid." + (format === "jpeg" ? "jpg" : format), { type: blob.type });
+}
+export async function exportFile(
+  assets: Assets,
+  c: Composition,
+  format: ExportFormat,
+) {
+  const file = await prepareExport(assets, c, format);
+  download(file, file.name);
 }
 export async function printComposition(assets: Assets, c: Composition) {
   const region = FRAME,

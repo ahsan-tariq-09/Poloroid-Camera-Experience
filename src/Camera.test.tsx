@@ -55,7 +55,7 @@ it.each(["front","front-reduced","rear","unsupported","rejected","ignored","redu
     const unavailable=["unsupported","rejected","ignored"].includes(scenario);
     if(!screen&&!unavailable&&scenario!=="off"){
       expect(draw).not.toHaveBeenCalled();
-      await act(async()=>vi.advanceTimersByTimeAsync(199));expect(draw).not.toHaveBeenCalled();
+      await act(async()=>vi.advanceTimersByTimeAsync(scenario==="front-reduced"?299:199));expect(draw).not.toHaveBeenCalled();
       await act(async()=>vi.advanceTimersByTimeAsync(1));
     }
     if(scenario==="front-reduced")expect(document.querySelector(".capture-flash")).toBeNull();
@@ -321,8 +321,9 @@ it.each([0,3,5,10])("uses the %s-second dial setting and captures only one Polar
     await act(async()=>vi.advanceTimersByTimeAsync(2800));await act(async()=>button("Capture").click());
     if(seconds===3)await act(async()=>root.render(<Camera enabled={false} onClose={()=>{}} onUpload={()=>{}} onCapture={()=>{}}/>));
     if(seconds){await act(async()=>vi.advanceTimersByTimeAsync(seconds*1000-1));expect(blob).not.toHaveBeenCalled();expect(button("Timer off").closest("fieldset")!.disabled).toBe(true);await act(async()=>vi.advanceTimersByTimeAsync(1));}
-    // Reduced motion holds the steady front light for 200 ms before sampling.
-    expect(blob).not.toHaveBeenCalled();await act(async()=>vi.advanceTimersByTimeAsync(200));
+    // Reduced motion holds the steady front light for 300 ms before sampling.
+    expect(blob).not.toHaveBeenCalled();await act(async()=>vi.advanceTimersByTimeAsync(299));
+    expect(blob).not.toHaveBeenCalled();await act(async()=>vi.advanceTimersByTimeAsync(1));
     expect(blob).toHaveBeenCalledTimes(1);
     await act(async()=>vi.advanceTimersByTimeAsync(2489));expect(blob).toHaveBeenCalledTimes(1);
     await act(async()=>vi.advanceTimersByTimeAsync(3*(seconds*1000+2490)-2489));expect(blob).toHaveBeenCalledTimes(1);expect(write).toHaveBeenCalledTimes(1);

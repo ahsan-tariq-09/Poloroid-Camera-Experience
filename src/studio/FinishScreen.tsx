@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import type { Studio } from "./useStudioSession";
 import type { ExportFormat } from "../render";
 import CompositionPreview from "./CompositionPreview";
+import SavePhotoButton from "./SavePhotoButton";
 
 export default function FinishScreen({ studio: s, onScrapbook, scrapbookBusy, updatingScrapbook = false }: { studio: Studio; onScrapbook: () => void; scrapbookBusy: boolean; updatingScrapbook?: boolean }) {
   return (
@@ -10,7 +11,7 @@ export default function FinishScreen({ studio: s, onScrapbook, scrapbookBusy, up
       <div className="page-heading">
         <div>
           <h1 tabIndex={-1}>Your Polaroid</h1>
-          <p>Ready to keep. Download, print or add it to your scrapbook.</p>
+          <p>Ready to keep. Save, print or add it to your scrapbook.</p>
         </div>
         <Link to="/edit" className="text-button">
           <ArrowLeft size={16} /> Back to editing
@@ -37,13 +38,7 @@ export default function FinishScreen({ studio: s, onScrapbook, scrapbookBusy, up
               <option value="svg">SVG</option>
             </select>
           </label>
-          <button
-            className="primary-button download-main"
-            disabled={s.exporting || s.busy}
-            onClick={() => void s.exportFile()}
-          >
-            <Download size={17} /> {s.exporting ? "Preparing…" : "Download"}
-          </button>
+          <SavePhotoButton studio={s} />
           <button
             className="secondary-button print-button"
             aria-label="Print Polaroid"
