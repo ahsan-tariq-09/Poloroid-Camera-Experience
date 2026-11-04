@@ -261,7 +261,6 @@ function PieceSettings({ s }: { s: Studio }) {
             }
           />
         </label>
-        <p className="field-hint">Only the area inside the frame is included in your download.</p>
         <Range
           label="Opacity"
           value={layer.opacity * 100}

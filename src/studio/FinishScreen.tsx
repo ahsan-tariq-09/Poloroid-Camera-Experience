@@ -11,7 +11,6 @@ export default function FinishScreen({ studio: s, onScrapbook, scrapbookBusy, up
       <div className="page-heading">
         <div>
           <h1 tabIndex={-1}>Your Polaroid</h1>
-          <p>Ready to keep. Save, print or add it to your scrapbook.</p>
         </div>
         <Link to="/edit" className="text-button">
           <ArrowLeft size={16} /> Back to editing
@@ -59,7 +58,6 @@ export default function FinishScreen({ studio: s, onScrapbook, scrapbookBusy, up
 
           <h2 id="printable-frames-title">Give your Polaroid a home.</h2>
           <p>Free 3D-printable frames for the memories you want to keep close.</p>
-          <p className="field-hint">Download an STL for your 3D printer. Check each model’s opening before sizing your photo.</p>
         </div>
         <div className="frame-models">
           <article className="frame-model">

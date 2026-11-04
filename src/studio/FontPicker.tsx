@@ -22,7 +22,7 @@ export default function FontPicker({value = "studio", onChange, label = "Font", 
       </select>
     </label>
     <p className="font-specimen" style={{fontFamily: fontFamily(value), fontWeight: bold ? 700 : 400, fontStyle: italic ? "italic" : "normal", fontSynthesis: "weight style"}} aria-hidden="true">{sample || "Your words here"}</p>
-    <p className="font-status" role="status" aria-live="polite">{status || "30 fonts · Google Fonts + Font Library"}</p>
+    <p className="font-status" role="status" aria-live="polite" hidden={!status}>{status}</p>
     {failed && <div className="font-recovery"><button className="text-button" onClick={() => {onChange(value); setRetry(n => n + 1);}}>Retry font</button><button className="text-button" onClick={() => onChange("studio")}>Use Studio sans</button></div>}
   </div>;
 }

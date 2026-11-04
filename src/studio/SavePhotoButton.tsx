@@ -103,13 +103,22 @@ export default function SavePhotoButton({ studio: s }: { studio: SaveStudio }) {
       <button
         className="primary-button download-main"
         disabled={s.exporting || busy || preparing || sharing}
-        aria-describedby="photo-save-guidance"
+        aria-describedby={
+          message || sharing || preparing || shareable
+            ? "photo-save-guidance"
+            : undefined
+        }
         onClick={() => void save()}
       >
         <Download size={17} aria-hidden="true" />{" "}
         {preparing || s.exporting ? "Preparing…" : "Save Photo"}
       </button>
-      <p id="photo-save-guidance" className="field-hint" role="status">
+      <p
+        id="photo-save-guidance"
+        className="field-hint"
+        role="status"
+        hidden={!message && !sharing && !preparing && !shareable}
+      >
         {message ||
           (sharing
             ? "Choose where to save or share your photo."
@@ -117,7 +126,7 @@ export default function SavePhotoButton({ studio: s }: { studio: SaveStudio }) {
               ? "Preparing your photo for saving…"
               : shareable
                 ? "Opens your share menu. On iPhone or iPad, choose Save Image to add it to Photos."
-                : "Saves a file to your device’s downloads.")}
+                : "")}
       </p>
     </>
   );
