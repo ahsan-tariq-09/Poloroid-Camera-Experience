@@ -5,8 +5,8 @@ import {
   repeatLayer,
   type Asset,
   type Composition,
-} from "../model";
-import { loadImage } from "../imports";
+} from "../../model";
+import { loadImage } from "../../imports";
 
 export type ExampleDefinition = {
   id: "classic" | "collage" | "grid";

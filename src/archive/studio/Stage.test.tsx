@@ -10,7 +10,7 @@ import {
   type Asset,
   type Composition,
   type Tool,
-} from "./model";
+} from "../../model";
 
 const mocks = vi.hoisted(() => ({
   texture: vi.fn(),
@@ -20,7 +20,7 @@ const mocks = vi.hoisted(() => ({
     update: (v: number) => void;
   }[],
 }));
-vi.mock("./render", () => ({
+vi.mock("../../render", () => ({
   prepareTextures: mocks.texture,
   paintComposition: mocks.paint,
 }));

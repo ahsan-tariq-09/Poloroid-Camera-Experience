@@ -2,12 +2,12 @@ import type { ReactNode, RefObject } from "react";
 import { ImagePlus, RefreshCw } from "lucide-react";
 import InstantCamera from "./InstantCamera";
 
-/** The full-screen camera keeps the same housing and paper outlet as the desktop. */
+/** The camera screen used at every size: one housing, viewfinder, controls, and paper outlet. */
 export default function MobileCameraScreen({ containerRef, navigation, viewfinder, settings, print, decisions, flash,
   captured, disabled, ready, taking, loading, loaded, status, notice, retry, onRoll, onShutter, onFlip, onUpload }: {
   containerRef: RefObject<HTMLDivElement | null>;
   navigation?: ReactNode; viewfinder: ReactNode; settings: ReactNode; print: ReactNode;
-  decisions: ReactNode; flash: ReactNode; retry: ReactNode;
+  decisions?: ReactNode; flash: ReactNode; retry: ReactNode;
   captured: boolean; disabled: boolean; ready: boolean; taking: boolean; loading: boolean; loaded: boolean; status: string; notice: string;
   onRoll: () => void; onShutter: () => void; onFlip: () => void; onUpload: () => void;
 }) {

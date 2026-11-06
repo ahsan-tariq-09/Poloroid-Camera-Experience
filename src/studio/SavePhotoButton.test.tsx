@@ -3,17 +3,13 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { initialComposition } from "../model";
-import type { Studio } from "./useStudioSession";
 
 const mocks = vi.hoisted(() => ({ prepareExport: vi.fn(), download: vi.fn() }));
 vi.mock("../render", () => mocks);
-import SavePhotoButton from "./SavePhotoButton";
+import SavePhotoButton, { type SaveStudio } from "./SavePhotoButton";
 
 let root: Root, host: HTMLDivElement;
-let studio: Pick<
-  Studio,
-  "assets" | "composition" | "format" | "busy" | "exporting" | "exportFile"
->;
+let studio: SaveStudio;
 const share = vi.fn(),
   canShare = vi.fn();
 const jpeg = new File(["jpeg"], "my-polaroid.jpg", { type: "image/jpeg" });

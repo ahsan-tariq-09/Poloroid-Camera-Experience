@@ -1,9 +1,9 @@
 import { ArrowLeft, Download, Printer, BookOpen } from "lucide-react";
 import { Link } from "react-router";
 import type { Studio } from "./useStudioSession";
-import type { ExportFormat } from "../render";
+import type { ExportFormat } from "../../render";
 import CompositionPreview from "./CompositionPreview";
-import SavePhotoButton from "./SavePhotoButton";
+import SavePhotoButton from "../../studio/SavePhotoButton";
 
 export default function FinishScreen({ studio: s, onScrapbook, scrapbookBusy, updatingScrapbook = false }: { studio: Studio; onScrapbook: () => void; scrapbookBusy: boolean; updatingScrapbook?: boolean }) {
   return (

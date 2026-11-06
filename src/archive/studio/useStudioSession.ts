@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
-import { importAsset } from "../imports";
-import { captureDate } from "./captureDate";
+import { importAsset } from "../../imports";
+import { captureDate } from "../../studio/captureDate";
 import {
   addDecoration,
   addText as addTextLayer,
@@ -20,16 +20,16 @@ import {
   type Point,
   type Composition,
   type Tool,
-} from "../model";
-import { historyReducer } from "../history";
-import { initializeEffects } from "../effects";
+} from "../../model";
+import { historyReducer } from "../../history";
+import { initializeEffects } from "../../effects";
 import {
   exportFile as downloadArtwork,
   printComposition,
   type ExportFormat,
-} from "../render";
+} from "../../render";
 import { loadSample, type ExampleDefinition } from "./examples";
-import { assertComposition } from "../limits";
+import { assertComposition } from "../../limits";
 export type Category = "arrange" | "decorate" | "look";
 export type Screen = "/" | "/edit" | "/finish";
 export const tapeColors = [

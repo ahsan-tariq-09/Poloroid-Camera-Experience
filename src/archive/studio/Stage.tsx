@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 import { animate, motion, type AnimationPlaybackControls } from "motion/react";
-import { paintComposition, prepareTextures, type Textures } from "./render";
-import { loadCompositionFonts } from "./fonts";
-import { pieceHandles } from "./handles";
+import { paintComposition, prepareTextures, type Textures } from "../../render";
+import { loadCompositionFonts } from "../../fonts";
+import { pieceHandles } from "../../handles";
 import {
   WORKSPACE,
   clone,
@@ -16,12 +16,12 @@ import {
   type Layer,
   type Point,
   type Tool,
-} from "./model";
+} from "../../model";
 import {
   layerPose,
   pointerInComposition,
   type Presentation,
-} from "./presentation";
+} from "../../presentation";
 
 const arrowDirections: Record<string, Point> = {ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1]};
 

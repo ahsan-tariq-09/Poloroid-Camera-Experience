@@ -8,7 +8,7 @@ import { Range } from "./shared";
 import type { ScrapbookStudio } from "./useScrapbook";
 import { playSound } from "../sounds";
 
-export default function ScrapbookScreen({studio:b,onCamera,onEditPhoto}:{studio:ScrapbookStudio;onCamera:()=>void;onEditPhoto:(photo:StoredPhoto,id:string)=>void}) {
+export default function ScrapbookScreen({studio:b,onCamera,onEditPhoto}:{studio:ScrapbookStudio;onCamera:()=>void;onEditPhoto?:(photo:StoredPhoto,id:string)=>void}) {
   const {book}=b,strip=book.layout==="strip",input=useRef<HTMLInputElement>(null),page=useRef<HTMLDivElement>(null);
   const [exporting,setExporting]=useState(false);
   const drag=useRef<{id:string;clientX:number;clientY:number;x:number;y:number;before:typeof book}|null>(null);
@@ -32,7 +32,7 @@ export default function ScrapbookScreen({studio:b,onCamera,onEditPhoto}:{studio:
           <div className="nudge-actions">{([["Left",ArrowLeft,-10,0],["Up",ArrowUp,0,-10],["Down",ArrowDown,0,10],["Right",ArrowRight,10,0]] as const).map(([name,Icon,dx,dy])=><button key={name} aria-label={`Move scrapbook photo ${name}`} onClick={()=>changeItem({x:Math.max(-100,Math.min(900,selected.x+dx)),y:Math.max(-100,Math.min(680,selected.y+dy))})}><Icon size={17}/></button>)}</div>
           <label className="tape-toggle"><input type="checkbox" checked={selected.tape} onChange={e=>changeItem({tape:e.target.checked})}/> Add a little tape</label></>}
           <div className="book-order"><button className="secondary-button" disabled={book.items.indexOf(selected)===0} onClick={()=>reorder(-1)}><ArrowUp size={15}/>{strip?"Earlier":"Send back"}</button><button className="secondary-button" disabled={book.items.indexOf(selected)===book.items.length-1} onClick={()=>reorder(1)}><ArrowDown size={15}/>{strip?"Later":"Bring forward"}</button></div>
-          <button className="text-button" disabled={b.busy} onClick={()=>onEditPhoto(selected.photo,selected.id)}>Edit this Polaroid <ArrowRight size={16}/></button>
+          {onEditPhoto&&<button className="text-button" disabled={b.busy} onClick={()=>onEditPhoto(selected.photo,selected.id)}>Edit this Polaroid <ArrowRight size={16}/></button>}
           <button className="text-button remove-photo" disabled={b.busy} onClick={()=>{b.change({...book,items:book.items.filter(i=>i.id!==selected.id)});b.setSelected(null);}}><Trash2 size={16}/> Remove photo</button>
         </section>}
         {!strip&&<button className="text-button" disabled={!book.items.length||b.busy} onClick={()=>b.change({...book,items:arrangeMemories(book.items)})}>Arrange page</button>}

@@ -52,7 +52,6 @@
 .camera-assembly .hardware-control:first-child { width:68px; flex:0 0 68px; }
 .camera-assembly .camera-hardware-copy { flex:1; min-width:0; font-size:10px; }
 .camera-signature { display:flex; flex-direction:column; align-items:center; gap:5px; }
-.camera-nameplate .camera-tagline { color:#f5f1e5; font:italic 13px/1.2 Georgia,serif; text-align:center; white-space:nowrap; }
 .camera-alternatives { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:8px 12px; margin-top:12px; }
 .camera-alternatives .camera-upload { margin:0; }
 .shutter::after { content:''; position:absolute; inset:1px; border:3px solid #ff8b76; border-radius:50%; background:#ed4935; pointer-events:none; opacity:0; }
@@ -97,6 +96,9 @@
 .print-action-row { display:flex; justify-content:center; align-items:stretch; gap:10px; margin:0 auto; max-width:440px; }
 .print-action-row > button { min-height:52px; padding:12px 18px; }
 .print-action-row .shake-reveal { margin:0; font-weight:600; }
+.print-save { grid-column:1 / -1; display:flex; flex-direction:column; align-items:center; gap:8px; }
+.print-save .download-main { min-height:52px; padding:12px 22px; }
+.print-save .field-hint { max-width:36ch; margin:0; text-align:center; }
 .shake-reveal svg { flex-shrink:0; }
 .shake-reveal:disabled { opacity:1; color:#434e3d; background:#e6eadf; border-color:#b2b9a9; }
 @media(max-width:700px) {

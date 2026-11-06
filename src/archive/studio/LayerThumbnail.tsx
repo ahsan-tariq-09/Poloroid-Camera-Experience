@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
-import { type Asset, type Composition, type Layer } from "../model";
-import { renderComposition } from "../render";
+import { type Asset, type Composition, type Layer } from "../../model";
+import { renderComposition } from "../../render";
 
 export default function LayerThumbnail({asset, layer, effects}: {
   asset: Asset; layer: Layer; effects: Composition["effects"];

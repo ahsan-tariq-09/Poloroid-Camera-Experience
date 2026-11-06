@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { FRAME, type Assets, type Composition } from "../model";
-import { renderComposition } from "../render";
+import { FRAME, type Assets, type Composition } from "../../model";
+import { renderComposition } from "../../render";
 
 // Render into an isolated canvas first, so a slow previous render cannot overwrite a new one.
 export default function CompositionPreview({

@@ -1,7 +1,7 @@
 import { ArrowRight, Redo2, RotateCcw, Undo2 } from "lucide-react";
 import { useNavigate } from "react-router";
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
-import Stage from "../Stage";
+import Stage from "./Stage";
 import EditorControls from "./EditorControls";
 import PieceMenu, { PieceContextMenu } from "./PieceMenu";
 import type { Studio } from "./useStudioSession";

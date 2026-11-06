@@ -2,7 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { ArrowRight, BookOpen } from "lucide-react";
 import { Link, useLocation } from "react-router";
 import { examples, loadSample, type ExampleDefinition } from "./examples";
-import type { Assets } from "../model";
+import type { Assets } from "../../model";
 import CompositionPreview from "./CompositionPreview";
 
 /** The desktop home: the live camera first, then examples to start from. */

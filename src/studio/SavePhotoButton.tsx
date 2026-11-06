@@ -1,12 +1,17 @@
 import { useEffect, useState } from "react";
 import { Download } from "lucide-react";
 import { download, prepareExport } from "../render";
-import type { Studio } from "./useStudioSession";
+import type { ExportFormat } from "../render";
+import type { Assets, Composition } from "../model";
 
-type SaveStudio = Pick<
-  Studio,
-  "assets" | "composition" | "format" | "busy" | "exporting" | "exportFile"
->;
+export type SaveStudio = {
+  assets: Assets;
+  composition: Composition;
+  format: ExportFormat;
+  busy: boolean;
+  exporting: boolean;
+  exportFile: () => Promise<void>;
+};
 type Prepared = Pick<SaveStudio, "assets" | "composition" | "format"> & {
   file: File | null;
   shareable: boolean;

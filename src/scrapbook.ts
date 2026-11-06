@@ -162,6 +162,16 @@ export async function makeMemory(
     index,
   );
 }
+/** One photo in a plain Polaroid frame. Processed camera prints keep their film and get a date caption. */
+export async function importPolaroid(file: File, processed = false) {
+  const asset = await importAsset(file);
+  const composition = initialComposition("photo");
+  composition.layers = [photoLayer("photo", asset.name, 0, asset)];
+  composition.effects.film = processed ? 0 : 0.65;
+  if (processed) composition.caption = captureDate(file.lastModified);
+  const assets: Assets = { photo: asset };
+  return { assets, composition };
+}
 export async function importMemories(
   files: File[],
   offset = 0,
@@ -172,13 +182,10 @@ export async function importMemories(
   for (const file of files.slice(0, MAX_SCRAPBOOK_PHOTOS - offset)) {
     let asset: Asset | undefined;
     try {
-      asset = await importAsset(file);
-      const composition = initialComposition("photo");
-      composition.layers = [photoLayer("photo", asset.name, 0, asset)];
-      composition.effects.film = processed ? 0 : 0.65;
-      if (processed) composition.caption = captureDate(file.lastModified);
+      const polaroid = await importPolaroid(file, processed);
+      asset = polaroid.assets.photo;
       items.push(
-        await makeMemory({ photo: asset }, composition, offset + items.length),
+        await makeMemory(polaroid.assets, polaroid.composition, offset + items.length),
       );
     } catch (error) {
       errors.push(

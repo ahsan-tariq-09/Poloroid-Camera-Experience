@@ -7,6 +7,11 @@ dist/
 
 # Local deployment and agent tooling
 .git/
+.claude/
+.vscode/
+.idea/
+/state/
+/*_Handoff.md
 .vercel/
 .sites-runtime/
 .sites-checkout/
@@ -15,8 +20,12 @@ dist/
 .codex/
 .impeccable/
 
-# Repository-only documentation, tests, and Docker tooling
+# Repository-only documentation, tests, archived source, and Docker tooling
 /AGENTS.md
+/PRODUCT.md
+/src/archive/
+/src/**/*.test.ts
+/src/**/*.test.tsx
 /docs/
 /.github/
 /tests/

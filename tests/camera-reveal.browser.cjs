@@ -11,9 +11,10 @@ async function prepareCamera(page, mobile) {
   assert.equal(await page.getByRole('button',{name:'Timer off',exact:true}).getAttribute('aria-pressed'),'true','New cameras must start with the timer off');
   assert.equal(await page.locator('.film-stripes').count(),1);
   assert.deepEqual(await page.locator('.camera-signature .film-stripes i').evaluateAll(elements=>elements.map(e=>getComputedStyle(e).backgroundColor)),['rgb(0, 118, 163)','rgb(255, 191, 54)','rgb(255, 30, 39)']);
-  assert(await page.locator('.camera-tagline').isVisible());
+  assert.equal(await page.locator('.camera-tagline').count(),0);
+  assert.equal(await page.getByText('Made to keep.').count(),0);
   assert(await page.locator('.ejection-slot').evaluate(e=>e.getBoundingClientRect().height>=28));
-  if(!mobile)await page.getByRole('button',{name:'Roll film',exact:true}).click();
+  await page.waitForFunction(()=>{const shutter=document.querySelector('[aria-label="Capture"]');return shutter&&!shutter.disabled;});
 }
 (async()=>{
   const launched = engine === 'cdp'
@@ -86,19 +87,19 @@ async function prepareCamera(page, mobile) {
       },engine);
       const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
       await page.goto(baseURL+'/');
-      if(mobile)await page.waitForURL('**/camera');
-      if(mobile)await page.waitForFunction(()=>{const shutter=document.querySelector('[aria-label="Capture"]');return shutter&&!shutter.disabled;});
+      // Every size gets the same camera screen, with no separate desktop landing page.
+      await page.locator('main.mobile-camera').waitFor();
+      assert.equal(await page.locator('.camera-home, .camera-modal, .site-header').count(),0);
+      await page.waitForFunction(()=>{const shutter=document.querySelector('[aria-label="Capture"]');return shutter&&!shutter.disabled;});
       assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Live camera overflows horizontally');
       if(mobile&&process.argv[5]!=='inspect')assert(await page.evaluate(()=>document.documentElement.scrollHeight<=innerHeight+1),'Live camera exceeds the viewport height');
       await page.screenshot({path:path.join(output,`${engine}-${width}-home.png`),fullPage:true});
       if(process.argv[5]==='inspect'){console.log(JSON.stringify({engine,width,layout:await page.evaluate(()=>({width:innerWidth,height:innerHeight,scrollWidth:document.documentElement.scrollWidth,scrollHeight:document.documentElement.scrollHeight}))}));await context.close();continue;}
       await prepareCamera(page,mobile);
-      if(!mobile){
-        await page.waitForFunction(()=>{const shutter=document.querySelector('[aria-label="Capture"]');return shutter&&!shutter.disabled;});
-        await page.screenshot({path:path.join(output,`${engine}-${width}-camera.png`)});
-      }
+      if(!mobile)await page.screenshot({path:path.join(output,`${engine}-${width}-camera.png`)});
+      assert(await page.locator('.camera-nameplate').evaluate(e=>{const box=e.getBoundingClientRect();return [...e.children].every(child=>{const r=child.getBoundingClientRect();return r.left>=box.left-1&&r.right<=box.right+1;});}),'Camera header must fit its navigation');
       if(mobile){
-        assert.equal(await page.getByRole('link',{name:'Scrapbook',exact:true}).count(),0);
+        assert.equal(await page.getByRole('link',{name:'Scrapbook',exact:true}).count(),1);
         assert(await page.locator('.iso-dial .dial-hub').isVisible(),'ISO metal center must stay visible on short screens');
         assert.equal(await page.getByRole('slider',{name:'ISO effect',exact:true}).innerText(),'');
         for(const value of [100,200,400,800,1600,3200,800]){
@@ -123,7 +124,7 @@ async function prepareCamera(page, mobile) {
         assert.match(await page.locator('.viewfinder-readout').innerText(),/B&W/);
         await page.setViewportSize(size);
       }
-      const cameraSurface=page.locator(mobile?'.mobile-camera':'.camera-modal');
+      const cameraSurface=page.locator('.mobile-camera');
       assert.equal(await cameraSurface.locator('.viewfinder-readout').evaluate(e=>getComputedStyle(e).backgroundColor),'rgba(0, 0, 0, 0)');
       await page.waitForTimeout(650);
       const initialWheel=await cameraSurface.locator('.iso-markings').evaluate(e=>getComputedStyle(e).transform);
@@ -187,7 +188,7 @@ async function prepareCamera(page, mobile) {
         development.push({elapsed,opacity:sample.opacity});
       }
       await page.screenshot({path:path.join(output,`${engine}-${width}-developing.png`)});
-      await page.getByRole('button',{name:'Photo revealed',exact:true}).waitFor({timeout:15000});
+      await page.getByRole('button',{name:'Save Photo',exact:true}).waitFor({timeout:15000});
       assert.equal(await page.locator('.instant-photo-window img').evaluate(e=>Number(getComputedStyle(e).opacity)),1);
       console.log(JSON.stringify({engine,width,development}));
       assert.equal(await page.locator('.instant-photo-window').count(),1);
@@ -195,23 +196,22 @@ async function prepareCamera(page, mobile) {
       const layout=await page.evaluate(()=>{const surface=document.querySelector('main.mobile-camera')||document.querySelector('.camera-experience');return {viewport:innerWidth,page:document.documentElement.scrollWidth,dialog:surface.scrollWidth,dialogWidth:surface.clientWidth};});
       assert(layout.page<=layout.viewport&&layout.dialog<=layout.dialogWidth,JSON.stringify(layout));
       await page.screenshot({path:path.join(output,`${engine}-${width}-revealed.png`)});
-      if(mobile)assert(await page.evaluate(()=>{const button=[...document.querySelectorAll('button')].find(e=>e.textContent.trim()==='Done');return button.getBoundingClientRect().bottom<=innerHeight;}),'Finish actions exceed the viewport');
-      const contrast=await page.getByRole('button',{name:'Done',exact:true}).evaluate(e=>({color:getComputedStyle(e).color,background:getComputedStyle(e).backgroundColor}));
-      if(mobile)assert.deepEqual(contrast,{color:'rgb(41, 44, 38)',background:'rgb(250, 246, 236)'});
-      await page.getByRole('button',{name:'Done',exact:true}).click();await page.waitForURL('**/finish');
-      const downloadPromise=page.waitForEvent('download');await page.getByRole('button',{name:'Save Photo',exact:true}).click();
-      const download=await downloadPromise;assert.equal(await download.failure(),null);await download.saveAs(path.join(output,`${engine}-${width}.jpg`));
-      await page.getByRole('link',{name:'Back to editing'}).click();await page.waitForURL('**/edit');
-      await page.getByRole('heading',{name:'Edit your Polaroid',exact:true}).waitFor();
-      assert.equal(await page.getByText('Arrange photos, add pieces, or adjust the look.',{exact:true}).count(),0);
-      assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Editor overflows horizontally');
-      assert(await page.getByRole('button',{name:'Continue',exact:true}).isVisible());
-      await page.waitForFunction(()=>Math.abs(new DOMMatrixReadOnly(getComputedStyle(document.querySelector('.artboard')).transform).m42)<.1);
-      const labelSize=await page.locator('.target-label').evaluate(e=>{const matrix=e.getScreenCTM();return parseFloat(getComputedStyle(e).fontSize)*Math.hypot(matrix.a,matrix.b);});
-      assert(Math.abs(labelSize-14)<.1,`Selected filename must remain readable at every viewport: ${labelSize}px`);
-      assert(await page.locator('.target-label').evaluate(e=>e.getBoundingClientRect().top>=document.querySelector('.canvas-toolbar').getBoundingClientRect().bottom),'Selected filename must clear the toolbar');
-      await page.screenshot({path:path.join(output,`${engine}-${width}-edit.png`),fullPage:true});
-      await page.getByRole('button',{name:'Continue',exact:true}).click();await page.waitForURL('**/finish');
+      for(const label of ['Develop','Done','Retake photo','Photo revealed'])assert.equal(await page.getByRole('button',{name:label,exact:true}).count(),0,`${label} must not return`);
+      const save=page.getByRole('button',{name:'Save Photo',exact:true});
+      await save.scrollIntoViewIfNeeded();
+      assert(await save.evaluate(e=>{const r=e.getBoundingClientRect();return r.height>=44&&r.bottom<=innerHeight;}),'Save Photo must be reachable');
+      const downloadPromise=page.waitForEvent('download');await save.click();
+      const download=await downloadPromise;assert.equal(await download.failure(),null);assert.equal(download.suggestedFilename(),'my-polaroid.jpg');await download.saveAs(path.join(output,`${engine}-${width}.jpg`));
+      assert.equal(await page.locator('.instant-photo-window img').count(),1,'The revealed photo stays after saving');
+      assert.equal(page.url(),baseURL+'/');
+      // Roll again prepares a second shot without saving or leaving the camera.
+      await page.getByRole('button',{name:'Roll film',exact:true}).click();
+      await page.locator('.instant-print').waitFor({state:'detached'});
+      await page.waitForFunction(()=>{const shutter=document.querySelector('[aria-label="Capture"]');return shutter&&!shutter.disabled;});
+      await page.getByRole('button',{name:'Capture',exact:true}).click();
+      await page.locator('.instant-print').waitFor();
+      assert.equal(await page.locator('.instant-print').count(),1);
+      assert.equal(await save.count(),0,'A new print waits for its own reveal');
       assert.deepEqual(errors,[]);
       if(width===390){
         await page.goto(baseURL+'/');await prepareCamera(page,true);
@@ -268,7 +268,7 @@ async function prepareCamera(page, mobile) {
             Object.defineProperty(document,'hidden',{configurable:true,get:()=>true});
             document.dispatchEvent(new Event('visibilitychange'));
           });
-          await page.getByRole('button',{name:'Photo revealed',exact:true}).waitFor();
+          await page.getByRole('button',{name:'Save Photo',exact:true}).waitFor();
           assert.equal(await page.locator('.print-drag').evaluate(e=>getComputedStyle(e).transform),'none');
           await page.evaluate(()=>{delete document.hidden;document.dispatchEvent(new Event('visibilitychange'));});
           console.log(JSON.stringify({engine,method,noExtraShake:true,hiddenPageSettles:true}));
@@ -278,22 +278,22 @@ async function prepareCamera(page, mobile) {
         await page.locator('.instant-print').waitFor();
         assert.equal(await page.evaluate(()=>window.flashAtCapture?.opacity),1,'Reduced motion keeps a steady light before capture');
         assert.equal(await page.locator('.capture-flash').count(),0);
-        await page.getByRole('button',{name:'Retake photo',exact:true}).click();
-        await page.getByRole('button',{name:'Capture',exact:true}).click();
+        await page.getByRole('button',{name:'Roll film',exact:true}).focus();await page.keyboard.press('Enter');
+        await page.waitForFunction(()=>{const shutter=document.querySelector('[aria-label="Capture"]');return shutter&&!shutter.disabled;});
+        await page.getByRole('button',{name:'Capture',exact:true}).focus();await page.keyboard.press('Enter');
         await page.getByRole('button',{name:'Shake to reveal',exact:true}).focus();await page.keyboard.press('Enter');
-        await page.getByRole('button',{name:'Photo revealed',exact:true}).waitFor();
+        await page.getByRole('button',{name:'Save Photo',exact:true}).waitFor();
         assert.equal(await page.locator('.print-drag').evaluate(e=>getComputedStyle(e).transform),'none');
-        await page.getByRole('button',{name:'Develop',exact:true}).click();await page.waitForURL('**/edit');
-        console.log(JSON.stringify({engine,reducedMotion:true,keyboardReveal:true,develop:true}));
+        assert.equal(await page.evaluate(()=>document.activeElement?.textContent?.trim()),'Save Photo','Keyboard focus moves to Save Photo after the reveal');
+        console.log(JSON.stringify({engine,reducedMotion:true,keyboardReveal:true,keyboardSaveFocus:true}));
       }
       assert.deepEqual(errors,[]);
-      if(mobile){
-        await page.getByRole('button',{name:/^(1 )?Start$/}).click();await page.waitForURL('**/camera');
-        await page.getByRole('link',{name:'Continue your Polaroid',exact:true}).waitFor();
-        assert(await page.locator('.camera-nameplate').evaluate(e=>{const box=e.getBoundingClientRect();return [...e.children].every(child=>{const r=child.getBoundingClientRect();return r.left>=box.left-1&&r.right<=box.right+1;});}),'Camera header must fit with the resume link');
-        await page.screenshot({path:path.join(output,`${engine}-${width}-resume.png`)});
+      // Old editor links return to the camera.
+      for(const old of ['/edit','/finish','/camera']){
+        await page.goto(baseURL+old);await page.waitForURL(baseURL+'/');
+        await page.locator('main.mobile-camera').waitFor();
       }
-      console.log(JSON.stringify({engine,width,shakeSamples:transforms.length,layout,finish:true,edit:true,errors}));
+      console.log(JSON.stringify({engine,width,shakeSamples:transforms.length,layout,save:true,rollAgain:true,oldLinks:true,errors}));
       await context.close();
     }
     if(process.argv[5]==='inspect')return;
@@ -307,7 +307,7 @@ async function prepareCamera(page, mobile) {
           return permission==='denied'?Promise.reject(new DOMException('Denied','NotAllowedError')):new Promise(resolve=>window.pendingCameras.push(resolve));
         }});
       },permission);
-      const page=await context.newPage();await page.goto(baseURL+'/');await page.waitForURL('**/camera');
+      const page=await context.newPage();await page.goto(baseURL+'/');
       await page.getByText(permission==='pending'?'Waiting for the camera. Allow access if your browser asks.':/Camera permission was declined/).waitFor();
       assert(await page.getByRole('button',{name:'Capture',exact:true}).isDisabled());
       assert(await page.getByRole('button',{name:'Upload photos',exact:true}).isEnabled());
@@ -319,22 +319,26 @@ async function prepareCamera(page, mobile) {
       const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth);assert.equal(overflow,false);
       await page.screenshot({path:path.join(output,`${engine}-${permission}.png`),fullPage:true});
       if(permission==='pending'){
-        const chooser=page.waitForEvent('filechooser');await page.getByRole('button',{name:'Upload photos',exact:true}).click();await (await chooser).setFiles(path.resolve('public/sample-coast.png'));await page.waitForURL('**/edit');
-        await page.locator('.mobile-camera').waitFor({state:'detached'});
+        const chooser=page.waitForEvent('filechooser');await page.getByRole('button',{name:'Upload photos',exact:true}).click();await (await chooser).setFiles(path.resolve('public/sample-coast.png'));
+        await page.locator('.instant-print').waitFor();
+        // A camera that answers after the upload printed must not stay on behind the print.
         await page.evaluate(()=>window.pendingCameras.forEach(resolve=>resolve({getTracks:()=>[{stop(){window.cameraStops++;}}]})));
         await page.waitForFunction(()=>window.cameraStops===window.cameraRequests);
       }else{
         const chooserPromise=page.waitForEvent('filechooser');await page.getByRole('button',{name:'Upload photos',exact:true}).click();
         await (await chooserPromise).setFiles(path.resolve('public/sample-coast.png'));
-        await page.waitForURL('**/edit');
-        await page.getByRole('button',{name:/^(1 )?Start$/}).click();await page.waitForURL('**/camera');
-        await page.locator('input[type="file"]').setInputFiles(path.resolve('public/sample-coast.png'));
-        await page.getByRole('dialog',{name:'Start a new Polaroid?'}).waitFor();
-        assert.equal(await page.getByRole('dialog').evaluate(e=>getComputedStyle(e).color),'rgb(41, 44, 38)');
-        await page.getByRole('button',{name:'Keep editing',exact:true}).click();
-        await page.getByRole('link',{name:'Continue your Polaroid',exact:true}).click();await page.waitForURL('**/edit');
+        // Without a camera, an upload still prints, reveals, and saves on the camera screen.
+        await page.getByRole('button',{name:'Shake to reveal',exact:true}).click();
+        await page.getByRole('button',{name:'Save Photo',exact:true}).waitFor();
+        assert.equal(page.url(),baseURL+'/');
+        await page.screenshot({path:path.join(output,`${engine}-${permission}-upload.png`),fullPage:true});
+        const requests=await page.evaluate(()=>window.cameraRequests);
+        await page.getByRole('button',{name:'Roll film',exact:true}).click();
+        await page.locator('.instant-print').waitFor({state:'detached'});
+        await page.waitForFunction(expected=>window.cameraRequests===expected,requests+1);
+        await page.getByText(/Camera permission was declined/).waitFor();
       }
-      console.log(JSON.stringify({engine,permission,retry:permission==='denied',uploadAndResume:permission==='denied',lateStreamCleanup:permission==='pending',overflow}));
+      console.log(JSON.stringify({engine,permission,retry:permission==='denied',uploadAndSave:permission==='denied',lateStreamCleanup:permission==='pending',overflow}));
       await context.close();
     }
   } finally {await browser.close();if(browser!==launched)await launched.close();}

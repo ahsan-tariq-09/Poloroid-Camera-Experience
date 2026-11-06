@@ -6,15 +6,15 @@ import {
   Scissors,
 } from "lucide-react";
 import { motion } from "motion/react";
-import { clone, cropLayer, DEFAULT_CROP, type Tool } from "../model";
-import { panelVariants } from "../useStudioMotion";
-import { Range, PresetThumbnail } from "./shared";
+import { clone, cropLayer, DEFAULT_CROP, type Tool } from "../../model";
+import { panelVariants } from "../../useStudioMotion";
+import { Range, PresetThumbnail } from "../../studio/shared";
 import { colorNames, tapeColors, type Category, type Studio } from "./useStudioSession";
 import NumericInput from "./NumericInput";
 import FontPicker from "./FontPicker";
 import TextFormatting from "./TextFormatting";
 import LayerThumbnail from "./LayerThumbnail";
-import { MAX_PIECE_SIZE } from "../limits";
+import { MAX_PIECE_SIZE } from "../../limits";
 import PositionControls from "./PositionControls";
 
 const tools: { id: Tool; label: string; icon: typeof Copy }[] = [

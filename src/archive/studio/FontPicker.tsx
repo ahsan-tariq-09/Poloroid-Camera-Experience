@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fontFamily, fonts, loadFont } from "../fonts";
+import { fontFamily, fonts, loadFont } from "../../fonts";
 
 export default function FontPicker({value = "studio", onChange, label = "Font", sample = "The coast is calling.", bold, italic}: {
   value?: string; onChange: (id: string) => void; label?: string; sample?: string; bold?: boolean; italic?: boolean;

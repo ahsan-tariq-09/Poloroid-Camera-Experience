@@ -7,7 +7,6 @@
 .mobile-camera .camera-nameplate > span:first-child { font-size:22px; letter-spacing:-.02em; white-space:nowrap; }
 .mobile-camera nav { display:flex; gap:4px; }
 .mobile-camera .camera-nameplate { gap:6px; }
-.mobile-camera .camera-tagline { font-size:11px; }
 .mobile-camera nav :is(a,button) { display:grid; place-items:center; width:44px; height:44px; padding:0; border:1px solid #707267; border-radius:4px; color:#f5f1e5; background:#141713; }
 .mobile-camera :is(button,a):focus-visible { outline:3px solid #d9edb6; outline-offset:3px; }
 .mobile-camera .viewfinder-bezel { width:min(100%,calc(100dvh - 446px)); min-width:150px; justify-self:center; align-self:center; }
@@ -92,4 +91,26 @@
   .mobile-camera.has-print .print-outlet { padding-bottom:4px; }
   .mobile-camera.has-print .print-reveal-actions { margin-bottom:4px; }
   .mobile-camera.has-print .capture-decisions { padding-bottom:max(4px,env(safe-area-inset-bottom)); }
+}
+/* Wider windows hold the same camera as an object on the olive table, at phone proportions.
+   Short windows keep the compact layouts above and scroll rather than shrink controls. */
+@media(min-width:701px) and (min-height:601px) {
+  .app-shell.camera-page { background:transparent; }
+  .mobile-camera { display:flex; justify-content:center; align-items:flex-start; padding:clamp(12px,3dvh,32px) 16px 12px; }
+  .mobile-camera-body { width:min(100%,500px); }
+  .mobile-camera .camera-assembly { --camera-pad:22px; --slot-overlap:18px; --mobile-print-width:min(340px,calc(100% - 56px)); }
+  .mobile-camera .instant-camera { min-height:0; gap:12px; padding:18px var(--camera-pad) 16px; border:2px solid #474943; border-radius:14px; box-shadow:inset 0 1px 1px #fff5,inset 0 -3px 6px #000,0 24px 40px -18px #000c; }
+  .mobile-camera .viewfinder-bezel { width:min(100%,calc(100dvh - 465px)); min-width:240px; }
+  .mobile-camera .print-outlet { padding-bottom:20px; }
+}
+/* Tall windows have room for the full-size dials. */
+@media(min-width:701px) and (min-height:860px) {
+  .mobile-camera .viewfinder-bezel { width:min(100%,calc(100dvh - 530px)); }
+  .mobile-camera .camera-settings { grid-template-columns:minmax(96px,1fr) 152px 48px; gap:10px 8px; }
+  .mobile-camera .iso-dial { --iso-radius:54px; width:152px; height:152px; }
+  .mobile-camera .film-roll { width:60px; height:60px; min-height:60px; }
+}
+/* Short, wide windows keep the landscape camera at a believable width. */
+@media(orientation:landscape) and (max-height:600px) and (min-width:960px) {
+  .mobile-camera .camera-assembly { max-width:920px; margin-inline:auto; }
 }

@@ -82,18 +82,22 @@ async function layout(page, platform) {
       const page = await context.newPage(), errors = [], downloads = [];
       page.on('pageerror', error => errors.push(error.message));
       page.on('download', file => downloads.push(file.suggestedFilename()));
+      // The camera prints an uploaded photo, so saving needs no camera device.
       await page.goto(baseURL);
-      await page.getByRole('button', { name: 'Try Classic example', exact: true }).click();
-      await page.getByRole('button', { name: /^(3 )?Finish$/, exact: true }).click();
+      await page.locator('input[type="file"]').setInputFiles(path.resolve('public/sample-coast.png'));
+      const reveal = page.getByRole('button', { name: 'Shake to reveal', exact: true });
+      await page.waitForFunction(() => { const button = document.querySelector('.shake-reveal'); return button && !button.disabled; });
+      assert.equal(await page.getByRole('button', { name: 'Save Photo', exact: true }).count(), 0, 'Save waits for the reveal');
+      await reveal.click();
       const save = page.getByRole('button', { name: 'Save Photo', exact: true });
-      await save.waitFor();
-      await page.waitForFunction(() => document.querySelector('[aria-label="Finished Polaroid"]').width > 300);
+      await save.waitFor({ timeout: 15000 });
+      await page.waitForFunction(() => !document.querySelector('.download-main').disabled);
       if (platform === 'Win32' || platform === 'iPhone') await layout(page, platform);
       if (platform === 'Win32' || platform === 'Linux armv8l') {
-        for (const format of platform === 'Win32' ? ['jpeg', 'png', 'svg', 'heic'] : ['jpeg']) {
-          await page.getByLabel('Download format').selectOption(format);
-          await download(page, format === 'jpeg' ? 'jpg' : format);
-        }
+        await download(page, 'jpg');
+        // The revealed photo stays, so it can be saved again.
+        await download(page, 'jpg');
+        assert.equal(await page.locator('.instant-photo-window img').count(), 1);
         assert.equal(await page.evaluate(() => window.shareCalls.length), 0);
       } else {
         await save.press('Enter');
@@ -116,27 +120,11 @@ async function layout(page, platform) {
         await page.getByText('Sharing is unavailable.', { exact: false }).waitFor();
         assert.equal(downloads.length, 0);
         await download(page, 'jpg');
-        await page.evaluate(() => { window.shareMode = 'success'; });
-        await page.getByLabel('Download format').selectOption('png');
-        await save.click();
-        await page.getByText('Share sheet closed.', { exact: false }).waitFor();
-        assert.equal(await page.evaluate(() => window.lastShared.type), 'image/png');
-        await page.getByLabel('Download format').selectOption('svg');
-        await download(page, 'svg');
       }
-      if (platform === 'Win32') {
-        await page.getByRole('link', { name: 'Explore 3D-printable frames' }).click();
-        assert(page.url().endsWith('#printable-frames'));
-        for (const href of await page.locator('.frame-downloads a').evaluateAll(links => links.map(a => a.href))) {
-          const response = await page.request.get(href);
-          assert.equal(response.status(), 200);
-          assert((await response.body()).length > 1000);
-        }
-        await page.getByRole('link', { name: 'Back to editing' }).click();
-        await page.waitForURL('**/edit');
-        await page.getByRole('button', { name: /^(3 )?Finish$/, exact: true }).click();
-        await save.waitFor();
-      }
+      // Roll again clears the print without saving first.
+      await page.getByRole('button', { name: 'Roll film', exact: true }).click();
+      await page.locator('.instant-print').waitFor({ state: 'detached' });
+      assert.equal(await save.count(), 0);
       assert.deepEqual(errors, [], 'No browser exceptions');
       console.log(`${engine}: ${platform} save flow passed`);
       await context.close();

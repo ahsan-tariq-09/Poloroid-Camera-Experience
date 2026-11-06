@@ -1,6 +1,6 @@
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, AlignCenter } from "lucide-react";
-import { FRAME, PHOTO, type Layer } from "../model";
-import { MIN_POSITION, MAX_POSITION } from "../limits";
+import { FRAME, PHOTO, type Layer } from "../../model";
+import { MIN_POSITION, MAX_POSITION } from "../../limits";
 
 export default function PositionControls({layer, onChange}: {layer: Layer; onChange: (values: Partial<Layer>) => void}) {
   const move = (dx: number, dy: number) => onChange({x: Math.max(MIN_POSITION,Math.min(MAX_POSITION,layer.x+dx)),y: Math.max(MIN_POSITION,Math.min(MAX_POSITION,layer.y+dy))});

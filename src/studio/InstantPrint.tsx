@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type PointerEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type PointerEvent, type ReactNode } from "react";
 import { motion, useMotionValue } from "motion/react";
 import { Hand } from "lucide-react";
 import { createPhoneShakeDetector } from "./phoneShake";
@@ -9,14 +9,16 @@ const PHOTO_DEVELOPMENT_DELAY_MS = 2000;
 export const PRINT_EJECTION_MS = 3000;
 
 /** Owns the blank-to-developed print, gestures, and optional phone sensor access. */
-export default function InstantPrint({ photos, caption, enabled, onReveal, onRetake }: {
-  photos: {src:string;alt:string}[]; caption:string; enabled:boolean; onReveal:()=>void; onRetake?:()=>void;
+export default function InstantPrint({ photos, caption, enabled, onReveal, onRetake, actions }: {
+  photos: {src:string;alt:string}[]; caption:string; enabled:boolean; onReveal?:()=>void; onRetake?:()=>void;
+  /** Replaces Shake to reveal once the photo has fully developed. */
+  actions?: ReactNode;
 }) {
   const [phase,setPhase]=useState<"ejecting"|"blank"|"developing"|"revealed">(enabled?"ejecting":"blank");
   const motionApi=window.isSecureContext?window.DeviceMotionEvent as MotionAccess|undefined:undefined;
   const [sensorActive,setSensorActive]=useState(false);
   const [buttonShake,setButtonShake]=useState(false);
-  const revealStarted=useRef(false), revealCallback=useRef(onReveal);
+  const revealStarted=useRef(false), revealCallback=useRef(onReveal), actionRow=useRef<HTMLDivElement>(null);
   const offset=useMotionValue(0);
   const gesture=useRef<{id:number;anchor:number;direction:number;turns:number;distance:number}|null>(null);
   revealCallback.current=onReveal;
@@ -33,7 +35,7 @@ export default function InstantPrint({ photos, caption, enabled, onReveal, onRet
   },[phase,enabled]);
   useEffect(()=>{
     if(phase!=="developing")return;
-    const finish=()=>{setPhase("revealed");revealCallback.current();};
+    const finish=()=>{setPhase("revealed");revealCallback.current?.();};
     if(!enabled){finish();return;}
     // Leave a paint interval after the development fade before enabling next actions.
     const timer=setTimeout(finish,PHOTO_DEVELOPMENT_MS+100);
@@ -52,6 +54,12 @@ export default function InstantPrint({ photos, caption, enabled, onReveal, onRet
     document.addEventListener("visibilitychange",detector.reset);
     return()=>{window.removeEventListener("devicemotion",listener);document.removeEventListener("visibilitychange",detector.reset);};
   },[motionApi,phase,reveal]);
+  useEffect(()=>{
+    // The spent reveal button drops keyboard focus to the page or, in WebKit, to the camera body.
+    // Hand it to the first new action unless the user already moved to another control.
+    const active=document.activeElement;
+    if(phase==="revealed"&&(!active||active.contains(actionRow.current)))actionRow.current?.querySelector<HTMLElement>("button:not(:disabled)")?.focus();
+  },[phase]);
   const revealByButton=()=>{
     // Permission prompts require a user gesture. Revealing this print never depends on access.
     if(motionApi?.requestPermission&&!sensorActive){
@@ -88,8 +96,8 @@ export default function InstantPrint({ photos, caption, enabled, onReveal, onRet
       </motion.div>
     </motion.div></div>
     <div className="print-reveal-actions">
-      <div className="print-action-row">
-        <button className={`${phase==="blank"?"primary-button":"secondary-button"} shake-reveal`} aria-label={phase==="revealed"?"Photo revealed":"Shake to reveal"} disabled={phase!=="blank"} onClick={revealByButton}><Hand size={20}/>{phase==="ejecting"?"Printing…":phase==="blank"?"Shake to reveal":phase==="revealed"?"Photo revealed":"Developing…"}</button>
+      <div className="print-action-row" ref={actionRow}>
+        {phase==="revealed"&&actions ? actions : <button className={`${phase==="blank"?"primary-button":"secondary-button"} shake-reveal`} aria-label={phase==="revealed"?"Photo revealed":"Shake to reveal"} disabled={phase!=="blank"} onClick={revealByButton}><Hand size={20}/>{phase==="ejecting"?"Printing…":phase==="blank"?"Shake to reveal":phase==="revealed"?"Photo revealed":"Developing…"}</button>}
         {onRetake&&<button className="secondary-button retake-photo" onClick={onRetake}>Retake photo</button>}
       </div>
       <span className="sr-only" role="status">{phase==="ejecting"?"Printing…":phase==="blank"?"Shake to reveal":phase==="revealed"?"Photo revealed":"Developing…"}</span>
