@@ -234,7 +234,8 @@
 /* Controls drawn from the POLAROID Illustrator files: load lever, film counter, flash plate and ISO bar. */
 /* --lever sizes the lever; the status label is centred over the lever, not the lever plus counter. */
 .film-control { --lever:60px; align-items:flex-start; }
-.film-control > span { display:flex; justify-content:center; width:var(--lever); }
+/* The lever label wraps word by word so it stays centred on the lever and inside the body on narrow cameras. */
+.instant-camera .film-control > span { display:grid; justify-items:center; width:var(--lever); text-align:center; white-space:normal; line-height:1.15; min-height:2.3em; align-content:end; }
 .film-control-row { display:flex; align-items:flex-start; gap:10px; }
 .film-roll { position:relative; width:var(--lever); height:var(--lever); min-height:var(--lever); margin-bottom:calc(var(--lever) * .34); padding:0; border:0; border-radius:50%;
   background:radial-gradient(circle at 34% 28%,#6f6966,#55504e 48%,#34302f); box-shadow:0 4px 8px #000c,inset 0 1px 1px #ffffff2e,inset 0 -2px 4px #0008; }
@@ -266,6 +267,8 @@
 .flash-bat { position:absolute; z-index:1; left:calc(50% - 3.5px); top:calc(50% - 3.5px); width:7px; height:18px; border-radius:3.5px; transform-origin:50% 3.5px; transform:rotate(-35deg);
   background:linear-gradient(90deg,#4a4644,#9d9692 45%,#5c5855); box-shadow:1px 2px 3px #0008; transition:transform .15s ease-out; }
 .flash-switch[aria-checked=true] .flash-bat { transform:rotate(-145deg); }
+/* The plate is fixed to the body: pressing it moves only the bat, never the plate (overrides the global button press scale). */
+.instant-camera .flash-switch:active { scale:none; }
 .flash-led { width:7px; height:7px; flex-shrink:0; border-radius:50%; background:#5e1f1c; box-shadow:inset 0 1px 1px #0006; }
 .flash-switch[aria-checked=true] .flash-led { background:#ed1f24; box-shadow:0 0 6px #ff3b30,inset 0 1px 1px #fff6; }
 

@@ -17,7 +17,7 @@ export default function OpenOnPhone() {
     let live = true;
     // The encoder loads only on desktop, after the camera.
     void import("qrcode")
-      .then(qr => qr.toDataURL(url, { margin: 1, width: 320, errorCorrectionLevel: "M", color: { dark: "#141713", light: "#fff9e9" } }))
+      .then(qr => qr.toDataURL(url, { margin: 1, width: 480, errorCorrectionLevel: "M", color: { dark: "#141713", light: "#fff9e9" } }))
       .then(data => { if (live) setCode(data); })
       .catch(() => { /* Without a code the popover still names the address. */ });
     return () => { live = false; };
@@ -39,7 +39,7 @@ export default function OpenOnPhone() {
     <button ref={toggle} type="button" aria-label="Open on your phone" aria-expanded={open} aria-controls={id} onClick={() => setOpen(value => !value)}><QrCode size={20}/></button>
     {open && <div className="phone-qr" id={id} role="dialog" aria-label="Open roid on your phone">
       <button type="button" className="phone-qr-close" aria-label="Close" onClick={() => setOpen(false)}><X size={16}/></button>
-      {code ? <img src={code} width={160} height={160} alt={`QR code for ${url}`}/> : <span className="phone-qr-pending" aria-hidden="true"/>}
+      {code ? <img src={code} width={240} height={240} alt={`QR code for ${url}`}/> : <span className="phone-qr-pending" aria-hidden="true"/>}
       <p><b>Scan to open roid on your phone</b>Shoot, shake and save with your phone's camera.</p>
       <span className="phone-qr-url">{url.replace(/^https?:\/\//, "").replace(/\/$/, "")}</span>
     </div>}

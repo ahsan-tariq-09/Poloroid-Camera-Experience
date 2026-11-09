@@ -3,10 +3,10 @@ import { RefreshCw } from "lucide-react";
 import InstantCamera from "./InstantCamera";
 import OpenOnPhone from "./OpenOnPhone";
 
-/** Add photo: a Polaroid with a plus in its window, a second print tilted behind it (lucide 24px grid). */
+/** Add photo: a plus at the top left, outside a Polaroid with a second print tilted behind it (lucide 24px grid). */
 function AddPolaroidIcon({ size = 20 }: { size?: number }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M7.5 7 8.4 3.6l12.9 3.5-3.6 13.1-1.7-.5"/><rect x="2.5" y="7" width="13" height="15" rx="1.5"/><path d="M2.5 18h13"/><path d="M9 9.8v5.4M6.3 12.5h5.4"/>
+    <path d="M5 2v6M2 5h6"/><path d="M12.5 9 13.3 6l8.7 2.3-2 7.4"/><rect x="8" y="9" width="12" height="13" rx="1.5"/><path d="M8 18.5h12"/>
   </svg>;
 }
 

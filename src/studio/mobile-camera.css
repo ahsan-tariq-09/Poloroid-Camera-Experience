@@ -48,7 +48,7 @@
 /* Short portrait phones: compact hardware keeps the finder dominant. */
 @media(orientation:portrait) and (max-height:740px) {
   .mobile-camera .instant-camera { gap:6px; padding-top:max(8px,env(safe-area-inset-top)); padding-bottom:max(8px,env(safe-area-inset-bottom)); }
-  .mobile-camera .viewfinder-bezel { width:min(100%,calc(100dvh - 404px - env(safe-area-inset-top) - env(safe-area-inset-bottom))); min-width:150px; }
+  .mobile-camera .viewfinder-bezel { width:min(100%,calc(100dvh - 416px - env(safe-area-inset-top) - env(safe-area-inset-bottom))); min-width:150px; }
   .mobile-camera .camera-settings { grid-template-columns:88px minmax(140px,1fr) 54px; gap:6px 8px; }
   .mobile-camera .camera-settings legend { margin-bottom:6px; }
   .mobile-camera .film-presets legend { margin-bottom:0; }
@@ -189,13 +189,13 @@
 
 /* Desktop QR popover: a warm paper card under the header buttons. */
 .open-on-phone { position:relative; }
-.phone-qr { position:absolute; top:calc(100% + 10px); right:0; z-index:20; display:grid; justify-items:center; gap:10px; width:228px; padding:18px 16px 14px; border-radius:6px; color:#292c26; background:#fff9e9; box-shadow:0 18px 32px -12px #000d,0 0 0 1px #0003; text-align:center; animation:phone-qr-open .25s var(--ease-smooth-out); }
+.phone-qr { position:absolute; top:calc(100% + 10px); right:0; z-index:20; display:grid; justify-items:center; gap:12px; width:300px; padding:24px 20px 18px; border-radius:6px; color:#292c26; background:#fff9e9; box-shadow:0 18px 32px -12px #000d,0 0 0 1px #0003; text-align:center; animation:phone-qr-open .25s var(--ease-smooth-out); }
 .phone-qr::before { content:''; position:absolute; top:-6px; right:16px; width:12px; height:12px; background:#fff9e9; rotate:45deg; }
-.phone-qr img,.phone-qr-pending { display:block; width:160px; height:160px; image-rendering:pixelated; }
+.phone-qr img,.phone-qr-pending { display:block; width:240px; height:240px; image-rendering:pixelated; }
 .phone-qr-pending { background:#e9e2cf; }
-.phone-qr p { margin:0; font:400 13px/1.4 "Helvetica Neue",Helvetica,Arial,sans-serif; color:#4a4a42; }
-.phone-qr p b { display:block; color:#1c1e1a; font-weight:700; font-size:14px; }
-.phone-qr-url { font:600 12px/1 "Helvetica Neue",Helvetica,Arial,sans-serif; letter-spacing:.02em; color:#6a6658; overflow-wrap:anywhere; }
+.phone-qr p { margin:0; font:400 14px/1.4 "Helvetica Neue",Helvetica,Arial,sans-serif; color:#4a4a42; }
+.phone-qr p b { display:block; color:#1c1e1a; font-weight:700; font-size:16px; }
+.phone-qr-url { font:600 13px/1 "Helvetica Neue",Helvetica,Arial,sans-serif; letter-spacing:.02em; color:#6a6658; overflow-wrap:anywhere; }
 .phone-qr .phone-qr-close { position:absolute; top:2px; right:2px; display:grid; place-items:center; width:36px; height:36px; padding:0; border:0; border-radius:4px; color:#4a4a42; background:transparent; }
 .phone-qr .phone-qr-close:hover { color:#1c1e1a; background:#0000000f; }
 .mobile-camera .phone-qr :is(a,button):focus-visible { outline-color:#3d6b2f; }
