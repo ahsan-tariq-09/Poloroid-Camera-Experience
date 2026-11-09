@@ -70,7 +70,7 @@
   .camera-experience .camera-assembly { max-width:360px; margin-inline:auto; }
   .camera-footnote { font-size:10px; }
 }
-@media(max-width:370px) { .instant-camera,.camera-experience .instant-camera { padding:12px; }.camera-nameplate > span:first-child,.camera-experience .camera-nameplate > span:first-child { font-size:13px; }.film-roll { --lever:52px; }.camera-hardware-copy { font-size:10px; }.intro-copy h1 { font-size:31px; }.start-actions { flex-wrap:wrap; } }
+@media(max-width:370px) { .instant-camera,.camera-experience .instant-camera { padding:12px; }.camera-nameplate > span:first-child,.camera-experience .camera-nameplate > span:first-child { font-size:13px; }.film-control { --lever:52px; }.camera-hardware-copy { font-size:10px; }.intro-copy h1 { font-size:31px; }.start-actions { flex-wrap:wrap; } }
 
 /* A single measurement keeps the paper aligned with the physical exit slot. */
 .camera-assembly { --camera-pad:24px; --slot-overlap:20px; --slot-inset:calc(var(--camera-pad) + 7px); width:100%; }
@@ -119,7 +119,7 @@
 /* Knurled timer, metal film cartridges and a two-position flash lever. */
 .camera-settings { display:grid; grid-template-columns:minmax(86px,1fr) 120px 44px; gap:12px; align-items:center; margin-top:20px; color:#f5f1e5; }
 .camera-settings fieldset { min-width:0; border:0; margin:0; padding:0; }
-.camera-settings legend,.flash-control > span:first-child { color:#f5f1e5; font-size:12px; font-weight:600; margin-bottom:10px; text-align:center; width:100%; }
+.camera-settings legend { color:#f5f1e5; font-size:12px; font-weight:600; margin-bottom:10px; text-align:center; width:100%; }
 .timer-dial { position:relative; width:96px; height:96px; margin:auto; touch-action:none; user-select:none; -webkit-user-select:none; cursor:grab; }
 /* While a finger turns the dial or slides the ISO pointer, they follow it with no easing. */
 .timer-dial.turning { cursor:grabbing; }
@@ -196,7 +196,6 @@
   .camera-experience .instant-camera { padding:16px; }
   .camera-settings,.camera-experience .camera-settings { grid-template-columns:minmax(78px,1fr) 120px; grid-template-areas:"film dials" "flash dials"; gap:12px; margin-top:20px; }
   .camera-settings .flash-control { display:flex; align-items:center; justify-content:center; gap:6px; }
-  .camera-settings .flash-control > span:first-child { width:auto; margin:0; }
   .camera-settings .film-presets { align-self:end; }
   .camera-experience .camera-assembly { max-width:min(380px,100%); }
 }
@@ -233,8 +232,11 @@
 
 /* Lighten/darken ISO bar: white and black arrow plates above a ruler, after the 600-series slider. */
 /* Controls drawn from the POLAROID Illustrator files: load lever, film counter, flash plate and ISO bar. */
+/* --lever sizes the lever; the status label is centred over the lever, not the lever plus counter. */
+.film-control { --lever:60px; align-items:flex-start; }
+.film-control > span { display:flex; justify-content:center; width:var(--lever); }
 .film-control-row { display:flex; align-items:flex-start; gap:10px; }
-.film-roll { --lever:60px; position:relative; width:var(--lever); height:var(--lever); min-height:var(--lever); margin-bottom:calc(var(--lever) * .34); padding:0; border:0; border-radius:50%;
+.film-roll { position:relative; width:var(--lever); height:var(--lever); min-height:var(--lever); margin-bottom:calc(var(--lever) * .34); padding:0; border:0; border-radius:50%;
   background:radial-gradient(circle at 34% 28%,#6f6966,#55504e 48%,#34302f); box-shadow:0 4px 8px #000c,inset 0 1px 1px #ffffff2e,inset 0 -2px 4px #0008; }
 .film-roll:hover:not(:disabled) { background:radial-gradient(circle at 34% 28%,#7a7471,#5d5856 48%,#393534); }
 .film-roll::before { content:''; position:absolute; inset:23%; border-radius:50%; background:radial-gradient(circle at 50% 40%,#3a3a3a,#2d2d2d 55%,#1d1d1d); box-shadow:inset 0 2px 5px #000; }

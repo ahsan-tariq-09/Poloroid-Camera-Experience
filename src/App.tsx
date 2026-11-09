@@ -15,7 +15,7 @@ import Camera from "./Camera";
 import { useStudioMotion } from "./useStudioMotion";
 import ScrapbookScreen from "./studio/ScrapbookScreen";
 import { useScrapbook } from "./studio/useScrapbook";
-import { soundEnabled, setSoundEnabled } from "./sounds";
+import { soundEnabled, setSoundEnabled, unlockSound } from "./sounds";
 import InstallApp from "./studio/InstallApp";
 
 /**
@@ -79,7 +79,10 @@ function StudioApp() {
           const files = Array.from(e.dataTransfer.files);
           if (path === "/scrapbook") {
             if (!book.busy) void book.addFiles(files);
-          } else print(files);
+          } else {
+            void unlockSound();
+            print(files);
+          }
         }}
       >
         <input
@@ -109,7 +112,11 @@ function StudioApp() {
               <Camera
                 enabled={enabled}
                 upload={upload}
-                onUpload={() => input.current?.click()}
+                onUpload={() => {
+                  // Resume audio inside the click so the print's ejection sound can play.
+                  void unlockSound();
+                  input.current?.click();
+                }}
                 navigation={soundButton(20)}
               />
             }

@@ -53,21 +53,23 @@ function track(source: AudioScheduledSourceNode, nodes: AudioNode[]) {
   active.set(source, clean);
   source.onended = clean;
 }
-export async function playSound(kind: Exclude<Clip, "click"> | "paper" | "tick") {
+/** "eject" is the print leaving the slot without the shutter click, for uploaded photos. */
+export async function playSound(kind: Exclude<Clip, "click"> | "eject" | "paper" | "tick") {
   if (!enabled || document.hidden) return;
-  if (kind === "load" || kind === "shutter") stopSounds();
+  const recording = kind === "load" || kind === "shutter" || kind === "eject";
+  if (recording) stopSounds();
   const token = generation, requested = performance.now(), resumed = unlockSound(), ctx = audio;
   if (!ctx) return;
   let cancel!: () => void;
   const cancelled = new Promise<undefined>(resolve => { cancel = () => resolve(undefined); pending.add(cancel); });
   const timeout = setTimeout(cancel, 2000);
   try {
-    const ready = await Promise.race([Promise.all([resumed, kind === "load" || kind === "shutter" ? loadClip(kind, ctx) : undefined, kind === "shutter" ? loadClip("click", ctx) : undefined]), cancelled]);
+    const ready = await Promise.race([Promise.all([resumed, recording ? loadClip(kind === "eject" ? "shutter" : kind, ctx) : undefined, kind === "shutter" ? loadClip("click", ctx) : undefined]), cancelled]);
     // A late decode/resume must not attach an old effect to a newer camera action.
     if (!ready || !enabled || document.hidden || token !== generation || ctx.state !== "running") return;
     if ((kind === "tick" || kind === "paper") && performance.now() - requested > 250) return;
     const buffer = ready[1];
-    if (kind === "load" || kind === "shutter") {
+    if (recording) {
       const click = ready[2];
       if (click) {
         const source = ctx.createBufferSource(); source.buffer = click;

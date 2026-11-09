@@ -7,9 +7,6 @@ const engine = process.argv[3] || 'cdp';
 const output = path.resolve(process.argv[4] || 'camera-browser-results');
 const baseURL = process.env.CAMERA_TEST_URL || 'http://127.0.0.1:5174';
 fs.mkdirSync(output, {recursive:true});
-// Mirrors isoAt in src/studio/CameraSettings.tsx: geometric between the five evenly spaced stops.
-const isoStops=[100,400,800,1600,3200];
-function isoAt(position){const f=Math.max(0,Math.min(1,position))*4,i=Math.min(3,Math.floor(f));return Math.round(isoStops[i]*(isoStops[i+1]/isoStops[i])**(f-i));}
 async function prepareCamera(page, mobile) {
   assert.equal(await page.getByRole('button',{name:'Timer off',exact:true}).getAttribute('aria-pressed'),'true','New cameras must start with the timer off');
   assert.equal(await page.locator('.film-stripes, .camera-signature').count(),0,'The spectrum flag is gone');
@@ -111,25 +108,25 @@ async function prepareCamera(page, mobile) {
         for(const [index,value] of [[0,100],[1,400],[2,800],[3,1600],[4,3200],[2,800]]){
           const x=travel.pad+travel.span*index/4;
           await iso.tap({position:{x,y:travel.y}});
-          // The bar is continuous: allow the tap to land 1.5px either side, which is several ISO on a short bar.
-          const read=Number(await iso.getAttribute('aria-valuenow')),low=isoAt((x-1.5-travel.pad)/travel.span),high=isoAt((x+1.5-travel.pad)/travel.span);
-          assert(read>=low&&read<=high,`Tap at ${index}/4 of the ISO bar read ${read}, expected ${value} (${low}-${high})`);
+          assert.equal(await iso.getAttribute('aria-valuenow'),String(value));
           await page.waitForTimeout(300); // a tap eases the needle over .25s
           const needle=await iso.locator('.iso-pointer').evaluate((e,left)=>{const r=e.getBoundingClientRect();return r.left+r.width/2-left;},(await iso.boundingBox()).x);
-          assert(Math.abs(needle-x)<=1.5,`The needle sits under the tap at ${index}/4`);
+          assert(Math.abs(needle-x)<=1.5,`The needle sits on the ${value} stop`);
         }
         assert.equal(await iso.locator('.iso-mark').count(),0,'The ISO bar shows no numbers');
-        // Dragging moves the needle with the finger and stops between stops.
+        // Dragging moves the needle with the finger; letting go snaps it to the nearest stop (70% along: 1600).
         const box=await iso.boundingBox(),needle=()=>iso.locator('.iso-pointer').evaluate(e=>{const r=e.getBoundingClientRect();return r.left+r.width/2;});
+        const finger=box.x+travel.pad+travel.span*.7;
         await page.mouse.move(box.x+box.width/2,box.y+box.height/2);await page.mouse.down();
-        await page.mouse.move(box.x+box.width/2+travel.span/8,box.y+box.height/2,{steps:6});
+        await page.mouse.move(finger,box.y+box.height/2,{steps:6});
         // WebKit paints the drag state a frame later than Chromium, so wait for it rather than sampling once.
         await page.waitForFunction(()=>document.querySelector('.mobile-camera .iso-slider').classList.contains('sliding'),null,{timeout:2000});
-        assert(Math.abs(await needle()-(box.x+box.width/2+travel.span/8))<=2,'The ISO needle follows the pointer');
+        assert(Math.abs(await needle()-finger)<=2,'The ISO needle follows the pointer');
         await page.mouse.up();
-        const dragged=Number(await iso.getAttribute('aria-valuenow'));
-        const slack=1.5/travel.span;
-        assert(dragged>=isoAt(.625-slack)&&dragged<=isoAt(.625+slack),`Dragging an eighth right of 800 rests near ISO 1131, got ${dragged}`);
+        assert.equal(await iso.getAttribute('aria-valuenow'),'1600');
+        await page.waitForTimeout(300);
+        assert(Math.abs(await needle()-(box.x+travel.pad+travel.span*.75))<=1.5,'Letting go snaps the needle onto the 1600 stop');
+        await iso.tap({position:{x:travel.pad+travel.span/2,y:travel.y}});
         const requests=await page.evaluate(()=>window.cameraRequests);
         await page.evaluate(()=>{window.cameraVideo=document.querySelector('video');});
         assert.equal(await page.getByRole('button',{name:'Camera settings',exact:true}).count(),0);

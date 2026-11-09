@@ -1,12 +1,12 @@
 import type { ReactNode, RefObject } from "react";
 import { RefreshCw } from "lucide-react";
 import InstantCamera from "./InstantCamera";
+import OpenOnPhone from "./OpenOnPhone";
 
-/** A boxy 1970s instant camera with a print leaving its slot, drawn on the lucide 24px grid. */
-function RetroInstantIcon({ size = 20 }: { size?: number }) {
+/** Add photo: a Polaroid with a plus in its window, a second print tilted behind it (lucide 24px grid). */
+function AddPolaroidIcon({ size = 20 }: { size?: number }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M5 5V3.5h5V5"/><rect x="2.5" y="5" width="19" height="12" rx="2"/>
-    <circle cx="11" cy="11" r="3.25"/><path d="M16.5 8h2"/><path d="M7 17v4h10v-4"/>
+    <path d="M7.5 7 8.4 3.6l12.9 3.5-3.6 13.1-1.7-.5"/><rect x="2.5" y="7" width="13" height="15" rx="1.5"/><path d="M2.5 18h13"/><path d="M9 9.8v5.4M6.3 12.5h5.4"/>
   </svg>;
 }
 
@@ -23,7 +23,7 @@ export default function MobileCameraScreen({ containerRef, navigation, viewfinde
     <h1 className="sr-only">roid instant camera</h1>
     <div className="mobile-camera-body" ref={containerRef} tabIndex={-1}>
       <InstantCamera printed={captured} print={print} settings={settings}
-        navigation={<nav aria-label="Camera navigation">{navigation}<button onClick={onUpload} disabled={taking} aria-label="Upload photos"><RetroInstantIcon/></button></nav>}
+        navigation={<nav aria-label="Camera navigation">{navigation}<button onClick={onUpload} disabled={taking} aria-label="Upload photos"><AddPolaroidIcon/></button><OpenOnPhone/></nav>}
         onRoll={onRoll} rollDisabled={taking || loading} loaded={loaded} loading={loading} ready={ready} filmLeft={filmLeft}
         onShutter={onShutter} disabled={disabled} label="Capture" status={status}
         controls={<button className="camera-flip" onClick={onFlip} disabled={taking || loading || captured} aria-label="Flip camera"><RefreshCw size={20}/></button>}>

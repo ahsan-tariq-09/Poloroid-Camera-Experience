@@ -123,7 +123,7 @@ export default function Camera({onUpload, enabled, initialSettings, navigation, 
       const owned=value.assets.photo.url;
       if(!current||!alive.current||sheet.current!==id){if(owned.startsWith("blob:"))URL.revokeObjectURL(owned);return;}
       if(owned.startsWith("blob:"))urls.current.push(owned);
-      showPrint(upload.file,owned,value);
+      showPrint(upload.file,owned,value);playSound("eject");
     }).catch(reason=>{if(current&&alive.current&&sheet.current===id)setError(upload.file.name+": "+(reason instanceof Error?reason.message:"Could not open this photo."));});
     return()=>{current=false;};
   },[upload]);

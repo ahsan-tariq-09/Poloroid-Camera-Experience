@@ -93,13 +93,13 @@ it("opens the camera screen ready to capture and keeps its stream while using vi
     await act(async()=>root.render(<Camera enabled={false} onUpload={()=>{}}/>));
     expect(getUserMedia).toHaveBeenCalledOnce();
     expect(host.querySelector("main.mobile-camera")).not.toBeNull();
-    expect(host.querySelector('[role="dialog"]')).toBeNull();
+    expect(host.querySelector('[role="dialog"]:not(.phone-qr)')).toBeNull();
     expect(host.querySelector<HTMLButtonElement>('[aria-label="Capture"]')!.disabled).toBe(false);
     const video=host.querySelector("video");
     expect(host.querySelector('button[aria-label="Camera settings"]')).toBeNull();
     await act(async()=>host.querySelector('[aria-label="ISO effect"]')!.dispatchEvent(new KeyboardEvent("keydown",{key:"ArrowRight",bubbles:true})));
     expect(host.querySelector('[role="slider"]')!.getAttribute('aria-valuenow')).toBe('1600');
-    expect(host.querySelector('[role="dialog"]')).toBeNull();
+    expect(host.querySelector('[role="dialog"]:not(.phone-qr)')).toBeNull();
     expect(host.querySelector("video")).toBe(video);
     expect(getUserMedia).toHaveBeenCalledOnce();
     expect(host.querySelector('[aria-label="Close camera"]')).toBeNull();
@@ -325,11 +325,14 @@ it("prints an uploaded photo in place of a capture and keeps the camera settings
   Object.defineProperty(navigator,"mediaDevices",{configurable:true,value:{getUserMedia:vi.fn().mockResolvedValue({getTracks:()=>[{stop}]})}});
   URL.revokeObjectURL=vi.fn();
   const file=new File(["x"],"beach.heic",{lastModified:Date.UTC(2024,6,4,12)});
+  const play=vi.spyOn(sounds,"playSound").mockResolvedValue();
   try{
     await act(async()=>root.render(<Camera enabled={false} onUpload={()=>{}}/>));
     await act(async()=>host.querySelector('[aria-label="ISO effect"]')!.dispatchEvent(new KeyboardEvent("keydown",{key:"ArrowRight",bubbles:true})));
     await act(async()=>root.render(<Camera enabled={false} onUpload={()=>{}} upload={{file,id:1}}/>));
     expect(saved.importPolaroid).toHaveBeenCalledWith(file,true);
+    // The uploaded print leaves the slot with the ejection sound, without the shutter click.
+    expect(play).toHaveBeenCalledWith("eject");
     expect(host.querySelector<HTMLImageElement>(".instant-print img")).toBeNull();
     await act(async()=>host.querySelector<HTMLButtonElement>('[aria-label="Shake to reveal"]')!.click());
     expect(host.querySelector<HTMLImageElement>('img[alt="Your captured photo"]')!.src).toBe("blob:asset-beach.heic");
