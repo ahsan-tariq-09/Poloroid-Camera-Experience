@@ -9,7 +9,7 @@ import {
   useNavigate,
 } from "react-router";
 import { MotionConfig } from "motion/react";
-import { Volume2, VolumeX, BookOpen } from "lucide-react";
+import { Volume2, VolumeX } from "lucide-react";
 import { ACCEPT } from "./imports";
 import Camera from "./Camera";
 import { useStudioMotion } from "./useStudioMotion";
@@ -110,14 +110,7 @@ function StudioApp() {
                 enabled={enabled}
                 upload={upload}
                 onUpload={() => input.current?.click()}
-                navigation={
-                  <>
-                    <Link to="/scrapbook" aria-label="Scrapbook">
-                      <BookOpen size={20} />
-                    </Link>
-                    {soundButton(20)}
-                  </>
-                }
+                navigation={soundButton(20)}
               />
             }
           />

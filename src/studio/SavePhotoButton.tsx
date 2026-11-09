@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Download } from "lucide-react";
 import { download, prepareExport } from "../render";
 import type { ExportFormat } from "../render";
 import type { Assets, Composition } from "../model";
@@ -58,7 +57,7 @@ export default function SavePhotoButton({ studio: s }: { studio: SaveStudio }) {
           shareable: false,
         });
         setMessage(
-          "Could not prepare sharing. Tap Save Photo to try a file download.",
+          "Could not prepare sharing. Tap Save to try a file download.",
         );
       });
     return () => {
@@ -95,7 +94,7 @@ export default function SavePhotoButton({ studio: s }: { studio: SaveStudio }) {
       } else {
         setDownloadInstead(true);
         setMessage(
-          "Sharing is unavailable. Tap Save Photo to download the file instead.",
+          "Sharing is unavailable. Tap Save to download the file instead.",
         );
       }
     } finally {
@@ -106,7 +105,8 @@ export default function SavePhotoButton({ studio: s }: { studio: SaveStudio }) {
   return (
     <>
       <button
-        className="primary-button download-main"
+        className="save-plate"
+        aria-label={preparing || s.exporting ? undefined : "Save Photo"}
         disabled={s.exporting || busy || preparing || sharing}
         aria-describedby={
           message || sharing || preparing || shareable
@@ -115,8 +115,7 @@ export default function SavePhotoButton({ studio: s }: { studio: SaveStudio }) {
         }
         onClick={() => void save()}
       >
-        <Download size={17} aria-hidden="true" />{" "}
-        {preparing || s.exporting ? "Preparing…" : "Save Photo"}
+        {preparing || s.exporting ? "Preparing" : "Save"}
       </button>
       <p
         id="photo-save-guidance"

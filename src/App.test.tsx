@@ -56,7 +56,7 @@ it("opens the camera at every size without the Start, Edit, and Finish workflow"
   expect(host.querySelector('nav[aria-label="Studio steps"], .site-header')).toBeNull();
   expect(host.querySelector('a[href="/edit"], a[href="/finish"]')).toBeNull();
   expect(host.textContent).not.toContain("Made to keep.");
-  expect(host.querySelector('a[href="/scrapbook"]')).not.toBeNull();
+  expect(host.querySelector('a[href="/scrapbook"]')).toBeNull();
 });
 
 it.each(["/edit", "/finish", "/camera", "/unknown"])("returns %s to the camera", async (path) => {

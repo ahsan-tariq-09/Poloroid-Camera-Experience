@@ -433,7 +433,7 @@ describe("existing editor regression", () => {
       '[aria-label="Download format"]',
     )!;
     expect(select.value).toBe("jpeg");
-    await click(".download-main");
+    await click(".save-plate");
     expect(mocks.exportFile).toHaveBeenLastCalledWith(
       mocks.current!.assets,
       comp(),
@@ -446,7 +446,7 @@ describe("existing editor regression", () => {
         select.dispatchEvent(new Event("change", { bubbles: true }));
       });
 
-      await click(".download-main");
+      await click(".save-plate");
       expect(mocks.exportFile).toHaveBeenLastCalledWith(
         mocks.current!.assets,
         comp(),
@@ -805,7 +805,7 @@ describe("photo-first navigation and sessions", () => {
     await click(".wordmark");
     vi.useFakeTimers();
     try {
-      await act(async()=>host.querySelector<HTMLButtonElement>('.camera-home [aria-label="Roll film"]')!.click());
+      await act(async()=>host.querySelector<HTMLButtonElement>('.camera-home [aria-label="Load film"]')!.click());
       await act(async () =>
         host
           .querySelector("video")!

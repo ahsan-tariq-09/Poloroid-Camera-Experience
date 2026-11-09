@@ -97,7 +97,7 @@ it("opens the camera screen ready to capture and keeps its stream while using vi
     expect(host.querySelector<HTMLButtonElement>('[aria-label="Capture"]')!.disabled).toBe(false);
     const video=host.querySelector("video");
     expect(host.querySelector('button[aria-label="Camera settings"]')).toBeNull();
-    await act(async()=>host.querySelector<HTMLButtonElement>('button[aria-label="ISO 1600"]')!.click());
+    await act(async()=>host.querySelector('[aria-label="ISO effect"]')!.dispatchEvent(new KeyboardEvent("keydown",{key:"ArrowRight",bubbles:true})));
     expect(host.querySelector('[role="slider"]')!.getAttribute('aria-valuenow')).toBe('1600');
     expect(host.querySelector('[role="dialog"]')).toBeNull();
     expect(host.querySelector("video")).toBe(video);
@@ -215,7 +215,7 @@ it("starts with the settings and loaded film chosen on the home camera",async()=
     expect(host.querySelector('[aria-label="Flash effect"]')!.getAttribute('aria-checked')).toBe('true');
     expect(host.querySelector('[aria-label="ISO effect"]')!.getAttribute('aria-valuenow')).toBe('1600');
     expect(host.querySelector('.viewfinder-readout')!.textContent).toContain('1600');
-    expect(host.querySelector('[aria-label="Roll film"]')!.getAttribute('aria-pressed')).toBe('true');
+    expect(host.querySelector('[aria-label="Load film"]')!.getAttribute('aria-pressed')).toBe('true');
     expect(host.querySelector<HTMLButtonElement>('[aria-label="Capture"]')!.disabled).toBe(false);
   }finally{await act(async()=>root.unmount());host.remove();vi.restoreAllMocks();}
 });
@@ -227,7 +227,7 @@ it("keeps the shutter and film roll disabled for the full 2.8-second load",async
   vi.useFakeTimers();
   try{
     await act(async()=>root.render(<Camera enabled={false} onUpload={()=>{}}/>));
-    const shutter=host.querySelector<HTMLButtonElement>('[aria-label="Capture"]')!,roll=host.querySelector<HTMLButtonElement>('[aria-label="Roll film"]')!;
+    const shutter=host.querySelector<HTMLButtonElement>('[aria-label="Capture"]')!,roll=host.querySelector<HTMLButtonElement>('[aria-label="Load film"]')!;
     await act(async()=>roll.click());
     expect(host.querySelector('.viewfinder-status')!.textContent).toBe("LOADING FILM");
     expect(roll.disabled).toBe(true);expect(shutter.disabled).toBe(true);
@@ -264,7 +264,7 @@ it.each([[640,480,80,0],[480,640,0,80]])("crops %s×%s video without stretching,
   vi.spyOn(HTMLCanvasElement.prototype,"getContext").mockReturnValue({drawImage:draw,translate,scale:vi.fn(),getImageData:vi.fn(()=>({data:new Uint8ClampedArray([80,100,120,255]),width:1,height:1})),putImageData:vi.fn()} as never);
   const toBlob=vi.spyOn(HTMLCanvasElement.prototype,"toBlob").mockImplementation(cb=>cb(new Blob(["frame"],{type:"image/png"})));
   URL.createObjectURL=vi.fn(()=>`blob:${crypto.randomUUID()}`); URL.revokeObjectURL=vi.fn();
-  const named=(text:string)=>[...host.querySelectorAll<HTMLButtonElement>("button")].find(b=>b.textContent?.trim()===text);
+  const named=(text:string)=>[...host.querySelectorAll<HTMLButtonElement>("button")].find(b=>(b.getAttribute("aria-label")??b.textContent?.trim())===text);
   const capture=async()=>{
     await act(async()=>host.querySelector("video")!.dispatchEvent(new Event("loadeddata",{bubbles:true})));
     await act(async()=>host.querySelector<HTMLButtonElement>('[aria-label="Capture"]')!.click());
@@ -281,7 +281,9 @@ it.each([[640,480,80,0],[480,640,0,80]])("crops %s×%s video without stretching,
     expect(host.querySelectorAll('img[alt="Your captured photo"]')).toHaveLength(0);
     // Nothing can be saved, edited, or finished before the reveal.
     for(const label of ["Save Photo","Develop","Done","Retake photo"])expect(named(label)).toBeUndefined();
-    expect(host.querySelector('[aria-label="Roll film"]')!.nextElementSibling!.textContent).toBe("ROLL AGAIN");
+    expect(host.querySelector('.film-control > span')!.textContent).toBe("ROLL AGAIN");
+    // The photo used one shot of the 8-shot pack.
+    expect(host.querySelector('.film-counter')!.textContent).toBe("7FILMLEFT");
     // A keyboard user's focus moves from the spent reveal button to Save Photo.
     const shake=host.querySelector<HTMLButtonElement>('[aria-label="Shake to reveal"]')!;shake.focus();
     await act(async()=>shake.click());
@@ -298,7 +300,7 @@ it.each([[640,480,80,0],[480,640,0,80]])("crops %s×%s video without stretching,
     expect(host.querySelector('[role="alert"]')).toBeNull();
     expect(host.querySelectorAll('img[alt="Your captured photo"]')).toHaveLength(1);
     // Roll again clears the print, releases its files, and readies a second shot.
-    await act(async()=>host.querySelector<HTMLButtonElement>('[aria-label="Roll film"]')!.click());
+    await act(async()=>host.querySelector<HTMLButtonElement>('[aria-label="Load film"]')!.click());
     expect(host.querySelector(".instant-print")).toBeNull();
     expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:asset-camera-photo-1.png");
     expect(navigator.mediaDevices.getUserMedia).toHaveBeenCalledTimes(2);
@@ -307,6 +309,13 @@ it.each([[640,480,80,0],[480,640,0,80]])("crops %s×%s video without stretching,
     expect(toBlob).toHaveBeenCalledTimes(2);
     expect(host.querySelectorAll(".instant-print")).toHaveLength(1);
     expect(named("Save Photo")).toBeUndefined();
+    // Six more shots empty the pack; loading film then fits a fresh pack of 8.
+    const load=()=>act(async()=>host.querySelector<HTMLButtonElement>('[aria-label="Load film"]')!.click());
+    for(let shot=3;shot<=8;shot++){await load();await act(async()=>vi.advanceTimersByTimeAsync(2800));await capture();}
+    expect(host.querySelector('.film-counter')!.textContent).toBe("0FILMLEFT");
+    expect(host.querySelector('.film-control > span')!.textContent).toBe("NEW PACK");
+    await load();
+    expect(host.querySelector('.film-counter')!.textContent).toBe("8FILMLEFT");
   } finally { vi.useRealTimers(); await act(async()=>root.unmount());host.remove();vi.restoreAllMocks(); }
 });
 
@@ -318,14 +327,14 @@ it("prints an uploaded photo in place of a capture and keeps the camera settings
   const file=new File(["x"],"beach.heic",{lastModified:Date.UTC(2024,6,4,12)});
   try{
     await act(async()=>root.render(<Camera enabled={false} onUpload={()=>{}}/>));
-    await act(async()=>host.querySelector<HTMLButtonElement>('[aria-label="ISO 1600"]')!.click());
+    await act(async()=>host.querySelector('[aria-label="ISO effect"]')!.dispatchEvent(new KeyboardEvent("keydown",{key:"ArrowRight",bubbles:true})));
     await act(async()=>root.render(<Camera enabled={false} onUpload={()=>{}} upload={{file,id:1}}/>));
     expect(saved.importPolaroid).toHaveBeenCalledWith(file,true);
     expect(host.querySelector<HTMLImageElement>(".instant-print img")).toBeNull();
     await act(async()=>host.querySelector<HTMLButtonElement>('[aria-label="Shake to reveal"]')!.click());
     expect(host.querySelector<HTMLImageElement>('img[alt="Your captured photo"]')!.src).toBe("blob:asset-beach.heic");
     expect(stop).toHaveBeenCalled();
-    await act(async()=>host.querySelector<HTMLButtonElement>('[aria-label="Roll film"]')!.click());
+    await act(async()=>host.querySelector<HTMLButtonElement>('[aria-label="Load film"]')!.click());
     expect(host.querySelector('[role="slider"]')!.getAttribute('aria-valuenow')).toBe('1600');
     saved.importPolaroid.mockRejectedValueOnce(new Error("We could not decode this HEIC photo."));
     await act(async()=>root.render(<Camera enabled={false} onUpload={()=>{}} upload={{file,id:2}}/>));
@@ -345,7 +354,7 @@ it.each(["dimensions", "blob"])("allows a new attempt after a %s capture failure
   try {
     await act(async()=>root.render(<Camera enabled={false} onUpload={()=>{}}/>));
     await act(async()=>host.querySelector("video")!.dispatchEvent(new Event("loadeddata",{bubbles:true})));
-    vi.useFakeTimers();await act(async()=>host.querySelector<HTMLButtonElement>('[aria-label="Roll film"]')!.click());
+    vi.useFakeTimers();await act(async()=>host.querySelector<HTMLButtonElement>('[aria-label="Load film"]')!.click());
     await act(async()=>vi.advanceTimersByTimeAsync(2800));const shutter=host.querySelector<HTMLButtonElement>('[aria-label="Capture"]')!;
     if(failure==="dimensions")Object.defineProperty(HTMLVideoElement.prototype,"videoWidth",{configurable:true,value:0});
     await act(async()=>shutter.click());await act(async()=>vi.advanceTimersByTimeAsync(3000));
@@ -364,7 +373,7 @@ it.each([0,3,5,10])("uses the %s-second dial setting and captures only one Polar
   try{
     await act(async()=>root.render(<Camera enabled={seconds===3} onUpload={()=>{}}/>));await act(async()=>host.querySelector("video")!.dispatchEvent(new Event("loadeddata",{bubbles:true})));
     expect(button("Timer off").getAttribute("aria-pressed")).toBe("true");expect(button("Capture").disabled).toBe(false);
-    vi.useFakeTimers();await act(async()=>{button(seconds?`Timer ${seconds} seconds`:"Timer off").click();button("B&W").click();button("Flash effect").click();button("Roll film").click();});
+    vi.useFakeTimers();await act(async()=>{button(seconds?`Timer ${seconds} seconds`:"Timer off").click();button("B&W").click();button("Flash effect").click();button("Load film").click();});
     await act(async()=>vi.advanceTimersByTimeAsync(2800));await act(async()=>button("Capture").click());
     if(seconds===3)await act(async()=>root.render(<Camera enabled={false} onUpload={()=>{}}/>));
     if(seconds){await act(async()=>vi.advanceTimersByTimeAsync(seconds*1000-1));expect(blob).not.toHaveBeenCalled();expect(button("Timer off").closest("fieldset")!.disabled).toBe(true);await act(async()=>vi.advanceTimersByTimeAsync(1));}
@@ -388,7 +397,7 @@ it.each([false,true])("discards unfinished captures when hidden (during shutter 
   const click=async(label:string)=>act(async()=>host.querySelector<HTMLButtonElement>(`[aria-label="${label}"]`)!.click());
   try{
     await act(async()=>root.render(<Camera enabled={false} onUpload={()=>{}}/>));await act(async()=>host.querySelector("video")!.dispatchEvent(new Event("loadeddata",{bubbles:true})));
-    vi.useFakeTimers();await click("Timer off");await click("Roll film");await act(async()=>vi.advanceTimersByTimeAsync(2800));await click("Capture");expect(pending).toHaveLength(1);
+    vi.useFakeTimers();await click("Timer off");await click("Load film");await act(async()=>vi.advanceTimersByTimeAsync(2800));await click("Capture");expect(pending).toHaveLength(1);
     hidden.mockReturnValue(true);await act(async()=>document.dispatchEvent(new Event("visibilitychange")));hidden.mockReturnValue(false);await act(async()=>document.dispatchEvent(new Event("visibilitychange")));
     await click("Capture");expect(pending).toHaveLength(2);await act(async()=>pending[0](new Blob(["old"])));expect(host.querySelector(".instant-print")).toBeNull();expect(stop).not.toHaveBeenCalled();
     await act(async()=>pending[1](new Blob(["new"])));expect(host.querySelector(".instant-print")).toBeNull();

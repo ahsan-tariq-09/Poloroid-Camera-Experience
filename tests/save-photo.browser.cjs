@@ -29,7 +29,7 @@ async function layout(page, platform) {
     await page.keyboard.press('Tab');
     await save.focus();
     const metrics = await page.evaluate(() => {
-      const button = document.querySelector('.download-main');
+      const button = document.querySelector('.save-plate');
       const hint = document.querySelector('#photo-save-guidance');
       const rgb = color => color.match(/[\d.]+/g).slice(0, 3).map(Number);
       const lum = color => rgb(color).map(v => { v /= 255; return v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; }).reduce((sum, v, i) => sum + v * [.2126, .7152, .0722][i], 0);
@@ -91,7 +91,7 @@ async function layout(page, platform) {
       await reveal.click();
       const save = page.getByRole('button', { name: 'Save Photo', exact: true });
       await save.waitFor({ timeout: 15000 });
-      await page.waitForFunction(() => !document.querySelector('.download-main').disabled);
+      await page.waitForFunction(() => !document.querySelector('.save-plate').disabled);
       if (platform === 'Win32' || platform === 'iPhone') await layout(page, platform);
       if (platform === 'Win32' || platform === 'Linux armv8l') {
         await download(page, 'jpg');
@@ -122,7 +122,7 @@ async function layout(page, platform) {
         await download(page, 'jpg');
       }
       // Roll again clears the print without saving first.
-      await page.getByRole('button', { name: 'Roll film', exact: true }).click();
+      await page.getByRole('button', { name: 'Load film', exact: true }).click();
       await page.locator('.instant-print').waitFor({ state: 'detached' });
       assert.equal(await save.count(), 0);
       assert.deepEqual(errors, [], 'No browser exceptions');

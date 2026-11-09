@@ -139,9 +139,9 @@ describe("real Polaroid rendering and export", () => {
     drawCaption(ctx, "Coast, October 2026");
     expect(fillText).toHaveBeenCalledExactlyOnceWith(
       "Coast, October 2026",
-      300,
-      598,
-      450,
+      70,
+      556,
+      460,
     );
     expect(ctx.font).toBe(
       '25px "Helvetica Neue", Helvetica, Arial, sans-serif',

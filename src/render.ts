@@ -128,9 +128,10 @@ export function drawDecoration(ctx: CanvasRenderingContext2D, layer: Layer) {
 export function drawCaption(ctx: CanvasRenderingContext2D, caption: string, fontId?: string, style: FontStyle & {fontSize?: number; color?: string} = {}) {
   ctx.fillStyle = style.color || "#493e30";
   ctx.font = fontCss(fontId, style.fontSize ?? 25, style);
-  ctx.textAlign = "center";
+  // Left-aligned with the photo's left edge, just below it.
+  ctx.textAlign = "left";
   ctx.textBaseline = "middle";
-  ctx.fillText(caption, 300, 598, 450);
+  ctx.fillText(caption, PHOTO.x, 556, PHOTO.size);
 }
 export function drawTextLayer(ctx: CanvasRenderingContext2D, layer: Layer) {
   const text = (layer.text || "").slice(0, 200);

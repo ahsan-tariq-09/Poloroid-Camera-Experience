@@ -7,13 +7,17 @@ const engine = process.argv[3] || 'cdp';
 const output = path.resolve(process.argv[4] || 'camera-browser-results');
 const baseURL = process.env.CAMERA_TEST_URL || 'http://127.0.0.1:5174';
 fs.mkdirSync(output, {recursive:true});
+// Mirrors isoAt in src/studio/CameraSettings.tsx: geometric between the five evenly spaced stops.
+const isoStops=[100,400,800,1600,3200];
+function isoAt(position){const f=Math.max(0,Math.min(1,position))*4,i=Math.min(3,Math.floor(f));return Math.round(isoStops[i]*(isoStops[i+1]/isoStops[i])**(f-i));}
 async function prepareCamera(page, mobile) {
   assert.equal(await page.getByRole('button',{name:'Timer off',exact:true}).getAttribute('aria-pressed'),'true','New cameras must start with the timer off');
-  assert.equal(await page.locator('.film-stripes').count(),1);
-  assert.deepEqual(await page.locator('.camera-signature .film-stripes i').evaluateAll(elements=>elements.map(e=>getComputedStyle(e).backgroundColor)),['rgb(0, 118, 163)','rgb(255, 191, 54)','rgb(255, 30, 39)']);
+  assert.equal(await page.locator('.film-stripes, .camera-signature').count(),0,'The spectrum flag is gone');
+  assert.equal(await page.locator('.chin-mark').innerText(),'AUTOFOCUS roid');
+  assert.equal(await page.locator('.shutter svg').count(),0,'The shutter has no camera icon');
   assert.equal(await page.locator('.camera-tagline').count(),0);
   assert.equal(await page.getByText('Made to keep.').count(),0);
-  assert(await page.locator('.ejection-slot').evaluate(e=>e.getBoundingClientRect().height>=28));
+  assert(await page.locator('.camera-chin .ejection-slot').evaluate(e=>e.getBoundingClientRect().height>=12));
   await page.waitForFunction(()=>{const shutter=document.querySelector('[aria-label="Capture"]');return shutter&&!shutter.disabled;});
 }
 (async()=>{
@@ -99,16 +103,33 @@ async function prepareCamera(page, mobile) {
       if(!mobile)await page.screenshot({path:path.join(output,`${engine}-${width}-camera.png`)});
       assert(await page.locator('.camera-nameplate').evaluate(e=>{const box=e.getBoundingClientRect();return [...e.children].every(child=>{const r=child.getBoundingClientRect();return r.left>=box.left-1&&r.right<=box.right+1;});}),'Camera header must fit its navigation');
       if(mobile){
-        assert.equal(await page.getByRole('link',{name:'Scrapbook',exact:true}).count(),1);
-        assert(await page.locator('.iso-dial .dial-hub').isVisible(),'ISO metal center must stay visible on short screens');
-        assert.equal(await page.getByRole('slider',{name:'ISO effect',exact:true}).innerText(),'');
-        for(const value of [100,200,400,800,1600,3200,800]){
-          const stop=page.getByRole('button',{name:`ISO ${value}`,exact:true});
-          assert(await stop.isVisible(),`ISO ${value} must stay on the ring`);
-          await stop.tap();
-          assert.equal(await stop.getAttribute('aria-pressed'),'true');
-          assert.equal(await page.getByRole('slider',{name:'ISO effect',exact:true}).getAttribute('aria-valuenow'),String(value));
+        assert.equal(await page.getByRole('link',{name:'Scrapbook',exact:true}).count(),0,'The camera has no scrapbook button');
+        const iso=page.getByRole('slider',{name:'ISO effect',exact:true});
+        assert(await iso.evaluate(e=>e.getBoundingClientRect().height>=44),'ISO ruler must be a 44px target');
+        // The bar has no printed numbers: a tap at each fifth of the travel reads 100, 400, 800 (centre), 1600, 3200.
+        const travel=await iso.evaluate(e=>{const r=e.getBoundingClientRect(),pad=parseFloat(getComputedStyle(e.parentElement).getPropertyValue('--iso-pad'));return {pad,span:r.width-2*pad,y:r.height/2};});
+        for(const [index,value] of [[0,100],[1,400],[2,800],[3,1600],[4,3200],[2,800]]){
+          const x=travel.pad+travel.span*index/4;
+          await iso.tap({position:{x,y:travel.y}});
+          // The bar is continuous: allow the tap to land 1.5px either side, which is several ISO on a short bar.
+          const read=Number(await iso.getAttribute('aria-valuenow')),low=isoAt((x-1.5-travel.pad)/travel.span),high=isoAt((x+1.5-travel.pad)/travel.span);
+          assert(read>=low&&read<=high,`Tap at ${index}/4 of the ISO bar read ${read}, expected ${value} (${low}-${high})`);
+          await page.waitForTimeout(300); // a tap eases the needle over .25s
+          const needle=await iso.locator('.iso-pointer').evaluate((e,left)=>{const r=e.getBoundingClientRect();return r.left+r.width/2-left;},(await iso.boundingBox()).x);
+          assert(Math.abs(needle-x)<=1.5,`The needle sits under the tap at ${index}/4`);
         }
+        assert.equal(await iso.locator('.iso-mark').count(),0,'The ISO bar shows no numbers');
+        // Dragging moves the needle with the finger and stops between stops.
+        const box=await iso.boundingBox(),needle=()=>iso.locator('.iso-pointer').evaluate(e=>{const r=e.getBoundingClientRect();return r.left+r.width/2;});
+        await page.mouse.move(box.x+box.width/2,box.y+box.height/2);await page.mouse.down();
+        await page.mouse.move(box.x+box.width/2+travel.span/8,box.y+box.height/2,{steps:6});
+        // WebKit paints the drag state a frame later than Chromium, so wait for it rather than sampling once.
+        await page.waitForFunction(()=>document.querySelector('.mobile-camera .iso-slider').classList.contains('sliding'),null,{timeout:2000});
+        assert(Math.abs(await needle()-(box.x+box.width/2+travel.span/8))<=2,'The ISO needle follows the pointer');
+        await page.mouse.up();
+        const dragged=Number(await iso.getAttribute('aria-valuenow'));
+        const slack=1.5/travel.span;
+        assert(dragged>=isoAt(.625-slack)&&dragged<=isoAt(.625+slack),`Dragging an eighth right of 800 rests near ISO 1131, got ${dragged}`);
         const requests=await page.evaluate(()=>window.cameraRequests);
         await page.evaluate(()=>{window.cameraVideo=document.querySelector('video');});
         assert.equal(await page.getByRole('button',{name:'Camera settings',exact:true}).count(),0);
@@ -127,23 +148,13 @@ async function prepareCamera(page, mobile) {
       const cameraSurface=page.locator('.mobile-camera');
       assert.equal(await cameraSurface.locator('.viewfinder-readout').evaluate(e=>getComputedStyle(e).backgroundColor),'rgba(0, 0, 0, 0)');
       await page.waitForTimeout(650);
-      const initialWheel=await cameraSurface.locator('.iso-markings').evaluate(e=>getComputedStyle(e).transform);
+      const pointerAt=()=>cameraSurface.locator('.iso-pointer').evaluate(e=>e.getBoundingClientRect().left);
+      const initialPointer=await pointerAt();
+      assert.equal(await cameraSurface.locator('.iso-pointer').evaluate(e=>getComputedStyle(e).transitionDuration),'0.25s');
       await cameraSurface.getByRole('slider',{name:'ISO effect',exact:true}).focus();
       await page.keyboard.press('ArrowLeft');
-      const dialFrames=await cameraSurface.evaluate(async surface=>{
-        const frames=[];
-        for(let i=0;i<12;i++){
-          await new Promise(resolve=>requestAnimationFrame(resolve));
-          const wheel=getComputedStyle(surface.querySelector('.iso-markings')).transform;
-          const hub=surface.querySelector('.iso-dial .dial-hub');
-          const matrix=new DOMMatrixReadOnly(wheel);
-          frames.push({wheel,hubWidth:hub.getBoundingClientRect().width,rotatedWidth:hub.offsetWidth*(Math.abs(matrix.a)+Math.abs(matrix.b))});
-        }
-        return frames;
-      });
-      assert(dialFrames.every(({hubWidth,rotatedWidth})=>Math.abs(hubWidth-rotatedWidth)<.1),'ISO center must rotate with its wheel');
-      assert(dialFrames.some(({wheel})=>wheel!==initialWheel),'ISO must turn between settings');
-      assert.equal(await cameraSurface.locator('.iso-markings').evaluate(e=>getComputedStyle(e).transitionDuration),'0.6s');
+      await page.waitForTimeout(350);
+      assert(await pointerAt()<initialPointer-10,'The ISO pointer must slide toward the sun');
       await page.keyboard.press('ArrowRight');
       assert.equal(await page.getByRole('button',{name:'4-shot strip',exact:true}).count(),0);
       await cameraSurface.getByRole('switch',{name:'Flash effect',exact:true}).focus();
@@ -165,7 +176,7 @@ async function prepareCamera(page, mobile) {
       await page.waitForFunction(()=>{const button=document.querySelector('.shake-reveal');return button&&!button.disabled;});
       await page.waitForFunction(()=>Math.abs(new DOMMatrixReadOnly(getComputedStyle(document.querySelector('.instant-print')).transform).m42)<.1);
       const outlet=await page.evaluate(()=>{const surface=document.querySelector('.mobile-camera')||document.querySelector('.camera-modal');const slot=surface.querySelector('.ejection-slot').getBoundingClientRect(),paper=surface.querySelector('.instant-paper').getBoundingClientRect();return {slot:{x:slot.x,width:slot.width,top:slot.top,bottom:slot.bottom},paper:{x:paper.x,width:paper.width,top:paper.top}};});
-      assert(Math.abs(outlet.slot.x-outlet.paper.x)<3&&Math.abs(outlet.slot.width-outlet.paper.width)<3&&outlet.paper.top>outlet.slot.top&&outlet.paper.top<outlet.slot.bottom-6,JSON.stringify(outlet));
+      assert(outlet.paper.x>=outlet.slot.x-1&&outlet.paper.x+outlet.paper.width<=outlet.slot.x+outlet.slot.width+1&&outlet.paper.top>=outlet.slot.top&&outlet.paper.top<outlet.slot.bottom-2,JSON.stringify(outlet));
       if(mobile)assert(await page.locator('.instant-paper').evaluate(e=>{const r=e.getBoundingClientRect();return document.elementFromPoint(r.x+r.width/2,r.y+2)?.closest('.instant-paper')===e;}),'Paper must be in front of the camera at the slot');
       await page.screenshot({path:path.join(output,`${engine}-${width}-blank.png`)});
       await reveal.scrollIntoViewIfNeeded();
@@ -205,7 +216,7 @@ async function prepareCamera(page, mobile) {
       assert.equal(await page.locator('.instant-photo-window img').count(),1,'The revealed photo stays after saving');
       assert.equal(page.url(),baseURL+'/');
       // Roll again prepares a second shot without saving or leaving the camera.
-      await page.getByRole('button',{name:'Roll film',exact:true}).click();
+      await page.getByRole('button',{name:'Load film',exact:true}).click();
       await page.locator('.instant-print').waitFor({state:'detached'});
       await page.waitForFunction(()=>{const shutter=document.querySelector('[aria-label="Capture"]');return shutter&&!shutter.disabled;});
       await page.getByRole('button',{name:'Capture',exact:true}).click();
@@ -278,13 +289,14 @@ async function prepareCamera(page, mobile) {
         await page.locator('.instant-print').waitFor();
         assert.equal(await page.evaluate(()=>window.flashAtCapture?.opacity),1,'Reduced motion keeps a steady light before capture');
         assert.equal(await page.locator('.capture-flash').count(),0);
-        await page.getByRole('button',{name:'Roll film',exact:true}).focus();await page.keyboard.press('Enter');
+        await page.getByRole('button',{name:'Load film',exact:true}).focus();await page.keyboard.press('Enter');
         await page.waitForFunction(()=>{const shutter=document.querySelector('[aria-label="Capture"]');return shutter&&!shutter.disabled;});
         await page.getByRole('button',{name:'Capture',exact:true}).focus();await page.keyboard.press('Enter');
         await page.getByRole('button',{name:'Shake to reveal',exact:true}).focus();await page.keyboard.press('Enter');
         await page.getByRole('button',{name:'Save Photo',exact:true}).waitFor();
         assert.equal(await page.locator('.print-drag').evaluate(e=>getComputedStyle(e).transform),'none');
-        assert.equal(await page.evaluate(()=>document.activeElement?.textContent?.trim()),'Save Photo','Keyboard focus moves to Save Photo after the reveal');
+        await page.waitForFunction(()=>document.activeElement?.getAttribute('aria-label')==='Save Photo',null,{timeout:2000}).catch(()=>{});
+        assert.equal(await page.evaluate(()=>document.activeElement?.getAttribute('aria-label')),'Save Photo','Keyboard focus moves to Save Photo after the reveal');
         console.log(JSON.stringify({engine,reducedMotion:true,keyboardReveal:true,keyboardSaveFocus:true}));
       }
       assert.deepEqual(errors,[]);
@@ -333,7 +345,7 @@ async function prepareCamera(page, mobile) {
         assert.equal(page.url(),baseURL+'/');
         await page.screenshot({path:path.join(output,`${engine}-${permission}-upload.png`),fullPage:true});
         const requests=await page.evaluate(()=>window.cameraRequests);
-        await page.getByRole('button',{name:'Roll film',exact:true}).click();
+        await page.getByRole('button',{name:'Load film',exact:true}).click();
         await page.locator('.instant-print').waitFor({state:'detached'});
         await page.waitForFunction(expected=>window.cameraRequests===expected,requests+1);
         await page.getByText(/Camera permission was declined/).waitFor();

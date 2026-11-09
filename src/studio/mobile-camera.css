@@ -1,36 +1,36 @@
 .app-shell.camera-page { max-width:none; padding:0; background:#252622 url('/textures/leather.webp') repeat; background-size:340px; color:#f5f1e5; }
 .mobile-camera { min-height:100dvh; color-scheme:dark; }
 .mobile-camera-body:focus { outline:none; }
-.mobile-camera .camera-assembly { --camera-pad:max(14px,env(safe-area-inset-left),env(safe-area-inset-right)); --slot-overlap:calc(max(12px,env(safe-area-inset-bottom)) + 6px); --mobile-print-width:min(360px,calc(100vw - 42px),calc((100dvh - 294px) * .82)); }
+.mobile-camera .camera-assembly { --camera-pad:max(14px,env(safe-area-inset-left),env(safe-area-inset-right)); --slot-overlap:calc(max(12px,env(safe-area-inset-bottom)) + 6px); --mobile-print-width:min(360px,calc(100vw - 2 * var(--camera-pad) - 28px),calc((100dvh - 294px) * .82)); }
+
+/* Portrait: plate, finder, controls, shutter row and chin stack down the phone. */
 .mobile-camera .instant-camera { min-height:100dvh; display:grid; grid-template-columns:minmax(0,1fr); grid-template-rows:auto minmax(130px,1fr) auto auto auto; gap:11px; padding:max(12px,env(safe-area-inset-top)) var(--camera-pad) max(12px,env(safe-area-inset-bottom)); border-radius:0; }
-.mobile-camera .camera-nameplate { padding:0; }
+.mobile-camera .camera-nameplate { display:flex; justify-content:space-between; align-items:center; gap:6px; padding:0; }
 .mobile-camera .camera-nameplate > span:first-child { font-size:22px; letter-spacing:-.02em; white-space:nowrap; }
 .mobile-camera nav { display:flex; gap:4px; }
-.mobile-camera .camera-nameplate { gap:6px; }
 .mobile-camera nav :is(a,button) { display:grid; place-items:center; width:44px; height:44px; padding:0; border:1px solid #707267; border-radius:4px; color:#f5f1e5; background:#141713; }
 .mobile-camera :is(button,a):focus-visible { outline:3px solid #d9edb6; outline-offset:3px; }
-.mobile-camera .viewfinder-bezel { width:min(100%,calc(100dvh - 446px)); min-width:150px; justify-self:center; align-self:center; }
+.mobile-camera .viewfinder-bezel { width:min(100%,calc(100dvh - 430px)); min-width:150px; justify-self:center; align-self:center; }
 .mobile-camera .camera-display { aspect-ratio:1; }
 .mobile-camera .camera-message { padding:40px 12px 30px; font-size:12px; }
-.mobile-camera .camera-settings { width:min(100%,440px); justify-self:center; margin:0; grid-template-columns:minmax(96px,1fr) 152px 48px; grid-template-areas:"film film film" "timer iso flash"; gap:10px 8px; }
+.mobile-camera .camera-settings { width:min(100%,440px); justify-self:center; margin:0; grid-template-columns:96px minmax(150px,1fr) 56px; grid-template-areas:"film film film" "timer iso flash"; gap:10px 10px; align-items:end; }
 .mobile-camera .camera-dials { display:contents; }
 .mobile-camera .timer-control { grid-area:timer; }
-.mobile-camera .iso-control { grid-area:iso; }
+.mobile-camera .iso-control { grid-area:iso; align-self:center; }
 .mobile-camera .film-presets { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:4px; align-self:auto; padding:5px!important; }
 .mobile-camera .film-presets legend { margin-bottom:0; font-size:11px; }
 .mobile-camera .film-presets button { flex-direction:column; justify-content:center; gap:4px; min-height:52px; padding:4px 0; font-size:11px; }
 .mobile-camera .film-presets button span { white-space:nowrap; }
 .mobile-camera .flash-control { display:block; }
 .mobile-camera .flash-control > span:first-child { display:block; width:100%; margin-bottom:10px; }
-.mobile-camera .iso-dial { --iso-radius:54px; width:152px; height:152px; }
-.mobile-camera .iso-stop { width:44px; height:44px; min-height:44px; margin:-22px 0 0 -22px; }
-.mobile-camera .iso-knob { width:44px; height:44px; min-height:44px; top:calc(50% - 22px); left:calc(50% - 22px); }
 .mobile-camera .camera-hardware { width:min(100%,440px); justify-self:center; padding:0; }
 .mobile-camera .shutter-control { align-self:center; }
-.mobile-camera .ejection-slot { width:100%; max-width:440px; height:28px; margin:0; justify-self:center; }
+.mobile-camera .instant-camera .shutter { width:72px; height:72px; min-height:72px; }
+.mobile-camera .camera-chin { width:100%; max-width:440px; justify-self:center; }
 .mobile-camera.has-print .instant-camera { min-height:0; grid-template-rows:auto auto auto; }
-.mobile-camera.has-print .ejection-slot { width:var(--mobile-print-width); }
 .mobile-camera .print-reveal { padding-top:0; z-index:4; isolation:isolate; }
+/* --slot-overlap is the bottom padding plus 6px, so the paper's top edge sits mid-slot. */
+.mobile-camera .camera-assembly .print-reveal { margin-top:calc(-1 * (var(--slot-overlap) + 8px)); }
 .mobile-camera .camera-assembly .instant-camera { z-index:1; }
 .mobile-camera .print-outlet { padding:0 16px 16px; }
 .mobile-camera .instant-print { width:var(--mobile-print-width); max-width:100%; }
@@ -45,72 +45,147 @@
 .mobile-camera-recovery { position:absolute; inset:0; z-index:2; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:14px; overflow:auto; background:#141713e6; color:#f5f1e5; text-align:center; }
 .mobile-camera-recovery p { max-width:36ch; margin:0; color:inherit; font-size:13px; line-height:1.45; }
 .mobile-camera-recovery .secondary-button { min-height:44px; }
-/* Compact hardware leaves the full-width finder dominant on short phones. */
-@media(max-height:740px), (orientation:landscape) {
-  .mobile-camera .instant-camera { gap:4px; padding-top:max(8px,env(safe-area-inset-top)); padding-bottom:max(8px,env(safe-area-inset-bottom)); }
-  .mobile-camera .viewfinder-bezel { width:min(100%,calc(100dvh - 376px - env(safe-area-inset-top) - env(safe-area-inset-bottom))); min-width:180px; }
-  .mobile-camera .camera-settings { grid-template-columns:minmax(96px,1fr) minmax(108px,1fr) 44px; gap:8px; }
+
+/* Short portrait phones: compact hardware keeps the finder dominant. */
+@media(orientation:portrait) and (max-height:740px) {
+  .mobile-camera .instant-camera { gap:6px; padding-top:max(8px,env(safe-area-inset-top)); padding-bottom:max(8px,env(safe-area-inset-bottom)); }
+  .mobile-camera .viewfinder-bezel { width:min(100%,calc(100dvh - 404px - env(safe-area-inset-top) - env(safe-area-inset-bottom))); min-width:150px; }
+  .mobile-camera .camera-settings { grid-template-columns:88px minmax(140px,1fr) 54px; gap:6px 8px; }
   .mobile-camera .camera-settings legend { margin-bottom:6px; }
   .mobile-camera .film-presets legend { margin-bottom:0; }
   .mobile-camera .film-presets button { min-height:44px; padding:2px 0; }
   .mobile-camera .film-cartridge { height:20px; }
-  .mobile-camera .iso-dial { --iso-radius:37px; width:108px; height:108px; margin:auto; }
+  .mobile-camera .timer-dial { width:88px; height:88px; }
   .mobile-camera .flash-control > span:first-child { margin-bottom:4px; }
-  .mobile-camera .film-roll { width:44px; height:44px; min-height:44px; }
+  .mobile-camera .film-roll { --lever:48px; }
+  .mobile-camera .instant-camera .shutter { width:64px; height:64px; min-height:64px; }
   .mobile-camera .hardware-control { gap:6px; }
 }
 @media(max-width:370px) {
   .mobile-camera .camera-assembly { --camera-pad:max(8px,env(safe-area-inset-left),env(safe-area-inset-right)); }
-  .mobile-camera .camera-settings { column-gap:4px; }
-  .mobile-camera .camera-nameplate > span:first-child { font-size:20px; padding-inline:4px; }
+  .mobile-camera .camera-settings { grid-template-columns:84px minmax(130px,1fr) 54px; column-gap:6px; }
+  .mobile-camera .timer-dial { width:84px; height:84px; }
+  .mobile-camera .iso-slider { --iso-pad:12px; min-width:130px; }
+  .mobile-camera .camera-nameplate > span:first-child { font-size:20px; padding-inline:6px; }
 }
-@media(orientation:landscape) and (max-height:600px) {
-  .mobile-camera .instant-camera { grid-template-columns:minmax(0,1fr) minmax(268px,1fr); grid-template-rows:auto 1fr auto auto; gap:6px 16px; }
-  .mobile-camera .camera-nameplate { grid-column:1; grid-row:1; }
-  .mobile-camera .viewfinder-bezel { grid-column:1; grid-row:2 / 4; width:min(100%,calc(100dvh - 112px)); min-width:0; }
-  .mobile-camera .camera-settings { grid-column:2; grid-row:1 / 3; }
-  .mobile-camera .camera-hardware { grid-column:2; grid-row:3; }
-  .mobile-camera .ejection-slot { grid-column:1 / -1; grid-row:4; }
-  .mobile-camera.has-print .camera-assembly { --mobile-print-width:clamp(90px,calc(100dvh - 270px),120px); --slot-overlap:14px; }
-  .mobile-camera.has-print .instant-camera { grid-template-columns:minmax(0,1fr) minmax(0,1fr); grid-template-rows:auto auto; padding-block:8px; }
-  .mobile-camera.has-print .camera-nameplate { grid-column:1; grid-row:1; }
-  .mobile-camera.has-print .camera-hardware { grid-column:2; grid-row:1; }
-  .mobile-camera.has-print .ejection-slot { grid-row:2; }
-  .mobile-camera.has-print .film-roll,.mobile-camera.has-print .shutter { width:52px; height:52px; min-height:52px; }
-  .mobile-camera.has-print .instant-caption { font-size:clamp(11px,3.5dvh,14px); padding:2px 0; }
+
+/* Landscape (phones turned sideways and desktop windows): the finder fills the height on the
+   left, the controls stack beside it, and the chin runs the full width. */
+@media(orientation:landscape) {
+  .mobile-camera .instant-camera {
+    --finder:min(58vw,calc(100dvh - var(--landscape-chrome)));
+    --landscape-chrome:calc(66px + env(safe-area-inset-top) + env(safe-area-inset-bottom));
+    min-height:100dvh; grid-template-columns:var(--finder) minmax(0,1fr); grid-template-rows:auto 1fr auto auto;
+    grid-template-areas:"finder plate" "finder settings" "finder hardware" "chin chin";
+    gap:6px 18px; padding-top:max(8px,env(safe-area-inset-top)); padding-bottom:max(8px,env(safe-area-inset-bottom)); }
+  .mobile-camera .camera-nameplate { grid-area:plate; }
+  .mobile-camera .viewfinder-bezel { grid-area:finder; width:var(--finder); min-width:0; padding:9px; align-self:start; }
+  .mobile-camera .camera-settings { grid-area:settings; align-self:center; width:min(100%,520px); grid-template-columns:84px minmax(150px,1fr) 54px; gap:4px 12px; }
+  .mobile-camera .camera-hardware { grid-area:hardware; width:min(100%,520px); }
+  .mobile-camera .camera-chin { grid-area:chin; max-width:none; padding-top:6px; gap:5px; }
+  .mobile-camera .chin-mark { font-size:10px; }
+  .mobile-camera .camera-chin .ejection-slot { height:12px; }
+  .mobile-camera .camera-settings legend { margin-bottom:4px; font-size:11px; }
+  .mobile-camera .film-presets legend { margin-bottom:0; }
+  .mobile-camera .film-presets button { flex-direction:row; justify-content:center; min-height:40px; padding:2px; gap:5px; }
+  .mobile-camera .film-cartridge { width:20px; height:18px; border-inline-width:3px; }
+  .mobile-camera .timer-dial { width:84px; height:84px; }
+  .mobile-camera .flash-control > span:first-child { margin-bottom:0; }
+  .mobile-camera .flash-switch { height:72px; }
+  .mobile-camera .film-roll { --lever:44px; }
+  .mobile-camera .instant-camera .shutter { width:60px; height:60px; min-height:60px; }
+  .mobile-camera .hardware-control { gap:4px; }
+  .mobile-camera.has-print .camera-assembly { --mobile-print-width:clamp(110px,calc(100dvh - 250px),340px); --slot-overlap:14px; }
+  .mobile-camera.has-print .instant-camera { min-height:0; grid-template-columns:minmax(0,1fr) minmax(0,1fr); grid-template-rows:auto auto; grid-template-areas:"plate hardware" "chin chin"; }
   .mobile-camera.has-print .print-action-row > button { min-height:44px; padding-block:8px; }
   .mobile-camera.has-print .capture-decisions button { min-height:44px; }
 }
-@media(orientation:landscape) and (max-width:650px) {
-  .mobile-camera .instant-camera { row-gap:2px; }
-  .mobile-camera .camera-nameplate > span:first-child { font-size:14px; padding:7px; }
-  .mobile-camera .camera-nameplate { grid-template-columns:1fr auto; gap:4px; }
-  .mobile-camera .camera-signature { grid-column:1; grid-row:2; justify-self:start; }
-  .mobile-camera .camera-nameplate nav { grid-column:2; grid-row:1 / 3; }
-  .mobile-camera .viewfinder-bezel { width:min(100%,calc(100dvh - 144px)); }
-  .mobile-camera.has-print .print-outlet { padding-bottom:4px; }
-  .mobile-camera.has-print .print-reveal-actions { margin-bottom:4px; }
-  .mobile-camera.has-print .capture-decisions { padding-bottom:max(4px,env(safe-area-inset-bottom)); }
+/* Short phone landscape: the roll/flip/shutter row turns into a column at the right edge so
+   everything fits beside a finder that uses the full height. */
+@media(orientation:landscape) and (max-height:500px) {
+  /* The finder gives up width so the settings (84 + 150 + 54px and gaps) never slide under the 72px hardware column. */
+  .mobile-camera .instant-camera { --finder:min(58vw,calc(100dvh - var(--landscape-chrome)),calc(100vw - 2 * var(--camera-pad) - 28px - 72px - 312px));
+    grid-template-columns:var(--finder) minmax(0,1fr) auto; grid-template-rows:auto 1fr auto;
+    grid-template-areas:"finder plate plate" "finder settings hardware" "chin chin chin"; column-gap:14px; }
+  .mobile-camera .camera-assembly .camera-hardware { gap:4px; }
+  .mobile-camera .film-roll { --lever:40px; }
+  .mobile-camera .instant-camera .shutter { width:54px; height:54px; min-height:54px; }
+  .mobile-camera .camera-hardware { flex-direction:column; justify-content:space-between; align-self:stretch; width:auto; padding:0; }
+  .mobile-camera .camera-assembly .hardware-control:first-child { width:auto; flex:0 0 auto; }
+  .mobile-camera .camera-assembly .camera-hardware-copy { flex:0 0 auto; }
+  .mobile-camera .hardware-control > span { font-size:9px; letter-spacing:.04em; }
+  .mobile-camera .camera-settings { align-self:center; }
+  .mobile-camera .camera-nameplate > span:first-child { font-size:17px; padding:6px 10px; }
+  .mobile-camera nav :is(a,button) { width:40px; height:40px; }
+  .mobile-camera .film-presets legend { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+  .mobile-camera .iso-control legend,.mobile-camera .timer-control legend,.mobile-camera .flash-control > span:first-child { font-size:10px; margin-bottom:2px; }
+  .mobile-camera .timer-control legend { margin-bottom:8px; }
+  .mobile-camera .timer-dial { width:80px; height:80px; }
+  .mobile-camera .flash-switch { height:64px; padding-block:3px; }
+  /* A compact film window beside the lever; "FILM LEFT" stays for screen readers. */
+  .mobile-camera .film-control-row { gap:4px; }
+  .mobile-camera .film-counter b { width:24px; height:24px; font-size:16px; }
+  .mobile-camera .film-counter small { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+  .mobile-camera.has-print .instant-camera { grid-template-columns:minmax(0,1fr) auto; grid-template-areas:"plate hardware" "chin chin"; }
+  .mobile-camera.has-print .camera-hardware { flex-direction:row; gap:16px; }
 }
-/* Wider windows hold the same camera as an object on the olive table, at phone proportions.
-   Short windows keep the compact layouts above and scroll rather than shrink controls. */
-@media(min-width:701px) and (min-height:601px) {
+@media(orientation:landscape) and (max-width:650px) {
+  /* Narrower settings here: 76 + 100 + 50px and gaps. */
+  .mobile-camera .instant-camera { --finder:min(58vw,calc(100dvh - var(--landscape-chrome)),calc(100vw - 2 * var(--camera-pad) - 28px - 72px - 246px)); }
+  .mobile-camera .camera-settings { grid-template-columns:76px minmax(100px,1fr) 50px; column-gap:10px; }
+  .mobile-camera .iso-slider { min-width:0; }
+  .mobile-camera .iso-arrow { width:26px; }
+  .mobile-camera .flash-switch { padding-inline:1px; }
+  .mobile-camera .timer-dial { width:76px; height:76px; }
+  .mobile-camera .camera-nameplate > span:first-child { font-size:15px; padding:7px; }
+  /* Swatches only, but the names stay as each button's accessible label. */
+  .mobile-camera .film-presets button span { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+}
+
+/* Tall portrait windows (tablets) hold the camera as a boxed object at phone proportions. */
+@media(orientation:portrait) and (min-width:701px) and (min-height:601px) {
   .app-shell.camera-page { background:transparent; }
   .mobile-camera { display:flex; justify-content:center; align-items:flex-start; padding:clamp(12px,3dvh,32px) 16px 12px; }
-  .mobile-camera-body { width:min(100%,500px); }
+  .mobile-camera-body { width:min(100%,520px); }
   .mobile-camera .camera-assembly { --camera-pad:22px; --slot-overlap:18px; --mobile-print-width:min(340px,calc(100% - 56px)); }
   .mobile-camera .instant-camera { min-height:0; gap:12px; padding:18px var(--camera-pad) 16px; border:2px solid #474943; border-radius:14px; box-shadow:inset 0 1px 1px #fff5,inset 0 -3px 6px #000,0 24px 40px -18px #000c; }
-  .mobile-camera .viewfinder-bezel { width:min(100%,calc(100dvh - 465px)); min-width:240px; }
+  .mobile-camera .viewfinder-bezel { width:min(100%,calc(100dvh - 470px)); min-width:240px; }
   .mobile-camera .print-outlet { padding-bottom:20px; }
 }
-/* Tall windows have room for the full-size dials. */
-@media(min-width:701px) and (min-height:860px) {
-  .mobile-camera .viewfinder-bezel { width:min(100%,calc(100dvh - 530px)); }
-  .mobile-camera .camera-settings { grid-template-columns:minmax(96px,1fr) 152px 48px; gap:10px 8px; }
-  .mobile-camera .iso-dial { --iso-radius:54px; width:152px; height:152px; }
-  .mobile-camera .film-roll { width:60px; height:60px; min-height:60px; }
+
+/* Desktop and tablet landscape: a wide camera body that fills most of the window. */
+@media(orientation:landscape) and (min-width:900px) and (min-height:601px) {
+  .app-shell.camera-page { background:transparent; }
+  /* The finder takes the window height; the body is the finder plus a fixed control column. */
+  .mobile-camera { --ui-scale:1; --controls:calc(720px * var(--ui-scale)); --finder:min(calc(100vw - var(--controls)),calc(100dvh - 2 * clamp(12px,2.5dvh,28px) - 112px * var(--ui-scale))); display:flex; justify-content:center; align-items:flex-start; padding:clamp(12px,2.5dvh,28px) clamp(16px,2.5vw,40px); }
+  .mobile-camera-body { width:min(100%,calc(var(--finder) + var(--controls))); }
+  /* Large monitors enlarge the hardware with the finder instead of leaving it tiny. */
+  .mobile-camera :is(.camera-nameplate,.camera-settings,.camera-hardware,.camera-chin) { zoom:var(--ui-scale); }
+  .mobile-camera .camera-assembly { --camera-pad:clamp(20px,2.4vw,36px); --slot-overlap:22px; --mobile-print-width:min(380px,calc(100vw - 80px)); }
+  .mobile-camera .instant-camera {
+    --finder:inherit;
+    min-height:0; gap:clamp(10px,1.6dvh,18px) clamp(24px,3vw,48px); padding:clamp(16px,2.2dvh,24px) var(--camera-pad) 16px;
+    border:2px solid #474943; border-radius:14px; box-shadow:inset 0 1px 1px #fff5,inset 0 -3px 6px #000,0 24px 40px -18px #000c; }
+  .mobile-camera .viewfinder-bezel { padding:13px; }
+  .mobile-camera :is(.camera-nameplate,.camera-settings,.camera-hardware) { width:min(100%,560px); justify-self:center; }
+  .mobile-camera .camera-nameplate > span:first-child { font-size:24px; }
+  .mobile-camera .camera-settings { grid-template-columns:110px minmax(180px,1fr) 60px; gap:14px 18px; }
+  .mobile-camera .camera-settings legend { font-size:12px; margin-bottom:8px; }
+  .mobile-camera .film-presets button { flex-direction:column; min-height:56px; font-size:12px; }
+  .mobile-camera .film-cartridge { width:28px; height:24px; border-inline-width:4px; }
+  .mobile-camera .timer-dial { width:104px; height:104px; }
+  .mobile-camera .flash-switch { height:88px; }
+  .mobile-camera .flash-control > span:first-child { margin-bottom:8px; }
+  .mobile-camera .film-roll { --lever:60px; }
+  .mobile-camera .instant-camera .shutter { width:84px; height:84px; min-height:84px; }
+  .mobile-camera .hardware-control { gap:8px; }
+  .mobile-camera .camera-chin { padding:10px 16px 0; gap:8px; }
+  .mobile-camera .chin-mark { font-size:13px; }
+  .mobile-camera .camera-chin .ejection-slot { height:18px; }
+  .mobile-camera.has-print .instant-camera { grid-template-columns:minmax(0,1fr) minmax(0,1fr); }
+  .mobile-camera .print-outlet { padding-bottom:20px; }
 }
-/* Short, wide windows keep the landscape camera at a believable width. */
-@media(orientation:landscape) and (max-height:600px) and (min-width:960px) {
-  .mobile-camera .camera-assembly { max-width:920px; margin-inline:auto; }
-}
+/* Narrow desktops trade control-column width for a larger finder. */
+@media(orientation:landscape) and (min-width:900px) and (max-width:1199px) and (min-height:601px) { .mobile-camera { --controls:600px; } }
+@media(orientation:landscape) and (min-width:1600px) and (min-height:950px) { .mobile-camera { --ui-scale:1.3; } }
+@media(orientation:landscape) and (min-width:2200px) and (min-height:1200px) { .mobile-camera { --ui-scale:1.5; } }

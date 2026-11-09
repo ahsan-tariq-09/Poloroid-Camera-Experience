@@ -15,6 +15,9 @@ import { exportFile as savePolaroid } from "./render";
 
 type Polaroid = Awaited<ReturnType<typeof importPolaroid>>;
 /** The one camera experience on every screen size: capture or upload, shake to reveal, then save or roll again. */
+/** Shots in one film pack. */
+const FILM_PACK=8;
+
 export default function Camera({onUpload, enabled, initialSettings, navigation, upload}: {
   onUpload: () => void; enabled: boolean;
   initialSettings?: CameraPreferences;
@@ -41,13 +44,15 @@ export default function Camera({onUpload, enabled, initialSettings, navigation, 
   const [filmLoaded,setFilmLoaded]=useState(initialSettings?.loadStartedAt===undefined);
   const [loadingUntil,setLoadingUntil]=useState(initialSettings?.loadStartedAt===undefined?0:initialSettings.loadStartedAt+FILM_LOAD_MS);
   const loading=loadingUntil>0;
+  // An 8-shot pack: each camera photo uses one, and loading film on an empty pack fits a fresh one.
+  const [filmLeft,setFilmLeft]=useState(FILM_PACK);
   useEffect(()=>{
     if(!loadingUntil)return;
     const timeout=setTimeout(()=>{setLoadingUntil(0);setFilmLoaded(true);},Math.max(0,loadingUntil-performance.now()));
     return()=>clearTimeout(timeout);
   },[loadingUntil]);
   const clearPrint=()=>{sheet.current++;urls.current.forEach(url=>URL.revokeObjectURL(url));urls.current=[];setPrints([]);setPolaroid(null);setSaveError("");};
-  const roll=()=>{if(loading)return;setFilmLoaded(false);setLoadingUntil(performance.now()+FILM_LOAD_MS);void Promise.resolve(playSound("load")).then(()=>{if(alive.current)setLoadingUntil(performance.now()+FILM_LOAD_MS);});if(captured){container.current?.focus();clearPrint();setRestart(n=>n+1);}};
+  const roll=()=>{if(loading)return;if(filmLeft===0)setFilmLeft(FILM_PACK);setFilmLoaded(false);setLoadingUntil(performance.now()+FILM_LOAD_MS);void Promise.resolve(playSound("load")).then(()=>{if(alive.current)setLoadingUntil(performance.now()+FILM_LOAD_MS);});if(captured){container.current?.focus();clearPrint();setRestart(n=>n+1);}};
   const stop=()=>{stream.current?.getTracks().forEach(t=>t.stop());stream.current=null;if(timer.current)clearTimeout(timer.current);};
   /** Shows a print and prepares its saved Polaroid. A later print or roll discards a late result. */
   const showPrint=(file:File,url:string,prepared?:Polaroid)=>{
@@ -173,7 +178,7 @@ export default function Camera({onUpload, enabled, initialSettings, navigation, 
       canvas.toBlob(blob=>{
         if(!alive.current||!captureRunning.current||generation.current!==token)return;
         if(!blob){fail("That photo could not be captured. Try again.");return;}
-        const url=URL.createObjectURL(blob);urls.current.push(url);results.push({file:new File([blob],`camera-photo-${results.length+1}.png`,{type:"image/png",lastModified:capturedAt}),url});
+        const url=URL.createObjectURL(blob);urls.current.push(url);setFilmLeft(n=>Math.max(0,n-1));results.push({file:new File([blob],`camera-photo-${results.length+1}.png`,{type:"image/png",lastModified:capturedAt}),url});
         timer.current=setTimeout(()=>{
           if(!alive.current||!captureRunning.current||generation.current!==token)return;
           captureRunning.current=false;setShot(0);showPrint(results[0].file,results[0].url);
@@ -209,7 +214,7 @@ export default function Camera({onUpload, enabled, initialSettings, navigation, 
   const captureFlash=screenFlash==="steady"?createPortal(<div className="capture-flash" aria-hidden="true"/>,document.body):enabled&&screenFlash&&createPortal(<motion.div className="capture-flash" aria-hidden="true" initial={{opacity:.35}} animate={{opacity:0}} transition={{duration:.3,ease:"easeOut"}} onAnimationComplete={()=>setScreenFlash(false)}/>,document.body);
   const retry=!captured&&error&&!ready&&<button className="secondary-button" onClick={()=>{if(stream.current&&!stream.current.getTracks().some(track=>track.readyState==="ended"))void playVideo();else setRestart(n=>n+1);}}>Retry camera</button>;
   return <MobileCameraScreen containerRef={container} navigation={navigation} viewfinder={viewfinder} settings={settings} print={print} flash={captureFlash} retry={retry}
-    captured={captured} disabled={!ready||!filmLoaded||shot>0||captured} taking={shot>0} loading={loading} loaded={filmLoaded} ready={ready} onRoll={roll}
+    captured={captured} disabled={!ready||!filmLoaded||shot>0||captured} taking={shot>0} loading={loading} loaded={filmLoaded} ready={ready} filmLeft={filmLeft} onRoll={roll}
     notice={!captured ? error || (!ready ? "Waiting for the camera. Allow access if your browser asks." : "") : ""}
     status={error&&!ready&&!captured?"CAMERA UNAVAILABLE":loading?"LOADING FILM":shot?"HOLD STILL":captured?"PRINT READY":ready?"READY":error?"CAMERA UNAVAILABLE":"CONNECTING"}
     onShutter={take} onFlip={()=>setFacing(f=>f==="user"?"environment":"user")} onUpload={onUpload}/>;

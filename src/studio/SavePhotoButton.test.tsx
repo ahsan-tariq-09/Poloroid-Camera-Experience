@@ -60,7 +60,8 @@ describe("Save Photo", () => {
     async (platform) => {
       vi.spyOn(navigator, "platform", "get").mockReturnValue(platform);
       await render();
-      expect(button().textContent).toContain("Save Photo");
+      expect(button().textContent).toBe("Save");
+      expect(button().getAttribute("aria-label")).toBe("Save Photo");
       expect(mocks.prepareExport).toHaveBeenCalledWith(
         studio.assets,
         studio.composition,
@@ -123,7 +124,7 @@ describe("Save Photo", () => {
     await render();
     await click();
     expect(host.textContent).toContain(
-      "Tap Save Photo to download the file instead",
+      "Tap Save to download the file instead",
     );
     expect(mocks.download).not.toHaveBeenCalled();
     await click();
