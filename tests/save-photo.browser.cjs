@@ -12,7 +12,7 @@ async function download(page, extension) {
   const pending = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Save Photo', exact: true }).click();
   const file = await pending;
-  assert.equal(file.suggestedFilename(), `my-polaroid.${extension}`);
+  assert.match(file.suggestedFilename(), new RegExp(String.raw`^my-polaroid-\d{4}-\d{2}-\d{2}-\d{6}\.${extension}$`));
   const bytes = fs.readFileSync(await file.path());
   assert(bytes.length > 1000, 'Export contains actual artwork');
   if (extension === 'jpg') assert.equal(bytes.subarray(0, 2).toString('hex'), 'ffd8');
@@ -82,35 +82,30 @@ async function layout(page, platform) {
       const page = await context.newPage(), errors = [], downloads = [];
       page.on('pageerror', error => errors.push(error.message));
       page.on('download', file => downloads.push(file.suggestedFilename()));
-      // The camera prints an uploaded photo, so saving needs no camera device.
-      await page.goto(baseURL);
-      await page.locator('input[type="file"]').setInputFiles(path.resolve('public/sample-coast.png'));
-      const reveal = page.getByRole('button', { name: 'Shake to reveal', exact: true });
-      await page.waitForFunction(() => { const button = document.querySelector('.shake-reveal'); return button && !button.disabled; });
-      assert.equal(await page.getByRole('button', { name: 'Save Photo', exact: true }).count(), 0, 'Save waits for the reveal');
-      await reveal.click();
       const save = page.getByRole('button', { name: 'Save Photo', exact: true });
-      await save.waitFor({ timeout: 15000 });
-      await page.waitForFunction(() => !document.querySelector('.save-plate').disabled);
+      // The camera prints an uploaded photo, so saving needs no camera device.
+      const printUpload = async () => {
+        await page.locator('input[type="file"]').setInputFiles(path.resolve('public/sample-coast.png'));
+        await page.waitForFunction(() => { const button = document.querySelector('.shake-reveal'); return button && !button.disabled; });
+        assert.equal(await save.count(), 0, 'Save waits for the reveal');
+        await page.getByRole('button', { name: 'Reveal the Snap', exact: true }).click();
+        await save.waitFor({ timeout: 15000 });
+        await page.waitForFunction(() => !document.querySelector('.save-plate').disabled);
+      };
+      // A finished save resets to the live camera, ready for the next shot.
+      const expectReset = async () => {
+        await page.locator('.instant-print').waitFor({ state: 'detached' });
+        assert.equal(await save.count(), 0);
+      };
+      await page.goto(baseURL);
+      await printUpload();
+      assert.equal(await save.textContent(), '', 'The save plate shows only its icon');
       if (platform === 'Win32' || platform === 'iPhone') await layout(page, platform);
       if (platform === 'Win32' || platform === 'Linux armv8l') {
         await download(page, 'jpg');
-        // The revealed photo stays, so it can be saved again.
-        await download(page, 'jpg');
-        assert.equal(await page.locator('.instant-photo-window img').count(), 1);
+        await expectReset();
         assert.equal(await page.evaluate(() => window.shareCalls.length), 0);
       } else {
-        await save.press('Enter');
-        await page.getByText('Share sheet closed.', { exact: false }).waitFor();
-        const shared = await page.evaluate(async () => {
-          const file = window.lastShared, image = new Image(), url = URL.createObjectURL(file);
-          image.src = url; await image.decode(); URL.revokeObjectURL(url);
-          return { ...window.shareCalls.at(-1), width: image.width, height: image.height };
-        });
-        assert.equal(shared.name, 'my-polaroid.jpg');
-        assert.equal(shared.type, 'image/jpeg');
-        assert(shared.active && shared.size > 1000);
-        assert.deepEqual([shared.width, shared.height], [1560, 1897]);
         await page.evaluate(() => { window.shareMode = 'cancel'; });
         await save.click();
         await page.getByText('Sharing canceled.', { exact: false }).waitFor();
@@ -120,11 +115,21 @@ async function layout(page, platform) {
         await page.getByText('Sharing is unavailable.', { exact: false }).waitFor();
         assert.equal(downloads.length, 0);
         await download(page, 'jpg');
+        await expectReset();
+        await page.evaluate(() => { window.shareMode = 'success'; });
+        await printUpload();
+        await save.press('Enter');
+        await expectReset();
+        const shared = await page.evaluate(async () => {
+          const file = window.lastShared, image = new Image(), url = URL.createObjectURL(file);
+          image.src = url; await image.decode(); URL.revokeObjectURL(url);
+          return { ...window.shareCalls.at(-1), width: image.width, height: image.height };
+        });
+        assert.match(shared.name, /^my-polaroid-\d{4}-\d{2}-\d{2}-\d{6}\.jpg$/);
+        assert.equal(shared.type, 'image/jpeg');
+        assert(shared.active && shared.size > 1000);
+        assert.deepEqual([shared.width, shared.height], [1560, 1897]);
       }
-      // Roll again clears the print without saving first.
-      await page.getByRole('button', { name: 'Load film', exact: true }).click();
-      await page.locator('.instant-print').waitFor({ state: 'detached' });
-      assert.equal(await save.count(), 0);
       assert.deepEqual(errors, [], 'No browser exceptions');
       console.log(`${engine}: ${platform} save flow passed`);
       await context.close();

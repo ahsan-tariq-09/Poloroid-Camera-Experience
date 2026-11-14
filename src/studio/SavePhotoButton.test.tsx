@@ -11,11 +11,12 @@ import SavePhotoButton, { type SaveStudio } from "./SavePhotoButton";
 let root: Root, host: HTMLDivElement;
 let studio: SaveStudio;
 const share = vi.fn(),
-  canShare = vi.fn();
+  canShare = vi.fn(),
+  onSaved = vi.fn();
 const jpeg = new File(["jpeg"], "my-polaroid.jpg", { type: "image/jpeg" });
 const button = () => host.querySelector("button")!;
 const render = async () => {
-  await act(async () => root.render(<SavePhotoButton studio={studio} />));
+  await act(async () => root.render(<SavePhotoButton studio={studio} onSaved={onSaved} />));
 };
 const click = async () => {
   await act(async () => button().click());
@@ -60,7 +61,9 @@ describe("Save Photo", () => {
     async (platform) => {
       vi.spyOn(navigator, "platform", "get").mockReturnValue(platform);
       await render();
-      expect(button().textContent).toBe("Save");
+      // The plate shows only the download icon.
+      expect(button().textContent).toBe("");
+      expect(button().querySelector("svg")).not.toBeNull();
       expect(button().getAttribute("aria-label")).toBe("Save Photo");
       expect(mocks.prepareExport).toHaveBeenCalledWith(
         studio.assets,
@@ -71,6 +74,7 @@ describe("Save Photo", () => {
       await click();
       expect(share).toHaveBeenCalledWith({ files: [jpeg] });
       expect(host.textContent).toContain("Share sheet closed");
+      expect(onSaved).toHaveBeenCalledOnce();
       expect(studio.exportFile).not.toHaveBeenCalled();
       expect(mocks.download).not.toHaveBeenCalled();
     },
@@ -114,6 +118,7 @@ describe("Save Photo", () => {
     await render();
     await click();
     expect(host.textContent).toContain("Sharing canceled");
+    expect(onSaved).not.toHaveBeenCalled();
     expect(mocks.download).not.toHaveBeenCalled();
     await click();
     expect(share).toHaveBeenCalledTimes(2);

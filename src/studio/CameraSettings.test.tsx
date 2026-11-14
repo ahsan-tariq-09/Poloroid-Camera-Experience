@@ -70,7 +70,7 @@ it("turns the timer dial with a drag, settles on the nearest mark, and still tak
   expect(dial.classList.contains("turning")).toBe(false);
   expect(rotor.style.transform).toBe("rotate(-135deg)");
   // A tap on a printed mark sets it.
-  const off = document.querySelector<HTMLButtonElement>('[aria-label="Timer off"]')!;
+  const off = document.querySelector<HTMLButtonElement>('.timer-stop.stop-0')!;
   await pointer(off, "pointerdown", 20, 20);
   await act(async () => off.click());
   expect(onSeconds).toHaveBeenLastCalledWith(0);

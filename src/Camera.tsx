@@ -19,7 +19,8 @@ type Polaroid = Awaited<ReturnType<typeof importPolaroid>>;
 const FILM_PACK=8;
 
 export default function Camera({onUpload, enabled, initialSettings, navigation, upload}: {
-  onUpload: () => void; enabled: boolean;
+  /** Desktop only; phones and tablets have no upload. */
+  onUpload?: () => void; enabled: boolean;
   initialSettings?: CameraPreferences;
   navigation?: ReactNode;
   /** A chosen or dropped photo to print in place of a capture. A new id prints again. */
@@ -53,6 +54,8 @@ export default function Camera({onUpload, enabled, initialSettings, navigation, 
   },[loadingUntil]);
   const clearPrint=()=>{sheet.current++;urls.current.forEach(url=>URL.revokeObjectURL(url));urls.current=[];setPrints([]);setPolaroid(null);setSaveError("");};
   const roll=()=>{if(loading)return;if(filmLeft===0)setFilmLeft(FILM_PACK);setFilmLoaded(false);setLoadingUntil(performance.now()+FILM_LOAD_MS);void Promise.resolve(playSound("load")).then(()=>{if(alive.current)setLoadingUntil(performance.now()+FILM_LOAD_MS);});if(captured){container.current?.focus();clearPrint();setRestart(n=>n+1);}};
+  /** After a saved photo, clear the print and reopen the live camera with the next shot loaded. */
+  const finish=()=>{container.current?.focus();clearPrint();setFilmLoaded(filmLeft>0);setRestart(n=>n+1);};
   const stop=()=>{stream.current?.getTracks().forEach(t=>t.stop());stream.current=null;if(timer.current)clearTimeout(timer.current);};
   /** Shows a print and prepares its saved Polaroid. A later print or roll discards a late result. */
   const showPrint=(file:File,url:string,prepared?:Polaroid)=>{
@@ -89,7 +92,7 @@ export default function Camera({onUpload, enabled, initialSettings, navigation, 
   };
   useEffect(()=>{
     alive.current=present; setReady(false); setError(""); if (!present) return; let disposed=false; let owned:MediaStream|null=null;
-    if(!navigator.mediaDevices?.getUserMedia){setError("Camera capture needs HTTPS or localhost. Upload a photo to keep creating."); return()=>{alive.current=false;};}
+    if(!navigator.mediaDevices?.getUserMedia){setError("Camera capture needs HTTPS or localhost."); return()=>{alive.current=false;};}
     void openCamera(facing,()=>disposed || !alive.current).then(value=>{
       if(!value)return;
       // A stream that arrives after an upload printed stays off until Roll again.
@@ -98,7 +101,7 @@ export default function Camera({onUpload, enabled, initialSettings, navigation, 
       // An unplugged or reclaimed camera ends its track without rejecting anything.
       value.getTracks().forEach(track=>{track.onended=()=>{if(alive.current&&stream.current===value){setReady(false);setError("The camera stopped. Tap Retry camera to reconnect.");}};});
       if(video.current){video.current.srcObject=value;void playVideo();}
-    }).catch(reason=>{if(!disposed)setError(reason?.name==="NotAllowedError"?"Camera permission was declined. Allow camera access in your browser settings, then retry.":reason?.name==="NotFoundError"?"No camera was found. Connect a camera and retry, or upload a photo.":"Your camera is unavailable. Close other apps using it and retry, or upload a photo.");});
+    }).catch(reason=>{if(!disposed)setError(reason?.name==="NotAllowedError"?"Camera permission was declined. Allow camera access in your browser settings, then retry.":reason?.name==="NotFoundError"?"No camera was found. Connect a camera and retry.":"Your camera is unavailable. Close other apps using it and retry.");});
     const target=video.current;
     return ()=>{disposed=true;alive.current=false;generation.current++;captureRunning.current=false;owned?.getTracks().forEach(t=>t.stop());if(target?.srcObject===owned)target.srcObject=null;if(stream.current===owned)stream.current=null;if(timer.current)clearTimeout(timer.current);};
   },[facing,restart,present]);
@@ -195,13 +198,13 @@ export default function Camera({onUpload, enabled, initialSettings, navigation, 
   const save=async()=>{
     if(!polaroid)return;
     setExporting(true);setSaveError("");
-    try{await savePolaroid(polaroid.assets,polaroid.composition,"jpeg");}
+    try{await savePolaroid(polaroid.assets,polaroid.composition,"jpeg");if(alive.current)finish();}
     catch(reason){if(alive.current)setSaveError(reason instanceof Error?reason.message:"Your photo could not be saved. Try again.");}
     finally{if(alive.current)setExporting(false);}
   };
   const settings=<CameraSettings seconds={seconds} onSeconds={setSeconds} preset={preset} onPreset={setPreset} flash={flash} onFlash={setFlash} iso={iso} onISO={setISO} disabled={shot>0}/>;
   const saveControls=<div className="print-save">
-    {polaroid?<SavePhotoButton studio={{assets:polaroid.assets,composition:polaroid.composition,format:"jpeg",busy:false,exporting,exportFile:save}}/>:!saveError&&<button className="primary-button download-main" disabled>Preparing…</button>}
+    {polaroid?<SavePhotoButton studio={{assets:polaroid.assets,composition:polaroid.composition,format:"jpeg",busy:false,exporting,exportFile:save}} onSaved={finish}/>:!saveError&&<button className="primary-button download-main" disabled>Preparing…</button>}
     {saveError&&<p className="field-hint save-error" role="alert">{saveError}</p>}
   </div>;
   const print=captured?<InstantPrint photos={prints.map(p=>({src:p.url,alt:"Your captured photo"}))} caption={captureDate(prints[0].file.lastModified)} enabled={enabled} actions={saveControls}/>:undefined;

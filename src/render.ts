@@ -475,6 +475,11 @@ export function canvasBlob(output: HTMLCanvasElement, type: string) {
     ),
   );
 }
+/** A per-save name, so a browser never asks to replace or re-download an earlier my-polaroid file. */
+export function exportName(extension: string, at = new Date()) {
+  const two = (n: number) => String(n).padStart(2, "0");
+  return `my-polaroid-${at.getFullYear()}-${two(at.getMonth() + 1)}-${two(at.getDate())}-${two(at.getHours())}${two(at.getMinutes())}${two(at.getSeconds())}.${extension}`;
+}
 export async function prepareExport(
   assets: Assets,
   c: Composition,
@@ -483,7 +488,7 @@ export async function prepareExport(
   if (format === "svg") {
     return new File(
       [await serializeSvg(assets, c)],
-      "my-polaroid.svg",
+      exportName("svg"),
       { type: "image/svg+xml" },
     );
   }
@@ -493,7 +498,7 @@ export async function prepareExport(
     format === "heic"
       ? await (await import("./heicExport")).encodeHeic(out)
       : await canvasBlob(out, format === "jpeg" ? "image/jpeg" : "image/png");
-  return new File([blob], "my-polaroid." + (format === "jpeg" ? "jpg" : format), { type: blob.type });
+  return new File([blob], exportName(format === "jpeg" ? "jpg" : format), { type: blob.type });
 }
 export async function exportFile(
   assets: Assets,

@@ -63,7 +63,7 @@ export default function CameraSettings({seconds,onSeconds,preset,onPreset,flash,
   const endTurn=()=>{press.current=null;setTurn(null);};
   return <div className="camera-settings">
     <div className="camera-dials">
-    <fieldset className="timer-control" disabled={disabled}><legend>Timer</legend>
+    <fieldset className="timer-control" disabled={disabled}>
       <div className={`timer-dial ${turn?"turning":""}`} style={{"--dial-duration":`${timerRotation.duration}ms`} as CSSProperties}
         onPointerDown={event=>{if(disabled||event.button!==0)return;turned.current=false;press.current={x:event.clientX,y:event.clientY,id:event.pointerId};}}
         onPointerMove={event=>{
@@ -87,14 +87,14 @@ export default function CameraSettings({seconds,onSeconds,preset,onPreset,flash,
         }}
         onPointerUp={endTurn} onPointerCancel={endTurn}>
         <i className="timer-pointer" aria-hidden="true"/><div className="timer-rotor" style={{transform:`rotate(${timerRotation.target}deg)`}}><i className="dial-hub" aria-hidden="true"/>
-        {timerStops.map((value,index)=><button key={value} type="button" className={`timer-stop stop-${index}`} aria-label={value?`Timer ${value} seconds`:"Timer off"} aria-pressed={seconds===value} onClick={()=>{if(turned.current){turned.current=false;return;}onSeconds(value);}}><span style={{transform:`rotate(${-timerRotation.target}deg)`}}>{value?`${value}s`:"OFF"}</span></button>)}
+        {timerStops.map((value,index)=><button key={value} type="button" className={`timer-stop stop-${index}`} aria-pressed={seconds===value} onClick={()=>{if(turned.current){turned.current=false;return;}onSeconds(value);}}><span style={{transform:`rotate(${-timerRotation.target}deg)`}}>{value?`${value}s`:"OFF"}</span></button>)}
       </div>
       </div>
     </fieldset>
-    <fieldset className="iso-control" disabled={disabled}><legend>ISO effect</legend>
+    <fieldset className="iso-control" disabled={disabled}>
       {/* Lighten/darken bar: the black arrow lowers ISO for bright light, the white arrow raises it for dim light. */}
       <div className={`iso-slider ${slide===null?"":"sliding"}`} style={{"--iso-position":slide??isoStops.indexOf(iso)/lastISO} as CSSProperties}>
-        <div className="iso-track" role="slider" tabIndex={disabled?-1:0} aria-disabled={disabled||undefined} aria-label="ISO effect" aria-valuemin={isoStops[0]} aria-valuemax={isoStops[lastISO]} aria-valuenow={iso} aria-valuetext={`ISO ${iso}`}
+        <div className="iso-track" role="slider" tabIndex={disabled?-1:0} aria-disabled={disabled||undefined} aria-valuemin={isoStops[0]} aria-valuemax={isoStops[lastISO]} aria-valuenow={iso}
           onPointerDown={event=>{if(disabled||event.button!==0)return;event.currentTarget.setPointerCapture?.(event.pointerId);pick(event.currentTarget,event.clientX);}}
           onPointerMove={event=>{if(!disabled&&event.currentTarget.hasPointerCapture?.(event.pointerId))setSlide(pick(event.currentTarget,event.clientX));}}
           onPointerUp={()=>setSlide(null)} onPointerCancel={()=>setSlide(null)}
@@ -111,7 +111,7 @@ export default function CameraSettings({seconds,onSeconds,preset,onPreset,flash,
       </div>
     </fieldset>
     </div>
-    <fieldset className="film-presets" disabled={disabled}><legend>Film presets</legend>{filmPresets.map((value,index)=><button key={value} type="button" aria-pressed={preset===value} onClick={()=>onPreset(value)}><i className={`film-cartridge cartridge-${index}`} aria-hidden="true"/><span>{value}</span></button>)}</fieldset>
+    <fieldset className="film-presets" disabled={disabled}>{filmPresets.map((value,index)=><button key={value} type="button" aria-pressed={preset===value} onClick={()=>onPreset(value)}><i className={`film-cartridge cartridge-${index}`} aria-hidden="true"/><span>{value}</span></button>)}</fieldset>
     <div className="flash-control">
       {/* A toggle on a metal plate: the bat points up for On and down for Off. */}
       <button type="button" className="flash-switch" role="switch" aria-label="Flash effect" aria-checked={flash} disabled={disabled} onClick={()=>onFlash(!flash)}>

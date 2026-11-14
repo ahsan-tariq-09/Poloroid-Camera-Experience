@@ -8,7 +8,7 @@ afterEach(()=>{vi.unstubAllGlobals();vi.restoreAllMocks();});
 async function setup(enabled=false){const host=document.createElement("div"),root=createRoot(host),reveal=vi.fn();document.body.append(host);await act(async()=>root.render(<InstantPrint photos={[{src:"photo.png",alt:"Captured moment"}]} caption="Today" enabled={enabled} onReveal={reveal}/>));return {host,reveal,close:async()=>{await act(async()=>root.unmount());host.remove();}};}
 it("waits for the complete eleven-second development before enabling the next action",async()=>{
   expect(PHOTO_DEVELOPMENT_MS).toBe(11000);
-  expect(PRINT_EJECTION_MS).toBe(3000);
+  expect(PRINT_EJECTION_MS).toBe(2490);
   vi.useFakeTimers();const s=await setup(true);
   try{
     expect(s.host.querySelector<HTMLButtonElement>('.shake-reveal')!.disabled).toBe(true);
@@ -30,7 +30,7 @@ it.each(["denied","unavailable","rejected"])("keeps the tap fallback when motion
   vi.stubGlobal("isSecureContext",true);vi.stubGlobal("DeviceMotionEvent",kind==="unavailable"?undefined:{requestPermission:permission});
   const s=await setup();try{
     expect(s.host.querySelector(".phone-shake")).toBeNull();expect(permission).not.toHaveBeenCalled();expect(s.host.querySelector("img")).toBeNull();
-    await act(async()=>s.host.querySelector<HTMLButtonElement>('[aria-label="Shake to reveal"]')!.click());expect(s.reveal).toHaveBeenCalledOnce();expect(s.host.querySelector("img")).not.toBeNull();
+    await act(async()=>s.host.querySelector<HTMLButtonElement>('.shake-reveal')!.click());expect(s.reveal).toHaveBeenCalledOnce();expect(s.host.querySelector("img")).not.toBeNull();
     if(kind!=="unavailable")expect(permission).toHaveBeenCalledOnce();
   }finally{await s.close();}
 });

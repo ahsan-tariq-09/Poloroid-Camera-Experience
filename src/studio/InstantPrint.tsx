@@ -1,17 +1,18 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent, type ReactNode } from "react";
-import { motion, useMotionValue } from "motion/react";
-import { Hand } from "lucide-react";
+import { motion, useMotionValue, useSpring, useTransform } from "motion/react";
 import { createPhoneShakeDetector } from "./phoneShake";
+import { SHUTTER_SOUND_MS } from "../sounds";
 
 type MotionAccess = typeof DeviceMotionEvent & { requestPermission?: () => Promise<"granted" | "denied"> };
 export const PHOTO_DEVELOPMENT_MS = 11000;
 const PHOTO_DEVELOPMENT_DELAY_MS = 2000;
-export const PRINT_EJECTION_MS = 3000;
+/** The slide lasts exactly as long as the ejection recording, so the print never moves in silence. */
+export const PRINT_EJECTION_MS = SHUTTER_SOUND_MS;
 
 /** Owns the blank-to-developed print, gestures, and optional phone sensor access. */
 export default function InstantPrint({ photos, caption, enabled, onReveal, onRetake, actions }: {
   photos: {src:string;alt:string}[]; caption:string; enabled:boolean; onReveal?:()=>void; onRetake?:()=>void;
-  /** Replaces Shake to reveal once the photo has fully developed. */
+  /** Replaces Reveal the Snap once the photo has fully developed. */
   actions?: ReactNode;
 }) {
   const [phase,setPhase]=useState<"ejecting"|"blank"|"developing"|"revealed">(enabled?"ejecting":"blank");
@@ -19,8 +20,12 @@ export default function InstantPrint({ photos, caption, enabled, onReveal, onRet
   const [sensorActive,setSensorActive]=useState(false);
   const [buttonShake,setButtonShake]=useState(false);
   const revealStarted=useRef(false), revealCallback=useRef(onReveal), actionRow=useRef<HTMLDivElement>(null);
-  const offset=useMotionValue(0);
-  const gesture=useRef<{id:number;anchor:number;direction:number;turns:number;distance:number}|null>(null);
+  // The finger sets the target; a soft spring trails it and eases the print back to centre on release.
+  const offset=useMotionValue(0), x=useSpring(offset,{stiffness:170,damping:15,mass:.7});
+  // The paper leans a little into each swing, like a print held by one edge.
+  const tilt=useTransform(x,[-16,0,16],[-2.4,0,2.4]);
+  // origin is where the finger pressed (the print follows it); anchor moves with each counted swing.
+  const gesture=useRef<{id:number;origin:number;anchor:number;direction:number;turns:number;distance:number}|null>(null);
   revealCallback.current=onReveal;
 
   const reveal=useCallback(()=>{
@@ -71,8 +76,8 @@ export default function InstantPrint({ photos, caption, enabled, onReveal, onRet
   const move=(event:PointerEvent<HTMLDivElement>)=>{
     const g=gesture.current;
     if(!g||g.id!==event.pointerId)return;
+    if(enabled)offset.set(Math.max(-16,Math.min(16,(event.clientX-g.origin)/2.5)));
     const delta=event.clientX-g.anchor;
-    if(enabled)offset.set(Math.max(-12,Math.min(12,delta/3)));
     if(Math.abs(delta)<20)return;
     const direction=Math.sign(delta);
     if(g.direction&&direction!==g.direction)g.turns++;
@@ -82,25 +87,25 @@ export default function InstantPrint({ photos, caption, enabled, onReveal, onRet
   const end=()=>{gesture.current=null;offset.set(0);};
   return <div className="print-reveal">
     <div className="print-outlet"><motion.div className="instant-print" initial={enabled?{y:"-100%"}:false} animate={{y:0}} transition={{duration:enabled?PRINT_EJECTION_MS/1000:0,ease:"linear"}}>
-      <motion.div className="print-drag" style={{x:offset}} animate={{rotate:enabled&&buttonShake&&phase==="developing"?[0,-4,4,-3,3,-1,0]:0}} transition={{duration:enabled&&buttonShake ? .65 : 0,ease:"easeInOut"}} onPointerDown={event=>{
+      <motion.div className="print-drag" style={{x}} animate={{rotate:enabled&&buttonShake&&phase==="developing"?[0,-4,3.4,-2.6,1.8,-1,.4,0]:0}} transition={{duration:enabled&&buttonShake ? 1.1 : 0,ease:"easeInOut"}} onPointerDown={event=>{
         if(phase!=="blank"||event.button!==0)return;
-        gesture.current={id:event.pointerId,anchor:event.clientX,direction:0,turns:0,distance:0};
+        gesture.current={id:event.pointerId,origin:event.clientX,anchor:event.clientX,direction:0,turns:0,distance:0};
         event.currentTarget.setPointerCapture?.(event.pointerId);
       }} onPointerMove={move} onPointerUp={end} onPointerCancel={end} onLostPointerCapture={end}>
-        <div className="instant-paper">
+        <motion.div className="instant-paper" style={{rotate:tilt}}>
           {photos.map((photo,index)=><div className="instant-photo-window" key={photo.src}>
-            {phase==="developing"||phase==="revealed" ? <motion.img src={photo.src} alt={photo.alt} initial={enabled?{opacity:0}:false} animate={{opacity:1}} transition={{delay:enabled?PHOTO_DEVELOPMENT_DELAY_MS/1000:0,duration:enabled?(PHOTO_DEVELOPMENT_MS-PHOTO_DEVELOPMENT_DELAY_MS)/1000:0,ease:"linear"}} draggable={false}/> : <div className="undeveloped-photo" aria-label={`Unrevealed photo ${index+1}`}>{index===0&&<><Hand size={25} strokeWidth={1.4}/><span>Shake to reveal</span></>}</div>}
+            {phase==="developing"||phase==="revealed" ? <motion.img src={photo.src} alt={photo.alt} initial={enabled?{opacity:0}:false} animate={{opacity:1}} transition={{delay:enabled?PHOTO_DEVELOPMENT_DELAY_MS/1000:0,duration:enabled?(PHOTO_DEVELOPMENT_MS-PHOTO_DEVELOPMENT_DELAY_MS)/1000:0,ease:"linear"}} draggable={false}/> : <div className="undeveloped-photo" aria-label={`Unrevealed photo ${index+1}`}>{index===0&&<span>Drag &amp; shake</span>}</div>}
           </div>)}
           <span className="instant-caption">{caption}</span>
-        </div>
+        </motion.div>
       </motion.div>
     </motion.div></div>
     <div className="print-reveal-actions">
       <div className="print-action-row" ref={actionRow}>
-        {phase==="revealed"&&actions ? actions : <button className={`${phase==="blank"?"primary-button":"secondary-button"} shake-reveal`} aria-label={phase==="revealed"?"Photo revealed":"Shake to reveal"} disabled={phase!=="blank"} onClick={revealByButton}><Hand size={20}/>{phase==="ejecting"?"Printing…":phase==="blank"?"Shake to reveal":phase==="revealed"?"Photo revealed":"Developing…"}</button>}
+        {phase==="revealed"&&actions ? actions : <button className={`${phase==="blank"?"primary-button":"secondary-button"} shake-reveal`} disabled={phase!=="blank"} onClick={revealByButton}>{phase==="ejecting"?"Printing…":phase==="blank"?"Reveal the Snap":phase==="revealed"?"Photo revealed":"Developing…"}</button>}
         {onRetake&&<button className="secondary-button retake-photo" onClick={onRetake}>Retake photo</button>}
       </div>
-      <span className="sr-only" role="status">{phase==="ejecting"?"Printing…":phase==="blank"?"Shake to reveal":phase==="revealed"?"Photo revealed":"Developing…"}</span>
+      <span className="sr-only" role="status">{phase==="ejecting"?"Printing…":phase==="blank"?"Drag and shake the print, or press Reveal the Snap":phase==="revealed"?"Photo revealed":"Developing…"}</span>
     </div>
   </div>;
 }

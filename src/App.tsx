@@ -17,6 +17,7 @@ import ScrapbookScreen from "./studio/ScrapbookScreen";
 import { useScrapbook } from "./studio/useScrapbook";
 import { soundEnabled, setSoundEnabled, unlockSound } from "./sounds";
 import InstallApp from "./studio/InstallApp";
+import { isDesktop } from "./studio/OpenOnPhone";
 
 /**
  * Camera-first app: open camera, take a photo, shake to reveal, save or roll again.
@@ -31,6 +32,8 @@ function StudioApp() {
   const input = useRef<HTMLInputElement>(null);
   const [upload, setUpload] = useState<{ file: File; id: number } | null>(null);
   const [dragging, setDragging] = useState(false);
+  // Phones and tablets get a camera-only body: no upload, drop target or sound button.
+  const [desktop] = useState(isDesktop);
   const path = location.pathname;
   const cameraPage = path === "/";
   useEffect(() => {
@@ -64,7 +67,7 @@ function StudioApp() {
         className={`app-shell${cameraPage ? " camera-page" : ""}`}
         data-motion={enabled ? "active" : "paused"}
         onDragOver={(e) => {
-          if (Array.from(e.dataTransfer.types).includes("Files")) {
+          if ((desktop || !cameraPage) && Array.from(e.dataTransfer.types).includes("Files")) {
             e.preventDefault();
             setDragging(true);
           }
@@ -74,6 +77,7 @@ function StudioApp() {
             setDragging(false);
         }}
         onDrop={(e) => {
+          if (!desktop && cameraPage) return;
           e.preventDefault();
           setDragging(false);
           const files = Array.from(e.dataTransfer.files);
@@ -112,12 +116,12 @@ function StudioApp() {
               <Camera
                 enabled={enabled}
                 upload={upload}
-                onUpload={() => {
+                onUpload={desktop ? () => {
                   // Resume audio inside the click so the print's ejection sound can play.
                   void unlockSound();
                   input.current?.click();
-                }}
-                navigation={soundButton(20)}
+                } : undefined}
+                navigation={desktop ? soundButton(20) : undefined}
               />
             }
           />

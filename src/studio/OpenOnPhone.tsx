@@ -2,7 +2,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { QrCode, X } from "lucide-react";
 
 /** Desktops and laptops: a mouse or trackpad that can hover. Phones and tablets never see the QR code. */
-const isDesktop = () => typeof matchMedia === "function" && matchMedia("(hover: hover) and (pointer: fine)").matches;
+export const isDesktop = () => typeof matchMedia === "function" && matchMedia("(hover: hover) and (pointer: fine)").matches;
 
 /** A header button whose popover shows a QR code for this camera, so desktop visitors can shoot on their phone.
  * The popover opens on every visit; Esc, the close button or a click elsewhere dismisses it. */

@@ -20,6 +20,7 @@ import {
   prepareTextures,
   flatten,
   drawCaption,
+  exportName,
 } from "./render";
 
 beforeAll(() => {
@@ -383,4 +384,8 @@ describe("real Polaroid rendering and export", () => {
       reopened.getContext("2d").getImageData(700, 700, 1, 1).data[0],
     ).toBeLessThan(240);
   });
+});
+
+it("names each export by its save time so browsers never ask to download it again", () => {
+  expect(exportName("jpg", new Date(2026, 10, 1, 9, 5, 7))).toBe("my-polaroid-2026-11-01-090507.jpg");
 });

@@ -16,7 +16,22 @@ type Prepared = Pick<SaveStudio, "assets" | "composition" | "format"> & {
   shareable: boolean;
 };
 
-export default function SavePhotoButton({ studio: s }: { studio: SaveStudio }) {
+/** A download arrow dropping into an open tray, engraved on the save plate (lucide 24px grid). */
+function SaveTrayIcon() {
+  return (
+    <svg width={30} height={30} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="square" strokeLinejoin="miter" aria-hidden="true">
+      <path d="M12 3v11" />
+      <path d="m7.5 9.5 4.5 4.5 4.5-4.5" />
+      <path d="M4 14v6h16v-6" />
+    </svg>
+  );
+}
+
+export default function SavePhotoButton({ studio: s, onSaved }: {
+  studio: SaveStudio;
+  /** Runs after the photo was downloaded or shared, not after a cancel or failure. */
+  onSaved?: () => void;
+}) {
   const [appleSharing] = useState(
     () =>
       window.isSecureContext &&
@@ -79,6 +94,7 @@ export default function SavePhotoButton({ studio: s }: { studio: SaveStudio }) {
       if (ready && prepared.file) {
         download(prepared.file, prepared.file.name);
         setMessage("Photo download started.");
+        onSaved?.();
       } else {
         await s.exportFile();
       }
@@ -88,6 +104,7 @@ export default function SavePhotoButton({ studio: s }: { studio: SaveStudio }) {
     try {
       await navigator.share({ files: [prepared.file] });
       setMessage("Share sheet closed. You can save or share your photo again.");
+      onSaved?.();
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") {
         setMessage("Sharing canceled. Your photo is still here.");
@@ -106,7 +123,7 @@ export default function SavePhotoButton({ studio: s }: { studio: SaveStudio }) {
     <>
       <button
         className="save-plate"
-        aria-label={preparing || s.exporting ? undefined : "Save Photo"}
+        aria-label={preparing || s.exporting ? "Preparing photo" : "Save Photo"}
         disabled={s.exporting || busy || preparing || sharing}
         aria-describedby={
           message || sharing || preparing || shareable
@@ -115,7 +132,7 @@ export default function SavePhotoButton({ studio: s }: { studio: SaveStudio }) {
         }
         onClick={() => void save()}
       >
-        {preparing || s.exporting ? "Preparing" : "Save"}
+        <SaveTrayIcon />
       </button>
       <p
         id="photo-save-guidance"

@@ -18,7 +18,6 @@
 .mobile-camera .timer-control { grid-area:timer; }
 .mobile-camera .iso-control { grid-area:iso; align-self:center; }
 .mobile-camera .film-presets { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:4px; align-self:auto; padding:5px!important; }
-.mobile-camera .film-presets legend { margin-bottom:0; font-size:11px; }
 .mobile-camera .film-presets button { flex-direction:column; justify-content:center; gap:4px; min-height:52px; padding:4px 0; font-size:11px; }
 .mobile-camera .film-presets button span { white-space:nowrap; }
 .mobile-camera .flash-control { display:block; }
@@ -26,6 +25,8 @@
 .mobile-camera .shutter-control { align-self:center; }
 .mobile-camera .instant-camera .shutter { width:72px; height:72px; min-height:72px; }
 .mobile-camera .camera-chin { width:100%; max-width:440px; justify-self:center; }
+/* The slot is cut to the print's width plus a small lip; the chin's zoom is divided out. */
+.mobile-camera .camera-chin .ejection-slot { width:calc((var(--mobile-print-width) + 10px) / var(--ui-scale,1)); max-width:100%; justify-self:center; }
 .mobile-camera.has-print .instant-camera { min-height:0; grid-template-rows:auto auto auto; }
 .mobile-camera .print-reveal { padding-top:0; z-index:4; isolation:isolate; }
 /* --slot-overlap is the bottom padding plus 6px, so the paper's top edge sits mid-slot. */
@@ -50,8 +51,6 @@
   .mobile-camera .instant-camera { gap:6px; padding-top:max(8px,env(safe-area-inset-top)); padding-bottom:max(8px,env(safe-area-inset-bottom)); }
   .mobile-camera .viewfinder-bezel { width:min(100%,calc(100dvh - 416px - env(safe-area-inset-top) - env(safe-area-inset-bottom))); min-width:150px; }
   .mobile-camera .camera-settings { grid-template-columns:88px minmax(140px,1fr) 54px; gap:6px 8px; }
-  .mobile-camera .camera-settings legend { margin-bottom:6px; }
-  .mobile-camera .film-presets legend { margin-bottom:0; }
   .mobile-camera .film-presets button { min-height:44px; padding:2px 0; }
   .mobile-camera .film-cartridge { height:20px; }
   .mobile-camera .timer-dial { width:88px; height:88px; }
@@ -83,8 +82,6 @@
   .mobile-camera .camera-chin { grid-area:chin; max-width:none; padding-top:6px; gap:5px; }
   .mobile-camera .chin-mark { font-size:10px; }
   .mobile-camera .camera-chin .ejection-slot { height:12px; }
-  .mobile-camera .camera-settings legend { margin-bottom:4px; font-size:11px; }
-  .mobile-camera .film-presets legend { margin-bottom:0; }
   .mobile-camera .film-presets button { flex-direction:row; justify-content:center; min-height:40px; padding:2px; gap:5px; }
   .mobile-camera .film-cartridge { width:20px; height:18px; border-inline-width:3px; }
   .mobile-camera .timer-dial { width:84px; height:84px; }
@@ -114,9 +111,6 @@
   .mobile-camera .camera-settings { align-self:center; }
   .mobile-camera .camera-nameplate > span:first-child { font-size:17px; padding:6px 10px; }
   .mobile-camera nav :is(a,button) { width:40px; height:40px; }
-  .mobile-camera .film-presets legend { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
-  .mobile-camera .iso-control legend,.mobile-camera .timer-control legend { font-size:10px; margin-bottom:2px; }
-  .mobile-camera .timer-control legend { margin-bottom:8px; }
   .mobile-camera .timer-dial { width:80px; height:80px; }
   .mobile-camera .flash-switch { height:64px; padding-block:3px; }
   /* A compact film window beside the lever; "FILM LEFT" stays for screen readers. */
@@ -160,6 +154,8 @@
   /* Large monitors enlarge the hardware with the finder instead of leaving it tiny. */
   .mobile-camera :is(.camera-nameplate,.camera-settings,.camera-hardware,.camera-chin) { zoom:var(--ui-scale); }
   .mobile-camera .camera-assembly { --camera-pad:clamp(20px,2.4vw,36px); --slot-overlap:22px; --mobile-print-width:min(380px,calc(100vw - 80px)); }
+  /* Desktop prints are larger than phone prints but still fit under the folded camera without scrolling. */
+  .mobile-camera.has-print .camera-assembly { --mobile-print-width:min(calc(280px + 120px * var(--ui-scale)),calc((100dvh - 290px * var(--ui-scale)) / 1.22)); }
   .mobile-camera .instant-camera {
     --finder:inherit;
     min-height:0; gap:clamp(10px,1.6dvh,18px) clamp(24px,3vw,48px); padding:clamp(16px,2.2dvh,24px) var(--camera-pad) 16px;
@@ -168,7 +164,6 @@
   .mobile-camera :is(.camera-nameplate,.camera-settings,.camera-hardware) { width:min(100%,560px); justify-self:center; }
   .mobile-camera .camera-nameplate > span:first-child { font-size:24px; }
   .mobile-camera .camera-settings { grid-template-columns:110px minmax(180px,1fr) 60px; gap:14px 18px; }
-  .mobile-camera .camera-settings legend { font-size:12px; margin-bottom:8px; }
   .mobile-camera .film-presets button { flex-direction:column; min-height:56px; font-size:12px; }
   .mobile-camera .film-cartridge { width:28px; height:24px; border-inline-width:4px; }
   .mobile-camera .timer-dial { width:104px; height:104px; }

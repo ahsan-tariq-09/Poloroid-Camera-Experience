@@ -93,7 +93,7 @@
 .print-save { grid-column:1 / -1; display:flex; flex-direction:column; align-items:center; gap:8px; }
 /* Brushed-metal SAVE plate from the Canva reference. */
 .save-plate { min-width:156px; min-height:52px; padding:10px 30px; border:1px solid #3f413d; border-radius:3px; color:#141513; cursor:pointer;
-  font:700 26px/1 "Helvetica Neue",Helvetica,Arial,sans-serif; letter-spacing:.03em; text-transform:uppercase; text-shadow:0 1px 0 #ffffffa0;
+  display:inline-flex; align-items:center; justify-content:center;
   /* Base colour is the darkest metal under the lettering, so contrast reads true. */
   --plate:repeating-linear-gradient(0deg,#ffffff1a 0 1px,#0000000f 1px 2px),linear-gradient(90deg,#6c6e6a,#dcddd9 22%,#a2a49f 48%,#f1f1ee 72%,#7d7f7a) #a2a49f;
   background:var(--plate);
@@ -102,6 +102,8 @@
 .save-plate:hover:not(:disabled) { background:var(--plate); filter:brightness(1.07); }
 .save-plate:active:not(:disabled) { transform:translateY(1px); box-shadow:0 1px 3px #0008,inset 0 1px #fff,inset 0 -1px #0006; }
 .save-plate:disabled { cursor:default; opacity:.65; }
+/* A white lip under the dark glyph reads as an engraving in the metal. */
+.save-plate svg { filter:drop-shadow(0 1px 0 #ffffffa0); }
 .save-plate:focus-visible { outline:3px solid #d9edb6; outline-offset:3px; }
 @media(prefers-reduced-motion:reduce) { .save-plate { transition:none; } }
 .print-save .field-hint { max-width:36ch; margin:0; text-align:center; }
@@ -119,7 +121,6 @@
 /* Knurled timer, metal film cartridges and a two-position flash lever. */
 .camera-settings { display:grid; grid-template-columns:minmax(86px,1fr) 120px 44px; gap:12px; align-items:center; margin-top:20px; color:#f5f1e5; }
 .camera-settings fieldset { min-width:0; border:0; margin:0; padding:0; }
-.camera-settings legend { color:#f5f1e5; font-size:12px; font-weight:600; margin-bottom:10px; text-align:center; width:100%; }
 .timer-dial { position:relative; width:96px; height:96px; margin:auto; touch-action:none; user-select:none; -webkit-user-select:none; cursor:grab; }
 /* While a finger turns the dial or slides the ISO pointer, they follow it with no easing. */
 .timer-dial.turning { cursor:grabbing; }
@@ -137,7 +138,6 @@
 .timer-pointer::before { content:''; position:absolute; top:0;left:calc(50% - 5px); border:5px solid transparent; border-top:8px solid #ec7662; }
 .hardware-value { display:block; text-align:center; font-size:11px; color:#e6ddc8; margin-top:10px; }
 .film-presets { background:#101310; border:2px solid #86897d!important; border-radius:4px; padding:8px!important; }
-.film-presets legend { float:none; margin:0 0 5px; padding:0 4px; text-align:left; }
 .film-presets button { display:flex; align-items:center; justify-content:flex-start; gap:8px; width:100%; min-height:44px; padding:4px; background:none; border:1px solid transparent; color:#f5f1e5; font-size:12px; text-align:left; }
 .film-presets button[aria-pressed=true] { border-color:#d8b77b; background:#d8b77b18; }
 .film-cartridge { display:block; width:35px;height:26px;flex-shrink:0;border-inline:5px solid #a5a89f;background:linear-gradient(#24140e,#bc7949 48%,#382118);box-shadow:inset 0 2px 3px #000; }
@@ -148,7 +148,7 @@
 
 @media(prefers-reduced-motion:reduce) { .timer-rotor,.timer-stop > span { transition:none; } }
 .camera-display .countdown { position:absolute; inset:0; display:grid; place-items:center; color:#fff9e9; background:#1118; font:700 72px/1 Georgia,serif; z-index:3; }
-@media(max-width:370px) { .film-presets button { padding:2px;gap:4px;font-size:11px; }.film-presets legend { font-size:12px; }.film-cartridge { width:20px;height:24px;border-inline-width:3px; } }
+@media(max-width:370px) { .film-presets button { padding:2px;gap:4px;font-size:11px; }.film-cartridge { width:20px;height:24px;border-inline-width:3px; } }
 .film-presets button:hover:not(:disabled) { background:#353c30; color:#fff9e9; }
 
 /* Give the desktop camera a landscape body while preserving its paper outlet. */
@@ -177,8 +177,6 @@
 .camera-dials { grid-area:dials; display:grid; gap:20px; justify-items:center; min-width:0; }
 .film-presets { grid-area:film; align-self:center; }
 .flash-control { grid-area:flash; }
-.camera-settings legend { float:none; display:block; max-width:100%; }
-.camera-settings .film-presets legend { width:auto; }
 .camera-settings .film-cartridge { width:25px; border-inline-width:4px; }
 .camera-settings .film-presets button { min-height:44px; gap:5px; font-size:11px; }
 .camera-settings .film-presets button span { overflow-wrap:anywhere; }
@@ -224,7 +222,6 @@
   .start-screen .viewfinder-bezel { box-shadow:inset 0 1px 2px #dce1cf99,0 4px 8px #000a; }
   .start-screen .camera-settings { grid-template-columns:minmax(100px,1fr) 144px 48px; gap:16px; }
   .start-screen .camera-settings .film-presets button { font-size:13px; min-height:48px; gap:8px; }
-  .start-screen .camera-settings legend { font-size:13px; }
   .start-screen .shutter { width:76px; height:76px; min-height:76px; background:radial-gradient(circle at 35% 25%,#ff6f61,#ff1e27 48%,#b6111c); box-shadow:0 5px 8px #000b,inset 0 2px 3px #ffd2b8; }
   .start-screen .shutter:hover:not(:disabled) { background:#d91b25; }
   .start-screen .camera-start { padding-top:8px; }
