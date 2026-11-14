@@ -180,10 +180,8 @@
 .camera-settings .film-cartridge { width:25px; border-inline-width:4px; }
 .camera-settings .film-presets button { min-height:44px; gap:5px; font-size:11px; }
 .camera-settings .film-presets button span { overflow-wrap:anywhere; }
-.viewfinder-readout { position:absolute; inset:0 0 auto; z-index:2; display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:8px; padding:8px; color:#d5f3af; background:transparent; text-shadow:0 1px 2px #000,0 0 4px #000,0 0 6px #000; font:700 11px/1.35 "Helvetica Neue",Helvetica,Arial,sans-serif; letter-spacing:.02em; font-variant-numeric:tabular-nums; }
-.viewfinder-readout > span { display:flex; flex-wrap:wrap; gap:0 4px; align-content:start; }
-.viewfinder-readout > span:nth-child(2) { justify-content:center; }
-.viewfinder-readout > span:last-child { justify-content:end; }
+.viewfinder-readout { position:absolute; inset:0 0 auto; z-index:2; display:flex; justify-content:end; padding:8px; color:#d5f3af; background:transparent; text-shadow:0 1px 2px #000,0 0 4px #000,0 0 6px #000; font:700 11px/1.35 "Helvetica Neue",Helvetica,Arial,sans-serif; letter-spacing:.02em; font-variant-numeric:tabular-nums; }
+.viewfinder-readout > span { display:flex; gap:4px; }
 .viewfinder-status { top:auto; bottom:8px; max-width:calc(100% - 16px); }
 .viewfinder-corners { inset:4px; }
 .camera-backdrop { overflow:hidden; padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left)); }
@@ -202,7 +200,7 @@
   .camera-settings,.camera-experience .camera-settings { column-gap:8px; }
   .camera-settings .film-presets { padding:5px!important; }
   .camera-settings .film-cartridge { width:20px; }
-  .viewfinder-readout { gap:4px; padding:6px; font-size:10px; }
+  .viewfinder-readout { padding:6px; font-size:10px; }
 }
 /* The home camera is the hero: a larger object on the camera-green page. */
 @media(min-width:800px) {

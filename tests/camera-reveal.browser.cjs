@@ -142,7 +142,8 @@ async function prepareCamera(page, mobile) {
         const size=page.viewportSize();await page.setViewportSize({width:size.height,height:size.width});
         assert.equal(await page.evaluate(()=>document.querySelector('video')===window.cameraVideo),true);
         assert.equal(await page.evaluate(()=>window.cameraRequests),requests);
-        assert.match(await page.locator('.viewfinder-readout').innerText(),/B&W/);
+        assert.equal(await page.getByRole('button',{name:'B&W',exact:true}).getAttribute('aria-pressed'),'true');
+        assert.doesNotMatch(await page.locator('.viewfinder-readout').innerText(),/ISO|Film|B&W|1600/);
         await page.setViewportSize(size);
       }
       const cameraSurface=page.locator('.mobile-camera');

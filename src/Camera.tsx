@@ -45,7 +45,7 @@ export default function Camera({onUpload, enabled, initialSettings, navigation, 
   const [filmLoaded,setFilmLoaded]=useState(initialSettings?.loadStartedAt===undefined);
   const [loadingUntil,setLoadingUntil]=useState(initialSettings?.loadStartedAt===undefined?0:initialSettings.loadStartedAt+FILM_LOAD_MS);
   const loading=loadingUntil>0;
-  // An 8-shot pack: each camera photo uses one, and loading film on an empty pack fits a fresh one.
+  // An 8-shot pack: each camera photo uses one, and every film load, Roll again included, fits a fresh pack.
   const [filmLeft,setFilmLeft]=useState(FILM_PACK);
   useEffect(()=>{
     if(!loadingUntil)return;
@@ -53,7 +53,7 @@ export default function Camera({onUpload, enabled, initialSettings, navigation, 
     return()=>clearTimeout(timeout);
   },[loadingUntil]);
   const clearPrint=()=>{sheet.current++;urls.current.forEach(url=>URL.revokeObjectURL(url));urls.current=[];setPrints([]);setPolaroid(null);setSaveError("");};
-  const roll=()=>{if(loading)return;if(filmLeft===0)setFilmLeft(FILM_PACK);setFilmLoaded(false);setLoadingUntil(performance.now()+FILM_LOAD_MS);void Promise.resolve(playSound("load")).then(()=>{if(alive.current)setLoadingUntil(performance.now()+FILM_LOAD_MS);});if(captured){container.current?.focus();clearPrint();setRestart(n=>n+1);}};
+  const roll=()=>{if(loading)return;setFilmLeft(FILM_PACK);setFilmLoaded(false);setLoadingUntil(performance.now()+FILM_LOAD_MS);void Promise.resolve(playSound("load")).then(()=>{if(alive.current)setLoadingUntil(performance.now()+FILM_LOAD_MS);});if(captured){container.current?.focus();clearPrint();setRestart(n=>n+1);}};
   /** After a saved photo, clear the print and reopen the live camera with the next shot loaded. */
   const finish=()=>{container.current?.focus();clearPrint();setFilmLoaded(filmLeft>0);setRestart(n=>n+1);};
   const stop=()=>{stream.current?.getTracks().forEach(t=>t.stop());stream.current=null;if(timer.current)clearTimeout(timer.current);};
@@ -211,7 +211,7 @@ export default function Camera({onUpload, enabled, initialSettings, navigation, 
   const viewfinder=<>
     <video ref={video} autoPlay playsInline muted style={{transform:facing==="user"?"scaleX(-1)":undefined}} onLoadedData={markReady} onPlaying={markReady}/>
     {ready&&!captured&&<CameraPreview video={video} preset={preset} iso={iso} flash={flash} mirrored={facing==="user"}/>}
-    <CameraReadout seconds={seconds} preset={preset} iso={iso}/>
+    <CameraReadout seconds={seconds}/>
     {count!==null&&<span className="countdown" aria-live="assertive">{count}</span>}
   </>;
   const captureFlash=screenFlash==="steady"?createPortal(<div className="capture-flash" aria-hidden="true"/>,document.body):enabled&&screenFlash&&createPortal(<motion.div className="capture-flash" aria-hidden="true" initial={{opacity:.35}} animate={{opacity:0}} transition={{duration:.3,ease:"easeOut"}} onAnimationComplete={()=>setScreenFlash(false)}/>,document.body);

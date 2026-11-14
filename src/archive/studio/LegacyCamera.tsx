@@ -170,7 +170,7 @@ export default function Camera({onClose, onCapture, onUpload, enabled, initialSe
   const viewfinder=<>
     <video ref={video} autoPlay playsInline muted style={{transform:facing==="user"?"scaleX(-1)":undefined}} onLoadedData={markReady} onPlaying={markReady}/>
     {ready&&!captured&&<CameraPreview video={video} preset={preset} iso={iso} flash={flash} mirrored={facing==="user"}/>}
-    <CameraReadout seconds={seconds} preset={preset} iso={iso}/>
+    <CameraReadout seconds={seconds}/>
     {!captured&&presentation!=="screen"&&<span className={!ready||error?"camera-message":"sr-only"} role="status">{error||(!ready?"Waiting for the camera. Allow access if your browser asks.":loading?"Loading film…":filmLoaded?"Film loaded. Click the shutter.":"Camera ready. Roll the film, then click the shutter.")}</span>}
     {count!==null&&<span className="countdown" aria-live="assertive">{count}</span>}
   </>;

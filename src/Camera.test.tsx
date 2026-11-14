@@ -214,7 +214,8 @@ it("starts with the settings and loaded film chosen on the home camera",async()=
     expect([...host.querySelectorAll('button')].find(b=>b.textContent==='B&W')!.getAttribute('aria-pressed')).toBe('true');
     expect(host.querySelector('[aria-label="Flash effect"]')!.getAttribute('aria-checked')).toBe('true');
     expect(host.querySelector('[role="slider"]')!.getAttribute('aria-valuenow')).toBe('1600');
-    expect(host.querySelector('.viewfinder-readout')!.textContent).toContain('1600');
+    // The viewfinder shows only the timer; ISO and film live on the camera body.
+    expect(host.querySelector('.viewfinder-readout')!.textContent).toBe('Timer 5s');
     expect(host.querySelector('[aria-label="Load film"]')!.getAttribute('aria-pressed')).toBe('true');
     expect(host.querySelector<HTMLButtonElement>('[aria-label="Capture"]')!.disabled).toBe(false);
   }finally{await act(async()=>root.unmount());host.remove();vi.restoreAllMocks();}
@@ -308,11 +309,21 @@ it.each([[640,480,80,0],[480,640,0,80]])("crops %s×%s video without stretching,
     expect(toBlob).toHaveBeenCalledTimes(2);
     expect(host.querySelectorAll(".instant-print")).toHaveLength(1);
     expect(named("Save Photo")).toBeUndefined();
-    // Six more shots empty the pack; loading film then fits a fresh pack of 8.
+    expect(host.querySelector('.film-counter')!.textContent).toBe("6FILMLEFT");
+    // Every film load, Roll again included, fits a fresh pack of 8.
     const load=()=>act(async()=>host.querySelector<HTMLButtonElement>('[aria-label="Load film"]')!.click());
-    for(let shot=3;shot<=8;shot++){await load();await act(async()=>vi.advanceTimersByTimeAsync(2800));await capture();}
+    await load();
+    expect(host.querySelector('.film-counter')!.textContent).toBe("8FILMLEFT");
+    await act(async()=>vi.advanceTimersByTimeAsync(2800));
+    // Eight saved photos empty the pack without a reload; loading film then fits a fresh pack.
+    for(let shot=1;shot<=8;shot++){
+      await capture();
+      await act(async()=>host.querySelector<HTMLButtonElement>('.shake-reveal')!.click());
+      await act(async()=>named("Save Photo")!.click());
+    }
     expect(host.querySelector('.film-counter')!.textContent).toBe("0FILMLEFT");
     expect(host.querySelector('.film-control > span')!.textContent).toBe("NEW PACK");
+    expect(host.querySelector<HTMLButtonElement>('[aria-label="Capture"]')!.disabled).toBe(true);
     await load();
     expect(host.querySelector('.film-counter')!.textContent).toBe("8FILMLEFT");
   } finally { vi.useRealTimers(); await act(async()=>root.unmount());host.remove();vi.restoreAllMocks(); }

@@ -31,9 +31,9 @@ function useDialRotation(target:number) {
   return rotation;
 }
 
-export function CameraReadout({seconds,preset,iso=800}:Pick<CameraPreferences,"seconds"|"preset"|"iso">) {
+export function CameraReadout({seconds}:Pick<CameraPreferences,"seconds">) {
   return <div className="viewfinder-readout" aria-label="Camera settings">
-    <span>ISO <b>{iso}</b></span><span>Film <b>{preset}</b></span><span>Timer <b>{seconds?`${seconds}s`:"Off"}</b></span>
+    <span>Timer <b>{seconds?`${seconds}s`:"Off"}</b></span>
   </div>;
 }
 
