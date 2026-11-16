@@ -30,6 +30,6 @@ export default function InstantCamera({ children, onShutter, disabled, label = "
       <div className="hardware-control shutter-control"><button type="button" className={`shutter ${loaded&&!printed&&!disabled?"shutter-ready":""}`} aria-label={label} disabled={disabled} onClick={onShutter}/></div>
     </div>
     {/* The print leaves through the slot at the bottom of this ribbed chin. */}
-    <div className="camera-chin" aria-hidden="true"><span className="chin-mark">AUTOFOCUS <b>roid</b></span><div className="ejection-slot"/></div>
+    <div className="camera-chin" aria-hidden="true"><div className="ejection-slot"/></div>
   </div>{print}</div>;
 }

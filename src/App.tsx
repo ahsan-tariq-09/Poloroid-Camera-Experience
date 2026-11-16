@@ -20,7 +20,7 @@ import InstallApp from "./studio/InstallApp";
 import { isDesktop } from "./studio/OpenOnPhone";
 
 /**
- * Camera-first app: open camera, take a photo, shake to reveal, save or roll again.
+ * Camera-first app: open camera, take a photo, watch it develop, save or roll again.
  * The former Start, Edit, and Finish workflow lives in src/archive/studio (see docs/ARCHIVED-EDITOR.md).
  */
 function StudioApp() {
@@ -142,8 +142,8 @@ function StudioApp() {
             <div className="about-copy">
               <p>
                 roid is an instant camera in your browser, inspired by the joy
-                of instant photography. Roll the film, take a photo, shake it to
-                reveal, and keep the moments you love.
+                of instant photography. Roll the film, take a photo, watch it
+                develop, and keep the moments you love.
               </p>
               <p>
                 Your photos stay on your device. Save a Polaroid to keep it, or

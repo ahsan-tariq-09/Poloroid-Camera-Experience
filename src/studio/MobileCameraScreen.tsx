@@ -1,5 +1,4 @@
 import type { ReactNode, RefObject } from "react";
-import { RefreshCw } from "lucide-react";
 import InstantCamera from "./InstantCamera";
 import OpenOnPhone from "./OpenOnPhone";
 
@@ -28,7 +27,7 @@ export default function MobileCameraScreen({ containerRef, navigation, viewfinde
         navigation={onUpload && <nav aria-label="Camera navigation">{navigation}<button onClick={onUpload} disabled={taking} aria-label="Upload photos"><AddPolaroidIcon/></button><OpenOnPhone/></nav>}
         onRoll={onRoll} rollDisabled={taking || loading} loaded={loaded} loading={loading} ready={ready} filmLeft={filmLeft}
         onShutter={onShutter} disabled={disabled} label="Capture" status={status}
-        controls={<button className="camera-flip" onClick={onFlip} disabled={taking || loading || captured} aria-label="Flip camera"><RefreshCw size={20}/></button>}>
+        controls={<button className="camera-flip" onClick={onFlip} disabled={taking || loading || captured} aria-label="Flip camera"><img src="/icons/camera-switch.svg" alt="" width={44} height={44}/></button>}>
         {viewfinder}
         {notice && <div className="mobile-camera-recovery"><p role="status">{notice}</p>{retry}</div>}
       </InstantCamera>

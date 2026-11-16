@@ -1,5 +1,6 @@
-import { useRef, useState, type CSSProperties, type PointerEvent } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import { Zap } from "lucide-react";
+import { playDetent } from "../sounds";
 /** Marks on the timer dial; a turned dial settles on the nearest one. */
 export const timerStops = [0,3,5,10] as const;
 export type TimerSeconds = typeof timerStops[number];
@@ -19,6 +20,38 @@ const DIAL_OFF=45,DIAL_END=DIAL_OFF-lastStop*90;
 export const timerAngle=(seconds:TimerSeconds)=>DIAL_OFF-timerStops.indexOf(seconds)*90;
 /** Dial angle to the nearest timer mark. */
 export const timerSecondsAt=(angle:number)=>timerStops[Math.round(clamp((DIAL_OFF-angle)/90,0,lastStop))];
+/** True when a turn from one angle to the next reaches or passes a printed mark. */
+export const passesMark=(from:number,to:number)=>from!==to&&timerStops.some((_,index)=>{
+  // Within 1° counts as reached: the eased snap's last degree is too slow to see.
+  const mark=DIAL_OFF-index*90,near=from<to?mark-1:mark+1;
+  return from<to?from<near&&to>=near:from>near&&to<=near;
+});
+/** The rotor's drawn angle, unwrapped into the dial's travel (its 270° range has one match). */
+function rotorAngle(rotor:HTMLElement) {
+  const matrix=/matrix\(([^,]+),([^,]+)/.exec(getComputedStyle(rotor).transform);
+  const angle=matrix?Math.atan2(parseFloat(matrix[2]),parseFloat(matrix[1]))*180/Math.PI:DIAL_OFF;
+  return angle>DIAL_OFF+1?angle-360:angle;
+}
+/** Clicks each time the drawn rotor reaches a mark, so drags, taps and eased snaps all sound as they move. */
+function useDialClicks(target:number) {
+  const rotor=useRef<HTMLDivElement>(null),last=useRef<number|null>(null);
+  useEffect(()=>{
+    const element=rotor.current;
+    if(!element)return;
+    let frame=0,still=0;
+    const step=()=>{
+      const angle=rotorAngle(element);
+      if(last.current!==null&&passesMark(last.current,angle))void playDetent("dial");
+      still=last.current!==null&&Math.abs(angle-last.current)<.01?still+1:0;
+      last.current=angle;
+      // Stop watching once the rotor has settled; the next turn restarts it.
+      if(still<3)frame=requestAnimationFrame(step);
+    };
+    frame=requestAnimationFrame(step);
+    return()=>cancelAnimationFrame(frame);
+  },[target]);
+  return rotor;
+}
 
 /** Eases the dial at a steady speed, so a long turn takes longer than a short one. */
 function useDialRotation(target:number) {
@@ -46,14 +79,15 @@ export default function CameraSettings({seconds,onSeconds,preset,onPreset,flash,
   const [turn,setTurn]=useState<{pointer:number;angle:number}|null>(null);
   const press=useRef<{x:number;y:number;id:number}|null>(null),turned=useRef(false);
   const dialAngle=turn?.angle??timerAngle(seconds);
-  const timerRotation=useDialRotation(dialAngle);
+  const timerRotation=useDialRotation(dialAngle),rotor=useDialClicks(timerRotation.target);
+  const setISO=(value:CameraISO)=>{if(value===iso)return;void playDetent("iso");onISO(value);};
   /** Pointer x to a 0–1 position along the needle's travel; the value is the nearest stop. */
   const pick=(track:HTMLElement,x:number)=>{
     const box=track.getBoundingClientRect(),style=getComputedStyle(track);
     const start=box.left+parseFloat(style.paddingLeft||"0"),span=box.width-parseFloat(style.paddingLeft||"0")-parseFloat(style.paddingRight||"0");
     if(span<=0)return null;
     const position=clamp((x-start)/span,0,1),next=isoAt(position);
-    if(next!==iso)onISO(next);
+    setISO(next);
     return position;
   };
   const pointerAngle=(dial:HTMLElement,event:PointerEvent)=>{
@@ -86,7 +120,7 @@ export default function CameraSettings({seconds,onSeconds,preset,onPreset,flash,
           if(next!==seconds)onSeconds(next);
         }}
         onPointerUp={endTurn} onPointerCancel={endTurn}>
-        <i className="timer-pointer" aria-hidden="true"/><div className="timer-rotor" style={{transform:`rotate(${timerRotation.target}deg)`}}><i className="dial-hub" aria-hidden="true"/>
+        <i className="timer-pointer" aria-hidden="true"/><div className="timer-rotor" ref={rotor} style={{transform:`rotate(${timerRotation.target}deg)`}}><i className="dial-hub" aria-hidden="true"/>
         {timerStops.map((value,index)=><button key={value} type="button" className={`timer-stop stop-${index}`} aria-pressed={seconds===value} onClick={()=>{if(turned.current){turned.current=false;return;}onSeconds(value);}}><span style={{transform:`rotate(${-timerRotation.target}deg)`}}>{value?`${value}s`:"OFF"}</span></button>)}
       </div>
       </div>
@@ -102,7 +136,7 @@ export default function CameraSettings({seconds,onSeconds,preset,onPreset,flash,
             if(disabled)return;
             const step=event.key==='ArrowUp'||event.key==='ArrowRight'?1:event.key==='ArrowDown'||event.key==='ArrowLeft'?-1:0;
             if(step||event.key==='Home'||event.key==='End'){
-              event.preventDefault();onISO(isoStops[event.key==='Home'?0:event.key==='End'?lastISO:clamp(isoStops.indexOf(iso)+step,0,lastISO)]);
+              event.preventDefault();setISO(isoStops[event.key==='Home'?0:event.key==='End'?lastISO:clamp(isoStops.indexOf(iso)+step,0,lastISO)]);
             }
           }}>
           <i className="iso-arrow iso-lighten" aria-hidden="true"/><i className="iso-arrow iso-darken" aria-hidden="true"/>
@@ -116,7 +150,7 @@ export default function CameraSettings({seconds,onSeconds,preset,onPreset,flash,
       {/* A toggle on a metal plate: the bat points up for On and down for Off. */}
       <button type="button" className="flash-switch" role="switch" aria-label="Flash effect" aria-checked={flash} disabled={disabled} onClick={()=>onFlash(!flash)}>
         <span className="flash-position" aria-hidden="true">On</span>
-        <span className="flash-toggle" aria-hidden="true"><Zap size={13} fill="currentColor"/><i className="flash-nut"><i className="flash-bat"/></i><i className="flash-led"/></span>
+        <span className="flash-toggle" aria-hidden="true"><Zap size={13} fill="currentColor"/><i className="flash-nut"><img className="flash-knob" src="/icons/flash-knob-base.svg" alt="" width={26} height={26}/><img className="flash-knob flash-lever" src="/icons/flash-knob-lever.svg" alt="" width={26} height={26}/></i><i className="flash-led"/></span>
         <span className="flash-position" aria-hidden="true">Off</span>
       </button>
     </div>

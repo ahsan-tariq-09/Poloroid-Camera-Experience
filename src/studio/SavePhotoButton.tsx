@@ -16,17 +16,6 @@ type Prepared = Pick<SaveStudio, "assets" | "composition" | "format"> & {
   shareable: boolean;
 };
 
-/** A download arrow dropping into an open tray, engraved on the save plate (lucide 24px grid). */
-function SaveTrayIcon() {
-  return (
-    <svg width={30} height={30} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="square" strokeLinejoin="miter" aria-hidden="true">
-      <path d="M12 3v11" />
-      <path d="m7.5 9.5 4.5 4.5 4.5-4.5" />
-      <path d="M4 14v6h16v-6" />
-    </svg>
-  );
-}
-
 export default function SavePhotoButton({ studio: s, onSaved }: {
   studio: SaveStudio;
   /** Runs after the photo was downloaded or shared, not after a cancel or failure. */
@@ -132,7 +121,7 @@ export default function SavePhotoButton({ studio: s, onSaved }: {
         }
         onClick={() => void save()}
       >
-        <SaveTrayIcon />
+        <img src="/icons/save-photo.svg" alt="" width={52} height={52} />
       </button>
       <p
         id="photo-save-guidance"

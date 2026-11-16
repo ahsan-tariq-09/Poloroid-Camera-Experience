@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 261.95 260.95">
+  <defs>
+    <linearGradient id="linear-gradient" x1="54.6" y1="77.48" x2="162.88" y2="139.99" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#9f9694"/>
+      <stop offset="1" stop-color="#3f3a37"/>
+    </linearGradient>
+  </defs>
+  <circle fill="#060707" cx="108.74" cy="108.74" r="108.74"/>
+  <polygon fill="#b3a797" points="201.84 162.49 201.84 54.99 108.74 1.24 15.64 54.99 15.64 162.49 108.74 216.24 201.84 162.49"/>
+  <circle fill="#635a50" cx="108.74" cy="108.74" r="89.06"/>
+  <circle fill="#161413" stroke="url(#linear-gradient)" stroke-width="11" stroke-miterlimit="10" cx="108.74" cy="108.74" r="57"/>
+</svg>

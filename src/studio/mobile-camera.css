@@ -79,8 +79,7 @@
   .mobile-camera .viewfinder-bezel { grid-area:finder; width:var(--finder); min-width:0; padding:9px; align-self:start; }
   .mobile-camera .camera-settings { grid-area:settings; align-self:center; width:min(100%,520px); grid-template-columns:84px minmax(150px,1fr) 54px; gap:4px 12px; }
   .mobile-camera .camera-hardware { grid-area:hardware; width:min(100%,520px); }
-  .mobile-camera .camera-chin { grid-area:chin; max-width:none; padding-top:6px; gap:5px; }
-  .mobile-camera .chin-mark { font-size:10px; }
+  .mobile-camera .camera-chin { grid-area:chin; max-width:none; padding-top:26.5px; }
   .mobile-camera .camera-chin .ejection-slot { height:12px; }
   .mobile-camera .film-presets button { flex-direction:row; justify-content:center; min-height:40px; padding:2px; gap:5px; }
   .mobile-camera .film-cartridge { width:20px; height:18px; border-inline-width:3px; }
@@ -171,8 +170,7 @@
   .mobile-camera .film-control { --lever:60px; }
   .mobile-camera .instant-camera .shutter { width:84px; height:84px; min-height:84px; }
   .mobile-camera .hardware-control { gap:8px; }
-  .mobile-camera .camera-chin { padding:10px 16px 0; gap:8px; }
-  .mobile-camera .chin-mark { font-size:13px; }
+  .mobile-camera .camera-chin { padding:38.16px 16px 0; }
   .mobile-camera .camera-chin .ejection-slot { height:18px; }
   .mobile-camera.has-print .instant-camera { grid-template-columns:minmax(0,1fr) minmax(0,1fr); }
   .mobile-camera .print-outlet { padding-bottom:20px; }

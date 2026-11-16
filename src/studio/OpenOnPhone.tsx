@@ -40,7 +40,7 @@ export default function OpenOnPhone() {
     {open && <div className="phone-qr" id={id} role="dialog" aria-label="Open roid on your phone">
       <button type="button" className="phone-qr-close" aria-label="Close" onClick={() => setOpen(false)}><X size={16}/></button>
       {code ? <img src={code} width={240} height={240} alt={`QR code for ${url}`}/> : <span className="phone-qr-pending" aria-hidden="true"/>}
-      <p><b>Scan to open roid on your phone</b>Shoot, shake and save with your phone's camera.</p>
+      <p><b>Scan to open roid on your phone</b>Shoot, develop and save with your phone's camera.</p>
       <span className="phone-qr-url">{url.replace(/^https?:\/\//, "").replace(/\/$/, "")}</span>
     </div>}
   </div>;

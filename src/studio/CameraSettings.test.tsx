@@ -2,7 +2,10 @@
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { expect, it, vi } from "vitest";
-import CameraSettings, { isoAt, timerAngle, timerSecondsAt, type CameraISO, type TimerSeconds } from "./CameraSettings";
+import CameraSettings, { isoAt, passesMark, timerAngle, timerSecondsAt, type CameraISO, type TimerSeconds } from "./CameraSettings";
+import { playDetent } from "../sounds";
+
+vi.mock("../sounds", () => ({ playDetent: vi.fn() }));
 
 it("maps the bar to the nearest ISO stop with 800 in the centre", () => {
   expect([0, .25, .5, .75, 1].map(isoAt)).toEqual([100, 400, 800, 1600, 3200]);
@@ -17,6 +20,17 @@ it("maps the dial angle to the nearest timer mark between its hard stops", () =>
   expect(timerSecondsAt(-185)).toBe(10);
   expect(timerSecondsAt(100)).toBe(0);
   expect(timerSecondsAt(-400)).toBe(10);
+});
+
+it("clicks the dial once for each printed mark the rotor reaches", () => {
+  expect(passesMark(45, 0)).toBe(false);
+  expect(passesMark(0, -45)).toBe(true);
+  expect(passesMark(-50, -45)).toBe(true);
+  expect(passesMark(-45, -45)).toBe(false);
+  expect(passesMark(-40, -44.5)).toBe(true);
+  expect(passesMark(-44.5, -45)).toBe(false);
+  expect(passesMark(-46, -133)).toBe(false);
+  expect(passesMark(-225, 45)).toBe(true);
 });
 
 const render = async (props: { disabled?: boolean; onISO?: (v: CameraISO) => void; onSeconds?: (v: TimerSeconds) => void; seconds?: TimerSeconds; iso?: CameraISO }, root = createRoot(document.body.appendChild(document.createElement("div")))) => {
@@ -48,6 +62,19 @@ it("lets the ISO needle follow a drag, then snaps it to the nearest stop", async
   onISO.mockClear(); await render({ onISO, disabled: true }, root); await pointer(track, "pointerdown", 10);
   expect(onISO).not.toHaveBeenCalled();
   expect(track.tabIndex).toBe(-1);
+  await act(async () => root.unmount()); document.body.replaceChildren();
+});
+
+it("clicks the ISO bar once per stop change and stays quiet on the same stop", async () => {
+  Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
+  vi.mocked(playDetent).mockClear();
+  const onISO = vi.fn(), root = await render({ onISO, iso: 100 });
+  const track = document.querySelector<HTMLElement>('[role="slider"]')!;
+  await act(async () => track.dispatchEvent(new KeyboardEvent("keydown", { key: "Home", bubbles: true })));
+  expect(playDetent).not.toHaveBeenCalled();
+  await act(async () => track.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true })));
+  expect(onISO).toHaveBeenLastCalledWith(400);
+  expect(playDetent).toHaveBeenCalledTimes(1); expect(playDetent).toHaveBeenCalledWith("iso");
   await act(async () => root.unmount()); document.body.replaceChildren();
 });
 

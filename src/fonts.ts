@@ -22,6 +22,7 @@ export const fonts = [
     id: name.toLowerCase().replaceAll(" ", "-"), name,
     family: `"${name}", ${STUDIO_FONT}`, group,
     ...(name === "Caveat" ? {source: "/fonts/caveat/Caveat.ttf"}
+      : name === "Oswald" ? {source: "/fonts/oswald/Oswald-SemiBold.ttf"}
       : name === "Permanent Marker" ? {source: "/fonts/permanent-marker/PermanentMarker-Regular.ttf"}
       : {stylesheet: `https://fonts.googleapis.com/css2?family=${name.replaceAll(" ", "+")}:wght@400&display=swap`}),
   })),

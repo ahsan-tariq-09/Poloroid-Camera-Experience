@@ -168,7 +168,7 @@ export async function importPolaroid(file: File, processed = false) {
   const composition = initialComposition("photo");
   composition.layers = [photoLayer("photo", asset.name, 0, asset)];
   composition.effects.film = processed ? 0 : 0.65;
-  if (processed) composition.caption = captureDate(file.lastModified);
+  if (processed) { composition.caption = captureDate(file.lastModified); composition.captionFont = "oswald"; }
   const assets: Assets = { photo: asset };
   return { assets, composition };
 }

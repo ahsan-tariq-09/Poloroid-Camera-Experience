@@ -14,7 +14,7 @@ import { importPolaroid } from "./scrapbook";
 import { exportFile as savePolaroid } from "./render";
 
 type Polaroid = Awaited<ReturnType<typeof importPolaroid>>;
-/** The one camera experience on every screen size: capture or upload, shake to reveal, then save or roll again. */
+/** The one camera experience on every screen size: capture or upload, watch the print develop, then save or roll again. */
 /** Shots in one film pack. */
 const FILM_PACK=8;
 

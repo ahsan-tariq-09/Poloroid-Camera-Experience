@@ -3,7 +3,7 @@
 Poloroid is a React 19 + TypeScript + Vite photo studio. Read `README.md`
 and `docs/DESIGN.md` before changing its interface. Preserve the warm paper
 palette, upright frame, photo-first layout, and the camera-first flow: open
-camera → take a photo → shake to reveal → save photo or roll again. The former
+camera → take a photo → watch it develop → save photo or roll again. The former
 Start → Edit → Finish editor is archived in `src/archive/studio/`; see
 `docs/ARCHIVED-EDITOR.md` before restoring or reusing it.
 

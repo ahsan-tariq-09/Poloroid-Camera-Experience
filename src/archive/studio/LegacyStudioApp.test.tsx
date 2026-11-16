@@ -819,11 +819,9 @@ describe("photo-first navigation and sessions", () => {
       expect(host.textContent).toContain("3");
       await act(async () => vi.advanceTimersByTimeAsync(3480));
       expect(window.location.pathname).toBe("/");
-      expect(host.querySelector(".capture-decisions")).toBeNull();
       const capturedCaption=host.querySelector('.instant-caption')!.textContent;
       expect(capturedCaption).toBe(new Date().toLocaleDateString(undefined,{year:"numeric",month:"short",day:"numeric"}));
       vi.setSystemTime(Date.now()+86400000);
-      await act(async()=>host.querySelector<HTMLButtonElement>('.shake-reveal')!.click());
       await act(async()=>vi.advanceTimersByTimeAsync(650));
       expect(host.textContent).toContain("Done");
       const develop=[...host.querySelectorAll("button")].find(b=>b.textContent?.trim()===choice)!;

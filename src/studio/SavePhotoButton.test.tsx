@@ -61,9 +61,9 @@ describe("Save Photo", () => {
     async (platform) => {
       vi.spyOn(navigator, "platform", "get").mockReturnValue(platform);
       await render();
-      // The plate shows only the download icon.
+      // The key shows only the download artwork.
       expect(button().textContent).toBe("");
-      expect(button().querySelector("svg")).not.toBeNull();
+      expect(button().querySelector("img")!.getAttribute("src")).toBe("/icons/save-photo.svg");
       expect(button().getAttribute("aria-label")).toBe("Save Photo");
       expect(mocks.prepareExport).toHaveBeenCalledWith(
         studio.assets,

@@ -86,10 +86,9 @@ async function layout(page, platform) {
       // The camera prints an uploaded photo, so saving needs no camera device.
       const printUpload = async () => {
         await page.locator('input[type="file"]').setInputFiles(path.resolve('public/sample-coast.png'));
-        await page.waitForFunction(() => { const button = document.querySelector('.shake-reveal'); return button && !button.disabled; });
-        assert.equal(await save.count(), 0, 'Save waits for the reveal');
-        await page.getByRole('button', { name: 'Reveal the Snap', exact: true }).click();
-        await save.waitFor({ timeout: 15000 });
+        await page.locator('.instant-print').waitFor();
+        assert.equal(await save.count(), 0, 'Save waits for the print to develop');
+        await save.waitFor({ timeout: 20000 });
         await page.waitForFunction(() => !document.querySelector('.save-plate').disabled);
       };
       // A finished save resets to the live camera, ready for the next shot.

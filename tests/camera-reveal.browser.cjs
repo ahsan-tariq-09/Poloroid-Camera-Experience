@@ -10,7 +10,7 @@ fs.mkdirSync(output, {recursive:true});
 async function prepareCamera(page, mobile) {
   assert.equal(await page.getByRole('button',{name:'OFF',exact:true}).getAttribute('aria-pressed'),'true','New cameras must start with the timer off');
   assert.equal(await page.locator('.film-stripes, .camera-signature').count(),0,'The spectrum flag is gone');
-  assert.equal(await page.locator('.chin-mark').innerText(),'AUTOFOCUS roid');
+  assert.equal(await page.locator('.camera-chin').innerText(),'','The print outlet carries no model line');
   assert.equal(await page.locator('.shutter svg').count(),0,'The shutter has no camera icon');
   assert.equal(await page.locator('.camera-tagline').count(),0);
   assert.equal(await page.getByText('Made to keep.').count(),0);
@@ -30,9 +30,6 @@ async function prepareCamera(page, mobile) {
       const mobile=width!==1280;
       const context = await browser.newContext({viewport:{width,height:width===360?640:width===393?690:width===320?568:width===390?844:width===844?390:width===568?320:900},hasTouch:mobile,reducedMotion:'no-preference'});
       await context.addInitScript((engine)=>{
-        const addListener=window.addEventListener.bind(window),removeListener=window.removeEventListener.bind(window);
-        window.addEventListener=(type,...args)=>{if(type==='devicemotion')window.motionListenerReady=true;return addListener(type,...args);};
-        window.removeEventListener=(type,...args)=>{if(type==='devicemotion')window.motionListenerReady=false;return removeListener(type,...args);};
         if(!navigator.mediaDevices)Object.defineProperty(navigator,'mediaDevices',{value:{}});
         window.cameraRequests=0;window.cameraStops=0;
         window.frameCaptured=false;window.torchActive=false;window.torchEvents=[];
@@ -173,35 +170,28 @@ async function prepareCamera(page, mobile) {
       if(sound.starts.length>=2){assert(Math.abs(sound.starts[0].duration-.672)<.01,JSON.stringify(sound));assert(Math.abs(sound.starts[1].when-sound.starts[0].now-.48)<.04,JSON.stringify(sound));}
       // The print stops moving as the ejection recording ends: the slide lasts the 2490ms clip.
       await page.waitForFunction(()=>Math.abs(new DOMMatrixReadOnly(getComputedStyle(document.querySelector('.instant-print')).transform).m42)<.5,null,{polling:'raf'});
-      sound.slide=await page.evaluate(()=>performance.now()-window.printAt);
+      const printStopped=await page.evaluate(()=>performance.now());
+      sound.slide=printStopped-await page.evaluate(()=>window.printAt);
       assert(sound.slide>2300&&sound.slide<2800,JSON.stringify(sound));
       console.log(JSON.stringify({engine,width,sound}));
       await page.screenshot({path:path.join(output,`${engine}-${width}-ejecting.png`)});
-      const reveal=page.getByRole('button',{name:'Reveal the Snap',exact:true});
-      assert.equal(await page.locator('.undeveloped-photo').innerText(),'Drag & shake');
-      assert.equal(await page.locator('.undeveloped-photo svg, .shake-reveal svg').count(),0,'No hand icon');
-      await page.waitForFunction(()=>{const button=document.querySelector('.shake-reveal');return button&&!button.disabled;});
+      // The print develops on its own: no reveal button, gesture hint or shake text.
+      assert.equal(await page.locator('.print-reveal button').count(),0,'Nothing to press while the print develops');
+      assert.doesNotMatch(await page.locator('.print-reveal').innerText(),/shake|reveal/i);
       await page.waitForFunction(()=>Math.abs(new DOMMatrixReadOnly(getComputedStyle(document.querySelector('.instant-print')).transform).m42)<.1);
       const outlet=await page.evaluate(()=>{const surface=document.querySelector('.mobile-camera')||document.querySelector('.camera-modal');const slot=surface.querySelector('.ejection-slot').getBoundingClientRect(),paper=surface.querySelector('.instant-paper').getBoundingClientRect();return {slot:{x:slot.x,width:slot.width,top:slot.top,bottom:slot.bottom},paper:{x:paper.x,width:paper.width,top:paper.top}};});
       assert(outlet.paper.x>=outlet.slot.x-1&&outlet.paper.x+outlet.paper.width<=outlet.slot.x+outlet.slot.width+1&&outlet.paper.top>=outlet.slot.top&&outlet.paper.top<outlet.slot.bottom-2,JSON.stringify(outlet));
       if(mobile)assert(await page.locator('.instant-paper').evaluate(e=>{const r=e.getBoundingClientRect();return document.elementFromPoint(r.x+r.width/2,r.y+2)?.closest('.instant-paper')===e;}),'Paper must be in front of the camera at the slot');
       await page.screenshot({path:path.join(output,`${engine}-${width}-blank.png`)});
-      await reveal.scrollIntoViewIfNeeded();
-      await page.evaluate(()=>{
-        window.shakeSamples=[];window.shakeSampling=setInterval(()=>window.shakeSamples.push(getComputedStyle(document.querySelector('.print-drag')).transform),16);
-      });
-      await reveal.click();
-      const developmentStarted=await page.evaluate(()=>performance.now());
-      await page.waitForTimeout(850);
-      assert.equal(await page.locator('.instant-photo-window img').evaluate(e=>Number(getComputedStyle(e).opacity)),0,'photo must remain blank for the first two seconds');
-      const transforms=await page.evaluate(()=>{clearInterval(window.shakeSampling);return [...new Set(window.shakeSamples)];});
-      assert(transforms.some(t=>t!=='none'&&t!=='matrix(1, 0, 0, 1, 0, 0)'),`button did not shake: ${transforms}`);
+      // Blank for 2.5s after the print stops, then an even 9s fade.
+      await page.waitForTimeout(Math.max(0,2200-(await page.evaluate(()=>performance.now())-printStopped)));
+      assert.equal(await page.locator('.instant-photo-window img').evaluate(e=>Number(getComputedStyle(e).opacity)),0,'photo must remain blank for 2.5 seconds after printing');
       assert.equal(await page.getByRole('button',{name:'4-shot strip',exact:true}).count(),0);
       const development=[];
-      for(const sampleAt of [3300,6500]){
-        await page.waitForTimeout(Math.max(0,sampleAt-(await page.evaluate(()=>performance.now())-developmentStarted)));
+      for(const sampleAt of [3800,7000]){
+        await page.waitForTimeout(Math.max(0,sampleAt-(await page.evaluate(()=>performance.now())-printStopped)));
         const sample=await page.locator('.instant-photo-window img').evaluate(e=>({time:performance.now(),opacity:Number(getComputedStyle(e).opacity)}));
-        const elapsed=sample.time-developmentStarted,expected=(elapsed-2000)/9000;
+        const elapsed=sample.time-printStopped,expected=(elapsed-2500)/9000;
         assert(Math.abs(sample.opacity-expected)<.08,`development should fade evenly: ${JSON.stringify({elapsed,expected,...sample})}`);
         development.push({elapsed,opacity:sample.opacity});
       }
@@ -210,7 +200,6 @@ async function prepareCamera(page, mobile) {
       assert.equal(await page.locator('.instant-photo-window img').evaluate(e=>Number(getComputedStyle(e).opacity)),1);
       console.log(JSON.stringify({engine,width,development}));
       assert.equal(await page.locator('.instant-photo-window').count(),1);
-      assert.equal(await page.locator('.print-drag').evaluate(e=>getComputedStyle(e).transform),'none');
       const layout=await page.evaluate(()=>{const surface=document.querySelector('main.mobile-camera')||document.querySelector('.camera-experience');return {viewport:innerWidth,page:document.documentElement.scrollWidth,dialog:surface.scrollWidth,dialogWidth:surface.clientWidth};});
       assert(layout.page<=layout.viewport&&layout.dialog<=layout.dialogWidth,JSON.stringify(layout));
       await page.screenshot({path:path.join(output,`${engine}-${width}-revealed.png`)});
@@ -227,7 +216,7 @@ async function prepareCamera(page, mobile) {
       await page.getByRole('button',{name:'Capture',exact:true}).click();
       await page.locator('.instant-print').waitFor();
       assert.equal(await page.locator('.instant-print').count(),1);
-      assert.equal(await save.count(),0,'A new print waits for its own reveal');
+      assert.equal(await save.count(),0,'A new print develops before Save returns');
       // Roll again clears an unsaved print without leaving the camera.
       await page.getByRole('button',{name:'Load film',exact:true}).click();
       await page.locator('.instant-print').waitFor({state:'detached'});
@@ -250,55 +239,6 @@ async function prepareCamera(page, mobile) {
         await page.getByRole('switch',{name:'Flash effect',exact:true}).click();
         await page.getByRole('button',{name:'Capture',exact:true}).click();await page.locator('.instant-print').waitFor();
         console.log(JSON.stringify({engine,rearLightSequence:true,unsupportedRearRecovery:true}));
-        for(const method of ['pointer','sensor']){
-          await page.goto(baseURL+'/');
-          await page.evaluate(()=>{if(!window.DeviceMotionEvent)window.DeviceMotionEvent=Event;});
-          await prepareCamera(page,true);
-          await page.getByRole('button',{name:'Capture',exact:true}).click();
-          await page.waitForFunction(()=>{const button=document.querySelector('.shake-reveal');return button&&!button.disabled;});
-          if(method==='pointer'){
-            const box=await page.locator('.print-drag').boundingBox();
-            const x=box.x+box.width/2,y=box.y+box.height/2;
-            await page.mouse.move(x,y);await page.mouse.down();
-            await page.mouse.move(x+40,y,{steps:5});
-            // Mid-drag the print trails the finger on a spring instead of jumping to it.
-            const follow=await page.evaluate(async()=>{const xs=[];for(let i=0;i<20;i++){await new Promise(r=>setTimeout(r,30));xs.push(new DOMMatrixReadOnly(getComputedStyle(document.querySelector('.print-drag')).transform).m41);}return xs;});
-            assert(follow.some(v=>v>1&&v<15)&&Math.max(...follow)>=10,`print must ease toward the finger: ${follow}`);
-            for(const delta of [-55,55])await page.mouse.move(x+delta,y,{steps:5});
-            await page.mouse.up();
-            // Released, it glides back to centre over several frames rather than snapping.
-            const settle=await page.evaluate(async()=>{const xs=[];for(let i=0;i<40;i++){await new Promise(r=>setTimeout(r,30));xs.push(new DOMMatrixReadOnly(getComputedStyle(document.querySelector('.print-drag')).transform).m41);}return xs;});
-            assert(settle.filter(v=>Math.abs(v)>.5).length>=4&&Math.abs(settle.at(-1))<.5,`print must ease back to centre: ${settle}`);
-          }else{
-            await page.waitForFunction(()=>window.motionListenerReady&&!document.hidden);
-            await page.evaluate(()=>{
-              for(let i=0;i<5;i++){
-                const event=new Event('devicemotion');
-                Object.defineProperties(event,{acceleration:{value:{x:i%2?-25:25,y:0,z:0}},timeStamp:{value:100+i*220}});
-                window.dispatchEvent(event);
-              }
-            });
-          }
-          await page.locator('.instant-photo-window img').waitFor();
-          const rotations=await page.evaluate(async()=>{
-            const samples=[];
-            for(let i=0;i<45;i++){
-              await new Promise(resolve=>requestAnimationFrame(resolve));
-              const m=new DOMMatrixReadOnly(getComputedStyle(document.querySelector('.print-drag')).transform);
-              samples.push(Math.atan2(m.b,m.a));
-            }
-            return samples;
-          });
-          assert(rotations.every(angle=>Math.abs(angle)<0.001),`${method} added a shake`);
-          await page.evaluate(()=>{
-            Object.defineProperty(document,'hidden',{configurable:true,get:()=>true});
-            document.dispatchEvent(new Event('visibilitychange'));
-          });
-          await page.getByRole('button',{name:'Save Photo',exact:true}).waitFor();
-          assert.equal(await page.locator('.print-drag').evaluate(e=>getComputedStyle(e).transform),'none');
-          await page.evaluate(()=>{delete document.hidden;document.dispatchEvent(new Event('visibilitychange'));});
-          console.log(JSON.stringify({engine,method,noExtraShake:true,hiddenPageSettles:true}));
-        }
         await page.emulateMedia({reducedMotion:'reduce'});await page.goto(baseURL+'/');
         await prepareCamera(page,true);await page.getByRole('switch',{name:'Flash effect',exact:true}).click();await page.getByRole('button',{name:'Capture',exact:true}).click();
         await page.locator('.instant-print').waitFor();
@@ -307,12 +247,10 @@ async function prepareCamera(page, mobile) {
         await page.getByRole('button',{name:'Load film',exact:true}).focus();await page.keyboard.press('Enter');
         await page.waitForFunction(()=>{const shutter=document.querySelector('[aria-label="Capture"]');return shutter&&!shutter.disabled;});
         await page.getByRole('button',{name:'Capture',exact:true}).focus();await page.keyboard.press('Enter');
-        await page.getByRole('button',{name:'Reveal the Snap',exact:true}).focus();await page.keyboard.press('Enter');
         await page.getByRole('button',{name:'Save Photo',exact:true}).waitFor();
-        assert.equal(await page.locator('.print-drag').evaluate(e=>getComputedStyle(e).transform),'none');
         await page.waitForFunction(()=>document.activeElement?.getAttribute('aria-label')==='Save Photo',null,{timeout:2000}).catch(()=>{});
-        assert.equal(await page.evaluate(()=>document.activeElement?.getAttribute('aria-label')),'Save Photo','Keyboard focus moves to Save Photo after the reveal');
-        console.log(JSON.stringify({engine,reducedMotion:true,keyboardReveal:true,keyboardSaveFocus:true}));
+        assert.equal(await page.evaluate(()=>document.activeElement?.getAttribute('aria-label')),'Save Photo','Keyboard focus moves to Save Photo once it is ready');
+        console.log(JSON.stringify({engine,reducedMotion:true,keyboardSaveFocus:true}));
       }
       assert.deepEqual(errors,[]);
       // Old editor links return to the camera.
@@ -320,7 +258,7 @@ async function prepareCamera(page, mobile) {
         await page.goto(baseURL+old);await page.waitForURL(baseURL+'/');
         await page.locator('main.mobile-camera').waitFor();
       }
-      console.log(JSON.stringify({engine,width,shakeSamples:transforms.length,layout,save:true,rollAgain:true,oldLinks:true,errors}));
+      console.log(JSON.stringify({engine,width,layout,save:true,rollAgain:true,oldLinks:true,errors}));
       await context.close();
     }
     if(process.argv[5]==='inspect')return;
@@ -355,8 +293,7 @@ async function prepareCamera(page, mobile) {
       }else{
         const chooserPromise=page.waitForEvent('filechooser');await page.getByRole('button',{name:'Upload photos',exact:true}).click();
         await (await chooserPromise).setFiles(path.resolve('public/sample-coast.png'));
-        // Without a camera, an upload still prints, reveals, and saves on the camera screen.
-        await page.getByRole('button',{name:'Reveal the Snap',exact:true}).click();
+        // Without a camera, an upload still prints, develops, and saves on the camera screen.
         await page.getByRole('button',{name:'Save Photo',exact:true}).waitFor();
         assert.equal(page.url(),baseURL+'/');
         await page.screenshot({path:path.join(output,`${engine}-${permission}-upload.png`),fullPage:true});

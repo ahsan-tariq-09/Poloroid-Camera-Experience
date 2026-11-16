@@ -279,17 +279,14 @@ it.each([[640,480,80,0],[480,640,0,80]])("crops %s×%s video without stretching,
     // Both orientations crop a square source, rather than distorting the full frame.
     expect(draw).toHaveBeenCalledWith(host.querySelector("video"),sourceX,sourceY,480,480,0,0,480,480);
     expect(translate).toHaveBeenCalledWith(480,0);
-    expect(host.querySelectorAll('img[alt="Your captured photo"]')).toHaveLength(0);
-    // Nothing can be saved, edited, or finished before the reveal.
-    for(const label of ["Save Photo","Develop","Done","Retake photo"])expect(named(label)).toBeUndefined();
+    // Reduced motion develops the print at once: no reveal step, and only Save follows.
+    for(const label of ["Reveal the Snap","Develop","Done","Retake photo"])expect(named(label)).toBeUndefined();
     expect(host.querySelector('.film-control > span')!.textContent).toBe("ROLL AGAIN");
     // The photo used one shot of the 8-shot pack.
     expect(host.querySelector('.film-counter')!.textContent).toBe("7FILMLEFT");
-    // A keyboard user's focus moves from the spent reveal button to Save Photo.
-    const shake=host.querySelector<HTMLButtonElement>('.shake-reveal')!;shake.focus();
-    await act(async()=>shake.click());
     expect(host.querySelectorAll('img[alt="Your captured photo"]')).toHaveLength(1);
     expect(saved.importPolaroid).toHaveBeenCalledWith(expect.objectContaining({name:"camera-photo-1.png"}),true);
+    // A keyboard user's focus moves to Save Photo once it is ready.
     expect(document.activeElement).toBe(named("Save Photo"));
     // A failed save stays retryable, and the revealed photo stays on the camera.
     saved.exportFile.mockRejectedValueOnce(new Error("Disk is full."));
@@ -308,7 +305,7 @@ it.each([[640,480,80,0],[480,640,0,80]])("crops %s×%s video without stretching,
     await capture();
     expect(toBlob).toHaveBeenCalledTimes(2);
     expect(host.querySelectorAll(".instant-print")).toHaveLength(1);
-    expect(named("Save Photo")).toBeUndefined();
+    expect(named("Save Photo")).toBeDefined();
     expect(host.querySelector('.film-counter')!.textContent).toBe("6FILMLEFT");
     // Every film load, Roll again included, fits a fresh pack of 8.
     const load=()=>act(async()=>host.querySelector<HTMLButtonElement>('[aria-label="Load film"]')!.click());
@@ -318,7 +315,6 @@ it.each([[640,480,80,0],[480,640,0,80]])("crops %s×%s video without stretching,
     // Eight saved photos empty the pack without a reload; loading film then fits a fresh pack.
     for(let shot=1;shot<=8;shot++){
       await capture();
-      await act(async()=>host.querySelector<HTMLButtonElement>('.shake-reveal')!.click());
       await act(async()=>named("Save Photo")!.click());
     }
     expect(host.querySelector('.film-counter')!.textContent).toBe("0FILMLEFT");
@@ -343,8 +339,6 @@ it("prints an uploaded photo in place of a capture and keeps the camera settings
     expect(saved.importPolaroid).toHaveBeenCalledWith(file,true);
     // The uploaded print leaves the slot with the ejection sound, without the shutter click.
     expect(play).toHaveBeenCalledWith("eject");
-    expect(host.querySelector<HTMLImageElement>(".instant-print img")).toBeNull();
-    await act(async()=>host.querySelector<HTMLButtonElement>('.shake-reveal')!.click());
     expect(host.querySelector<HTMLImageElement>('img[alt="Your captured photo"]')!.src).toBe("blob:asset-beach.heic");
     expect(stop).toHaveBeenCalled();
     await act(async()=>host.querySelector<HTMLButtonElement>('[aria-label="Load film"]')!.click());

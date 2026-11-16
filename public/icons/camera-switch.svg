@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 253.28 253.28">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #090909;
+        stroke: #090909;
+        stroke-width: 5px;
+      }
+
+      .cls-1, .cls-2 {
+        stroke-miterlimit: 10;
+      }
+
+      .cls-2 {
+        fill: none;
+        stroke: #060707;
+        stroke-width: 13px;
+      }
+
+      .cls-3 {
+        fill: url(#linear-gradient);
+      }
+    </style>
+    <linearGradient id="linear-gradient" x1="16.95" y1="63.31" x2="236.33" y2="189.97" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#c2b69b"/>
+      <stop offset=".64" stop-color="#c2b69b"/>
+      <stop offset=".69" stop-color="#c2b69b"/>
+      <stop offset=".75" stop-color="#beb398"/>
+      <stop offset=".8" stop-color="#b5a990"/>
+      <stop offset=".85" stop-color="#a49984"/>
+      <stop offset=".89" stop-color="#8c8371"/>
+      <stop offset=".93" stop-color="#6e665a"/>
+      <stop offset=".97" stop-color="#49443e"/>
+      <stop offset="1" stop-color="#231f20"/>
+    </linearGradient>
+  </defs>
+  <g id="camera_rotate_icon" data-name="camera rotate icon">
+    <g>
+      <circle class="cls-3" cx="126.64" cy="126.64" r="126.64"/>
+      <g>
+        <path class="cls-2" d="M199.75,110.08c.07-33.02-31.72-60.07-70.08-60.59-39.73-.55-72.2,27.56-72.2,60.59"/>
+        <polygon class="cls-1" points="185.66 104.66 200.83 126.64 212.27 102.23 185.66 104.66"/>
+      </g>
+      <g>
+        <path class="cls-2" d="M60.63,142.51c-2.69,31.53,26.1,59.1,63.4,61.71,38.62,2.7,72.46-22.36,75.08-53.91"/>
+        <polygon class="cls-1" points="73.91 148.46 60.9 126.64 47.82 149.32 73.91 148.46"/>
+      </g>
+    </g>
+  </g>
+</svg>
