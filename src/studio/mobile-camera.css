@@ -12,7 +12,7 @@
 .mobile-camera :is(button,a):focus-visible { outline:3px solid #d9edb6; outline-offset:3px; }
 .mobile-camera .viewfinder-bezel { width:min(100%,calc(100dvh - 430px)); min-width:150px; justify-self:center; align-self:center; }
 .mobile-camera .camera-display { aspect-ratio:1; }
-.mobile-camera .camera-message { padding:40px 12px 30px; font-size:12px; }
+
 .mobile-camera .camera-settings { width:min(100%,440px); justify-self:center; margin:0; grid-template-columns:96px minmax(150px,1fr) 56px; grid-template-areas:"film film film" "timer iso flash"; gap:10px 10px; align-items:end; }
 .mobile-camera .camera-dials { display:contents; }
 .mobile-camera .timer-control { grid-area:timer; }
@@ -36,10 +36,6 @@
 .mobile-camera .instant-print { width:var(--mobile-print-width); max-width:100%; }
 .mobile-camera .print-reveal-actions { margin:0 14px 12px; }
 .mobile-camera .secondary-button { color:#292c26; background:#faf6ec; }
-.mobile-camera .capture-decisions { width:min(calc(100% - 28px),440px); margin:0 auto; padding-bottom:max(14px,env(safe-area-inset-bottom)); }
-.mobile-camera .capture-decisions button { min-height:48px; }
-.camera-page > .error-banner,.camera-notice { position:fixed; top:68px; left:16px; right:16px; z-index:10; margin:0; }
-.camera-page > .modal-backdrop { color:#292c26; }
 
 /* Recovery sits inside the finder so the shutter row never moves off screen. */
 .mobile-camera-recovery { position:absolute; inset:0; z-index:2; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:14px; overflow:auto; background:#141713e6; color:#f5f1e5; text-align:center; }
@@ -91,7 +87,7 @@
   .mobile-camera.has-print .camera-assembly { --mobile-print-width:clamp(110px,calc(100dvh - 250px),340px); --slot-overlap:14px; }
   .mobile-camera.has-print .instant-camera { min-height:0; grid-template-columns:minmax(0,1fr) minmax(0,1fr); grid-template-rows:auto auto; grid-template-areas:"plate hardware" "chin chin"; }
   .mobile-camera.has-print .print-action-row > button { min-height:44px; padding-block:8px; }
-  .mobile-camera.has-print .capture-decisions button { min-height:44px; }
+  
 }
 /* Short phone landscape: the roll/flip/shutter row turns into a column at the right edge so
    everything fits beside a finder that uses the full height. */

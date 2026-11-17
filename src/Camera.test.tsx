@@ -294,7 +294,7 @@ it.each([[640,480,80,0],[480,640,0,80]])("crops %s×%s video without stretching,
     expect(host.querySelector('[role="alert"]')!.textContent).toBe("Disk is full.");
     await act(async()=>named("Save Photo")!.click());
     expect(saved.exportFile).toHaveBeenCalledTimes(2);
-    expect(saved.exportFile.mock.calls[1]).toEqual([{photo:expect.objectContaining({name:"camera-photo-1.png"})},{caption:"framed"},"jpeg"]);
+    expect(saved.exportFile.mock.calls[1]).toEqual([{photo:expect.objectContaining({name:"camera-photo-1.png"})},{caption:"framed"}]);
     expect(host.querySelector('[role="alert"]')).toBeNull();
     // A finished save clears the print, releases its files, and reopens the camera with the next shot loaded.
     expect(host.querySelector(".instant-print")).toBeNull();

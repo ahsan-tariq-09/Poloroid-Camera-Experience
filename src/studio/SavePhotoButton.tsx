@@ -1,17 +1,15 @@
 import { useEffect, useState } from "react";
 import { download, prepareExport } from "../render";
-import type { ExportFormat } from "../render";
 import type { Assets, Composition } from "../model";
 
 export type SaveStudio = {
   assets: Assets;
   composition: Composition;
-  format: ExportFormat;
   busy: boolean;
   exporting: boolean;
   exportFile: () => Promise<void>;
 };
-type Prepared = Pick<SaveStudio, "assets" | "composition" | "format"> & {
+type Prepared = Pick<SaveStudio, "assets" | "composition"> & {
   file: File | null;
   shareable: boolean;
 };
@@ -32,7 +30,7 @@ export default function SavePhotoButton({ studio: s, onSaved }: {
   const [sharing, setSharing] = useState(false);
   const [downloadInstead, setDownloadInstead] = useState(false);
   const [message, setMessage] = useState("");
-  const { assets, composition, format, busy } = s;
+  const { assets, composition, busy } = s;
 
   useEffect(() => {
     if (!appleSharing || busy) return;
@@ -40,13 +38,12 @@ export default function SavePhotoButton({ studio: s, onSaved }: {
     setDownloadInstead(false);
     setMessage("");
     // Prepare before the tap so rendering cannot consume Safari's user-activation window.
-    void prepareExport(assets, composition, format)
+    void prepareExport(assets, composition)
       .then((file) => {
         if (!current) return;
         setPrepared({
           assets,
           composition,
-          format,
           file,
           shareable: navigator.canShare({ files: [file] }),
         });
@@ -56,7 +53,6 @@ export default function SavePhotoButton({ studio: s, onSaved }: {
         setPrepared({
           assets,
           composition,
-          format,
           file: null,
           shareable: false,
         });
@@ -67,12 +63,11 @@ export default function SavePhotoButton({ studio: s, onSaved }: {
     return () => {
       current = false;
     };
-  }, [appleSharing, assets, composition, format, busy]);
+  }, [appleSharing, assets, composition, busy]);
 
   const ready =
     prepared?.assets === assets &&
-    prepared.composition === composition &&
-    prepared.format === format;
+    prepared.composition === composition;
   const preparing = appleSharing && !ready;
   const shareable = ready && prepared.shareable && !downloadInstead;
 

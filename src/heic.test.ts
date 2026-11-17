@@ -1,8 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolveObjectURL } from "node:buffer";
 import { Worker as NodeWorker } from "node:worker_threads";
-import { createCanvas, ImageData, loadImage } from "@napi-rs/canvas";
-import { build } from "vite";
+import { createCanvas, ImageData } from "@napi-rs/canvas";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 // Execute the decoder's actual browser-worker source in a Node worker. This
@@ -106,80 +105,3 @@ describe("actual HEIC decoder", () => {
   }, 30_000);
 });
 
-describe("actual HEIC encoder worker", () => {
-  it("encodes a rendered image as HEIC and decodes it with the independent import decoder", async () => {
-    const result = await build({
-      configFile: false,
-      logLevel: "silent",
-      build: {
-        write: false,
-        minify: false,
-        lib: {
-          entry: "src/heicExport.worker.ts",
-          formats: ["iife"],
-          name: "HeicWorker",
-        },
-      },
-    });
-    const output = Array.isArray(result) ? result[0] : result;
-    if (!("output" in output))
-      throw new Error("Worker build did not return output");
-    const chunk = output.output.find((item) => item.type === "chunk");
-    if (!chunk || chunk.type !== "chunk")
-      throw new Error("Missing worker bundle");
-    const worker = new NodeWorker(
-      `
-      const {parentPort}=require('node:worker_threads');
-      globalThis.self=globalThis;globalThis.location={href:'https://test.invalid/encoder.js'};
-      globalThis.importScripts=()=>{};globalThis.postMessage=(data)=>parentPort.postMessage(data);globalThis.process=undefined;
-      ${chunk.code}
-      parentPort.on('message',data=>globalThis.onmessage({data}));
-    `,
-      { eval: true },
-    );
-    try {
-      const c = createCanvas(128, 157),
-        ctx = c.getContext("2d");
-      ctx.fillStyle = "#fff9e9";
-      ctx.fillRect(0, 0, 128, 157);
-      ctx.fillStyle = "#d52c29";
-      ctx.fillRect(10, 10, 54, 110);
-      ctx.fillStyle = "#286b9b";
-      ctx.fillRect(64, 10, 54, 110);
-      const message = new Promise<{ bytes?: Uint8Array; error?: string }>(
-        (resolve, reject) => {
-          worker.once("message", resolve);
-          worker.once("error", reject);
-        },
-      );
-      worker.postMessage({
-        pixels: ctx.getImageData(0, 0, 128, 157).data,
-        width: 128,
-        height: 157,
-      });
-      const encoded = await message;
-      expect(encoded.error).toBeUndefined();
-      expect(encoded.bytes!.length).toBeGreaterThan(100);
-      expect(new TextDecoder().decode(encoded.bytes!.slice(4, 32))).toContain(
-        "ftyp",
-      );
-      const { heicTo } = await import("heic-to/csp");
-      const png = await heicTo({
-        blob: new Blob([new Uint8Array(encoded.bytes!)], {
-          type: "image/heic",
-        }),
-        type: "image/png",
-      });
-      const decoded = await loadImage(new Uint8Array(await png.arrayBuffer()));
-      expect(decoded.width).toBe(128);
-      expect(decoded.height).toBe(157);
-      const compare = createCanvas(128, 157);
-      compare.getContext("2d").drawImage(decoded, 0, 0);
-      const red = compare.getContext("2d").getImageData(30, 60, 1, 1).data;
-      expect(red[0]).toBeGreaterThan(170);
-      expect(red[1]).toBeLessThan(90);
-    } finally {
-      await worker.terminate();
-    }
-  }, 60000);
-});

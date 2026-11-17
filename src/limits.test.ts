@@ -1,6 +1,6 @@
 import {describe, expect, it} from "vitest";
 import {assertComposition, assertRenderSize} from "./limits";
-import {initialComposition, addText} from "./model";
+import {initialComposition} from "./model";
 import {fonts, fontFamily} from "./fonts";
 
 describe("composition and font boundaries", () => {
@@ -11,12 +11,10 @@ describe("composition and font boundaries", () => {
     }
     expect(() => assertRenderSize({x:0,y:0,width:2000,height:2000},3)).toThrow(/too large/);
     expect(() => assertComposition(initialComposition())).not.toThrow();
-    expect(() => assertComposition(addText(initialComposition()))).not.toThrow();
   });
-  it("offers exactly 30 distinct font choices including the library ransom-note face", () => {
-    expect(fonts).toHaveLength(30);
-    expect(new Set(fonts.map(f => f.id)).size).toBe(30);
-    expect(fontFamily("ransom-note")).toContain("LindberghBabyRegular");
+  it("offers only the bundled caption faces and falls back to the studio font", () => {
+    expect(fonts.map(f => f.id)).toEqual(["studio", "caveat", "oswald"]);
+    expect(fontFamily("oswald")).toContain('"Oswald"');
     expect(fontFamily("untrusted font; url(x)")).toBe(fontFamily("studio"));
   });
 });

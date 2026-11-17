@@ -21,7 +21,6 @@ import { isDesktop } from "./studio/OpenOnPhone";
 
 /**
  * Camera-first app: open camera, take a photo, watch it develop, save or roll again.
- * The former Start, Edit, and Finish workflow lives in src/archive/studio (see docs/ARCHIVED-EDITOR.md).
  */
 function StudioApp() {
   const book = useScrapbook();
@@ -131,7 +130,7 @@ function StudioApp() {
               <ScrapbookScreen studio={book} onCamera={() => navigate("/")} />
             }
           />
-          {/* Old /camera, /edit, and /finish links return to the camera. */}
+          {/* Unknown paths return to the camera. */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         {!cameraPage && (

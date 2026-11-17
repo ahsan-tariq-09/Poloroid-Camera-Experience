@@ -20,10 +20,9 @@ dist/
 .codex/
 .impeccable/
 
-# Repository-only documentation, tests, archived source, and Docker tooling
+# Repository-only documentation, tests, and Docker tooling
 /AGENTS.md
 /PRODUCT.md
-/src/archive/
 /src/**/*.test.ts
 /src/**/*.test.tsx
 /docs/

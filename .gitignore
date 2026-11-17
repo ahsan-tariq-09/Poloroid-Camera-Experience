@@ -42,7 +42,6 @@ coverage/
 !/docs/DESIGN-SKILLS.md
 !/docs/design-skills.lock.json
 !/docs/design-skill-licenses/
-!/docs/ARCHIVED-EDITOR.md
 
 # Operating-system metadata
 .DS_Store

@@ -128,19 +128,6 @@ export async function packPhoto(
     assets: Object.fromEntries(entries),
   };
 }
-export async function unpackPhoto(
-  photo: StoredPhoto,
-): Promise<{ assets: Assets; composition: Composition }> {
-  const entries = await Promise.all(
-    Object.entries(photo.assets).map(
-      async ([id, a]) => [id, { ...a, image: await loadImage(a.url) }] as const,
-    ),
-  );
-  return {
-    assets: Object.fromEntries(entries),
-    composition: clone(photo.composition),
-  };
-}
 export async function makeMemory(
   assets: Assets,
   composition: Composition,

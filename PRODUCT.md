@@ -8,17 +8,17 @@ web
 
 ## Product Purpose
 
-Make personal instant-photo keepsakes in a browser. Open the camera, roll film and take a photo, watch it develop, then save the framed Polaroid or roll again. Collect photos in a scrapbook saved on this device. The same camera experience serves phones, tablets and desktops. The former Start → Edit → Finish editor is archived (`docs/ARCHIVED-EDITOR.md`).
+Make personal instant-photo keepsakes in a browser. Open the camera, roll film and take a photo, watch it develop, then save the framed Polaroid or roll again. Collect photos in a scrapbook saved on this device. The same camera experience serves phones, tablets and desktops.
 
 ## Capabilities and Constraints
 
-Existing React, TypeScript, Vite application. Keep photos on the device. Preserve the editing tools, undo history, supported imports, four export formats and physical print dimensions. Imports preserve the full source and its proportions; users decide positioning and cropping. Finished output is clipped to the outer frame. Warm film is the default at 65%; Original, Black & white and Copy shop remain available. Caption and independent text colors are editable.
+Existing React, TypeScript, Vite application. Keep photos on the device. Preserve the supported imports and the 88:107 frame. Imports preserve the full source and its proportions. Saved photos are JPEG, clipped to the outer frame.
 
 Camera capture offers a single Polaroid. ISO 100–3200 simulates exposure gain and grain, with 800 as the neutral setting; browser sensor ISO is not controlled. Viewfinders show ISO, film and timer settings and preview the film treatment live. A shutter click precedes the print sound and ejection by 0.48 seconds. Prints eject over 2.49 seconds, exactly as long as the ejection recording, then rest blank for 2.5 seconds and develop over 9 seconds with no gesture; reduced motion settles immediately. Once developed, Save Photo saves the complete framed Polaroid as JPEG, using the native share sheet on Apple devices and a download elsewhere; a cancel or failure keeps the photo for retries, and a finished save returns to the live camera with the next shot loaded. Roll again clears the print and prepares the next shot without saving first. Every size opens the camera at / and requests camera permission on mount, with film loaded. Film, ISO, timer and flash remain visible on the leather camera body, alongside roll and shutter controls. The original housing reflows to fit short phones and landscape, with prints emerging from its bottom slot. On desktops, pending and denied permission states retain upload, which prints the chosen photo on the camera, and denial offers retry. Rotation preserves the active camera and settings; leaving the camera stops its stream. On desktops, sound has an accessible mute control; phones and tablets have no sound or upload button. Respect reduced motion.
 
 The scrapbook holds one current page with up to 12 photos. It supports overlapping, tilted Polaroids with tape or a continuous vertical photo strip, page title and paper color, and PNG page downloads. Save on device explicitly writes the page and editable photo sources to IndexedDB. Reopening a saved photo supports updating its original scrapbook item. Unsaved edits remain temporary; clearing site data removes saved work. There is no account or cross-device sync.
 
-The production PWA precaches the app shell, built code and codecs, demo image, icons and self-hosted fonts. Its readiness status and install help support mobile use. On-demand Google Fonts need a network connection on first use; STL files are not precached. Device storage and installation depend on browser support. This redesign does not include a deployment.
+The production PWA precaches the app shell, built code and codecs, demo image, icons and self-hosted fonts. Its readiness status and install help support mobile use. Device storage and installation depend on browser support. This redesign does not include a deployment.
 
 ## Brand Commitments
 
@@ -27,7 +27,7 @@ The brand name is lowercase rold, with no beta label. Polaroid remains the name 
 ## Evidence on Hand
 
 Canva reference: https://www.canva.com/design/DAHYz75uUaQ/vCQzdxfj0GIXwdZMn31AMQ/view
-The supplied broken-export screenshot shows out-of-frame image overflow. The existing coastal sample is AI-generated demonstration content and must be labeled accordingly. Existing reference images and STL models are in docs/inspiration and public/frames.
+The supplied broken-export screenshot shows out-of-frame image overflow. The existing coastal sample is AI-generated demonstration content and must be labeled accordingly. Existing reference images are in docs/inspiration.
 
 ## Product Principles
 

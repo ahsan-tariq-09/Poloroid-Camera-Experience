@@ -198,13 +198,13 @@ export default function Camera({onUpload, enabled, initialSettings, navigation, 
   const save=async()=>{
     if(!polaroid)return;
     setExporting(true);setSaveError("");
-    try{await savePolaroid(polaroid.assets,polaroid.composition,"jpeg");if(alive.current)finish();}
+    try{await savePolaroid(polaroid.assets,polaroid.composition);if(alive.current)finish();}
     catch(reason){if(alive.current)setSaveError(reason instanceof Error?reason.message:"Your photo could not be saved. Try again.");}
     finally{if(alive.current)setExporting(false);}
   };
   const settings=<CameraSettings seconds={seconds} onSeconds={setSeconds} preset={preset} onPreset={setPreset} flash={flash} onFlash={setFlash} iso={iso} onISO={setISO} disabled={shot>0}/>;
   const saveControls=<div className="print-save">
-    {polaroid?<SavePhotoButton studio={{assets:polaroid.assets,composition:polaroid.composition,format:"jpeg",busy:false,exporting,exportFile:save}} onSaved={finish}/>:!saveError&&<button className="primary-button download-main" disabled>Preparing…</button>}
+    {polaroid?<SavePhotoButton studio={{assets:polaroid.assets,composition:polaroid.composition,busy:false,exporting,exportFile:save}} onSaved={finish}/>:!saveError&&<button className="primary-button download-main" disabled>Preparing…</button>}
     {saveError&&<p className="field-hint save-error" role="alert">{saveError}</p>}
   </div>;
   const print=captured?<InstantPrint photos={prints.map(p=>({src:p.url,alt:"Your captured photo"}))} caption={captureDate(prints[0].file.lastModified)} enabled={enabled} actions={saveControls}/>:undefined;

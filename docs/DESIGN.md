@@ -129,13 +129,11 @@ The palette combines cream paper, muted sage and rust with charcoal camera hardw
 
 **Body and controls:** Helvetica Neue, Helvetica, Arial, sans-serif. The wordmark remains system sans. Introductory prose uses the larger `intro` role and a 34-character measure. Labels use the compact `label` role; form values remain 16px. Page headings reduce to 30px on phones, while the introductory title uses 44px below 650px and 38px below 370px.
 
-**Artwork typography is independent.** Captions and movable text offer 30 families: Studio sans, 26 on-demand Google Fonts families, bundled Caveat and Permanent Marker and Font Library's existing OFL [Lindbergh Baby](https://fontlibrary.org/en/font/lindbergh-baby). The latter is included unchanged with its license. DM Serif Display is the UI face, not an additional artwork catalog entry. Text pieces and captions retain separate font size, color, Bold and Italic controls. Exports wait for selected fonts, embed rendered lettering in SVG, and never send entered text in font requests. The 26 remote families require network access on first use. New captions use bundled Caveat, while Permanent Marker offers a bolder handwritten option.
+**Artwork typography is independent.** Captions use bundled fonts only: Caveat for uploads and Oswald for dated camera prints, with Studio sans as the fallback. DM Serif Display is the UI face, not a caption font. Saves wait for the caption font.
 
 ## Layout
 
-The shell is centered with a maximum width of 1380px and 48px desktop gutters. The desktop start introduction centers the headline above a camera up to 980px wide on warm linen. Layered ambient shadows and a subtle rim highlight lift the leather body; a glossy red shutter in a silver ring is the only spectrum accent. The desktop capture dialog grows to 1028px, with internal scrolling on short windows; the full-screen mobile camera keeps its independent sizing. Examples are real framed artwork, followed by an invitation to the scrapbook; they become a two-column grid on small screens.
-
-The archived editor (`docs/ARCHIVED-EDITOR.md`) kept artwork prominent beside grouped controls on desktop. On phones the compact artwork preview remains sticky above scrolling controls, with height following the visual viewport so keyboard opening leaves room to work. The Finish screen retains direct photo movement. Direct dragging, centering and directional nudges replace coordinate-entry as the normal positioning language.
+The shell is centered with a maximum width of 1380px and 48px desktop gutters. Layered ambient shadows and a subtle rim highlight lift the leather body; a glossy red shutter in a silver ring is the only spectrum accent.
 
 The scrapbook uses a 270px control column beside the page, reducing to 240px at 1000px. Below 700px, artwork precedes controls and the header becomes a wordmark/action row above workflow navigation. Safe-area insets protect phone edges. The collage is a 1000 × 780 logical page; strips are 360 logical pixels wide with height growing by shot count. A long strip scrolls within a workspace capped at 680px, or 410px on phones.
 
@@ -159,7 +157,7 @@ The outer Polaroid stays upright and keeps its 88:107 proportions. Photos and de
 
 ### Buttons and navigation
 
-Primary buttons use rust with a light label and a darker hover state. Secondary buttons use paper with a line border. Text actions retain generous hit areas. Shared buttons are at least 44px tall; the introductory primary action is at least 50px. Keyboard focus remains visible. The selected editor category uses dark sage; workflow navigation and scrapbook access remain distinct. Phone navigation occupies its own row.
+Primary buttons use rust with a light label and a darker hover state. Secondary buttons use paper with a line border. Text actions retain generous hit areas. Shared buttons are at least 44px tall; the introductory primary action is at least 50px. Keyboard focus remains visible. Phone navigation occupies its own row.
 
 ### Fields and selection
 
@@ -188,7 +186,7 @@ The supplied inspiration images remain documentation in `docs/inspiration/`, not
 | IMG_1003      | Primary cream, olive, orange-red and dark-brown palette             |
 | IMG_1004–1006 | Supporting muted colors and teal tape accents                       |
 
-Interface and decoration geometry are original HTML/CSS/SVG/Canvas work. The project retains the supplied STL models and their original Printables source links in the README. The existing GPL-3.0 repository license and third-party rights remain unchanged. Font licenses accompany the self-hosted fonts.
+Interface and decoration geometry are original HTML/CSS/SVG/Canvas work. The existing GPL-3.0 repository license and third-party rights remain unchanged. Font licenses accompany the self-hosted fonts.
 
 The current sample is served as `public/sample-flash.webp`; its image-generation provenance and user-directed grain/flash refinements are recorded in [CAMERA-REFINEMENT.md](redesign/CAMERA-REFINEMENT.md). The older `public/sample-coast.png` remains a source fixture for renderer tests. The following prompt documents that historical coastal sample. It is an AI-generated demo scene, not a user photograph. Original generation prompt:
 

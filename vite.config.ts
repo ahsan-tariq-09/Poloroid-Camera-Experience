@@ -10,8 +10,8 @@ export default defineConfig({
     generateBundle(_options, bundle) {
       const assets = Object.keys(bundle).filter(name => /\.(js|css|wasm)$/.test(name)).map(name => "/" + name);
       const resources = ["/", "/manifest.webmanifest", "/favicon.svg", "/icons/icon-192.png", "/icons/icon-512.png", "/sample-coast.webp", "/fonts/dm-serif-display/regular.ttf", "/fonts/dm-serif-display/italic.ttf", ...assets];
-      resources.push("/fonts/lindbergh-baby/Lindbergh_Baby.ttf", "/sample-flash.webp", "/textures/leather.webp");
-      resources.push("/fonts/caveat/Caveat.ttf", "/fonts/oswald/Oswald-SemiBold.ttf", "/fonts/permanent-marker/PermanentMarker-Regular.ttf");
+      resources.push("/sample-flash.webp", "/textures/leather.webp");
+      resources.push("/fonts/caveat/Caveat.ttf", "/fonts/oswald/Oswald-SemiBold.ttf");
       resources.push("/audio/film-load.mp3", "/audio/shutter.mp3", "/audio/camera-shutter.mp3", "/audio/iso-click.wav", "/audio/timer-dial.wav", "/audio/flash-on.wav", "/audio/flash-off.wav", "/icons/camera-switch.svg", "/icons/flash-knob-base.svg", "/icons/flash-knob-lever.svg", "/icons/save-photo.svg");
       const hash = createHash("sha256").update(JSON.stringify(resources)).update(readFileSync("index.html")).update(readFileSync("src/service-worker.js"));
       for (const path of resources.filter(path => path !== "/" && !path.startsWith("/assets/"))) hash.update(readFileSync("public" + path));
@@ -21,5 +21,5 @@ export default defineConfig({
     },
   }],
   // Discover lazy codecs before editing starts, avoiding a dev-only reload on first use.
-  optimizeDeps: { include: ["elheif", "heic-to/csp"] },
+  optimizeDeps: { include: ["heic-to/csp"] },
 });

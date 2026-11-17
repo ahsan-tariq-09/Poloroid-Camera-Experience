@@ -3,9 +3,7 @@
 Poloroid is a React 19 + TypeScript + Vite photo studio. Read `README.md`
 and `docs/DESIGN.md` before changing its interface. Preserve the warm paper
 palette, upright frame, photo-first layout, and the camera-first flow: open
-camera → take a photo → watch it develop → save photo or roll again. The former
-Start → Edit → Finish editor is archived in `src/archive/studio/`; see
-`docs/ARCHIVED-EDITOR.md` before restoring or reusing it.
+camera → take a photo → watch it develop → save photo or roll again.
 
 ## Installed design and animation skills
 
@@ -37,8 +35,8 @@ avoid competing CSS, Motion, and GSAP animations on the same property.
 
 Honor reduced-motion preferences and hidden-page behavior in
 `src/useStudioMotion.ts`. Keep animation presentation separate from composition
-state and undo history (`src/presentation.ts`). Exports and printing must render
-the complete composition independently of temporary UI animation.
+state. Saved photos must render the complete composition independently of
+temporary UI animation.
 
 Use the user's request to choose the task; installing these skills does not
 authorize a redesign, hook activation, live relay, account login, or deployment.

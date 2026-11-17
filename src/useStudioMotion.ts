@@ -18,10 +18,3 @@ export function useStudioMotion() {
   }, []);
   return !reduced && visible;
 }
-
-export const panelVariants = {
-  enter: { opacity: 0, y: 8 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.25, ease: [0.22, 1, 0.36, 1] as const } },
-  still: { opacity: 1, y: 0, transition: { duration: 0 } },
-  exit: { opacity: 0, y: -4, transition: { duration: 0.15 } },
-};

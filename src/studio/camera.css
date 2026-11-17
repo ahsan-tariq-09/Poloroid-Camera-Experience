@@ -1,21 +1,14 @@
 /* Leather, machined metal and real controls, adapted from the supplied Canva camera. */
 @font-face { font-family:"Oswald"; font-style:normal; font-weight:600; font-display:swap; src:url('/fonts/oswald/Oswald-SemiBold.ttf') format('truetype'); }
-.camera-intro { grid-template-columns: minmax(0,1fr); gap:24px; padding:30px 0 36px; justify-items:center; }
-.intro-copy { text-align:center; max-width:760px; }
-.intro-copy h1 { font-size:clamp(32px,4vw,48px); line-height:1.12; }
-.intro-copy > p:first-of-type { max-width:none; margin-top:12px; font-size:16px; }
-.camera-start { text-align:center; }
-.camera-start .start-actions { margin-top:0; justify-content:center; }
-.camera-start .import-hint { margin-top:8px; }
-.camera-start .resume-link { justify-content:center; }
+
 .instant-camera { font-family:"Helvetica Neue",Helvetica,Arial,sans-serif; padding:22px 24px 18px; border:2px solid #474943; border-radius:9px; background:#252622 url('/textures/leather.webp') repeat; background-size:340px; box-shadow:inset 0 1px 1px #fff5, inset 0 -3px 6px #000, 0 16px 26px -14px #24231d80; }
 .camera-nameplate { display:grid; grid-template-columns:1fr auto 1fr; padding:0 0 18px; align-items:center; gap:12px; }
 .camera-nameplate > :first-child { justify-self:start; }
 .camera-nameplate > :last-child { justify-self:end; }
 .camera-nameplate > span:first-child { padding:8px 14px; border:1px solid #8c8d83; border-radius:2px; background:linear-gradient(165deg,#e3e4da,#9b9e93 48%,#c9cdc1); box-shadow:0 2px 3px #000b,inset 0 1px #fff; color:#252b26; font:600 18px/1.1 'Helvetica Neue',Arial,sans-serif; letter-spacing:.19em; }
-.camera-indicator,.camera-experience .camera-indicator { padding:5px 8px; color:#e7e5d4; background:#141713; border:1px solid #707267; font:10px/1.4 ui-monospace,monospace; letter-spacing:.14em; text-align:center; }
+.camera-indicator { padding:5px 8px; color:#e7e5d4; background:#141713; border:1px solid #707267; font:10px/1.4 ui-monospace,monospace; letter-spacing:.14em; text-align:center; }
 .viewfinder-bezel { position:relative; padding:13px; border:1px solid #7e8277; border-radius:3px; background:linear-gradient(125deg,#42483d,#20251e 55%,#51564b); box-shadow:0 3px 5px #0009,inset 0 1px #8b9082; }
-.camera-display,.camera-experience .camera-display { aspect-ratio:1; border:2px solid #090c08; border-radius:0; }
+.camera-display { aspect-ratio:1; border:2px solid #090c08; border-radius:0; }
 .camera-display > img { object-fit:cover; filter:none; }
 .camera-display > video { object-fit:cover; }
 .camera-display > video,.camera-display > img { position:absolute; inset:0; }
@@ -41,35 +34,32 @@
 .instant-camera .shutter:active:not(:disabled) { transform:translateY(1px) scale(.98); box-shadow:0 2px 4px #000d,inset 0 2px 3px #ffc4b844,inset 0 -3px 8px #2a0003aa; }
 /* A dead shutter reads grey, not merely unclickable red. */
 .instant-camera .shutter:disabled { opacity:1; border-color:#77796f; filter:grayscale(.9) brightness(.7); box-shadow:0 2px 3px #0009; }
-.camera-experience .shutter { width:64px; height:64px; min-height:64px; }
+
 .camera-flip { min-width:44px; }
 .camera-center-control { width:44px; height:44px; display:grid; place-items:center; }
 .camera-flip { width:44px; height:44px; }
 .camera-assembly .camera-hardware { gap:8px; }
 .camera-assembly .hardware-control:first-child { flex:0 0 auto; }
 .camera-assembly .camera-hardware-copy { flex:1; min-width:0; font-size:10px; }
-.camera-alternatives { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:8px 12px; margin-top:12px; }
-.camera-alternatives .camera-upload { margin:0; }
+
 .shutter::after { content:''; position:absolute; inset:-1px; border:2px solid #ffb0a2; border-radius:50%; background:radial-gradient(circle at 64% 34%,#ff8a80aa,transparent 60%); box-shadow:0 0 12px #ff4a3f99; pointer-events:none; opacity:0; }
 .shutter-ready::after { animation:shutter-ready 4s ease-in-out .8s infinite; }
 @keyframes shutter-ready { 0%,20%,100% { opacity:0; } 55% { opacity:1; } }
 @media(prefers-reduced-motion:reduce) { .shutter-ready::after { animation:none; opacity:1; } }
-.camera-footnote { display:block; margin:7px 0 0; text-align:center; font-size:10px; }
-.camera-experience.has-print .camera-hardware { display:flex; }
-.camera-experience.has-print .instant-camera { border-radius:9px; }
+
 @media(max-width:700px) {
-  .camera-intro { padding:22px 0 28px; gap:20px; }
-  .intro-copy h1 { font-size:34px; }.intro-copy > p:first-of-type { margin-top:10px; font-size:14px; max-width:34ch; margin-inline:auto; }
-  .instant-camera,.camera-experience .instant-camera { padding:16px; }
+  
+  
+  .instant-camera { padding:16px; }
   .camera-nameplate { padding-bottom:14px; }
-  .camera-nameplate > span:first-child,.camera-experience .camera-nameplate > span:first-child { font-size:15px; padding:8px 10px; }
+  .camera-nameplate > span:first-child { font-size:15px; padding:8px 10px; }
   .camera-hardware { padding:16px 3px 12px; }
-  .camera-experience .camera-hardware { padding:16px 3px 12px; }
-  .camera-experience .camera-display { aspect-ratio:1; }
-  .camera-experience .camera-assembly { max-width:360px; margin-inline:auto; }
-  .camera-footnote { font-size:10px; }
+  
+  
+  
+  
 }
-@media(max-width:370px) { .instant-camera,.camera-experience .instant-camera { padding:12px; }.camera-nameplate > span:first-child,.camera-experience .camera-nameplate > span:first-child { font-size:13px; }.film-control { --lever:52px; }.camera-hardware-copy { font-size:10px; }.intro-copy h1 { font-size:31px; }.start-actions { flex-wrap:wrap; } }
+@media(max-width:370px) { .instant-camera { padding:12px; }.camera-nameplate > span:first-child { font-size:13px; }.film-control { --lever:52px; }.camera-hardware-copy { font-size:10px; } }
 
 /* A single measurement keeps the paper aligned with the physical exit slot. */
 .camera-assembly { --camera-pad:24px; --slot-overlap:20px; --slot-inset:calc(var(--camera-pad) + 7px); width:100%; }
@@ -125,7 +115,7 @@
 .dial-hub { position:absolute; width:14px;height:14px;top:calc(50% - 7px);left:calc(50% - 7px);border:1px solid #eee;border-radius:50%;background:linear-gradient(90deg,#565b58,#dce0d8); }
 .timer-pointer { position:absolute; inset:-6px; border-radius:50%; pointer-events:none; z-index:2; }
 .timer-pointer::before { content:''; position:absolute; top:0;left:calc(50% - 5px); border:5px solid transparent; border-top:8px solid #ec7662; }
-.hardware-value { display:block; text-align:center; font-size:11px; color:#e6ddc8; margin-top:10px; }
+
 .film-presets { background:#101310; border:2px solid #86897d!important; border-radius:4px; padding:8px!important; }
 .film-presets button { display:flex; align-items:center; justify-content:flex-start; gap:8px; width:100%; min-height:44px; padding:4px; background:none; border:1px solid transparent; color:#f5f1e5; font-size:12px; text-align:left; }
 .film-presets button[aria-pressed=true] { border-color:#d8b77b; background:#d8b77b18; }
@@ -133,7 +123,6 @@
 .cartridge-1 { background:linear-gradient(#141414,#acafa7 48%,#30322e); }.cartridge-2 { background:linear-gradient(#0b1420,#4e81af 48%,#1c3049); }.cartridge-3 { background:linear-gradient(#161b0a,#7b8742 48%,#2f351b); }
 .flash-control { text-align:center; }
 .capture-flash { position:fixed;inset:0;background:#fff6df;pointer-events:none;z-index:1000; }
-.camera-experience .camera-settings { grid-template-columns:minmax(86px,1fr) 120px 44px; justify-content:space-between; }
 
 @media(prefers-reduced-motion:reduce) { .timer-rotor,.timer-stop > span { transition:none; } }
 .camera-display .countdown { position:absolute; inset:0; display:grid; place-items:center; color:#fff9e9; background:#1118; font:700 72px/1 Georgia,serif; z-index:3; }
@@ -142,24 +131,15 @@
 
 /* Give the desktop camera a landscape body while preserving its paper outlet. */
 @media(min-width:800px) {
-  .camera-experience { width:1028px; }
+  
   .camera-assembly { --desktop-print-width:410px; }
   .camera-assembly .instant-camera { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); column-gap:24px; }
   .camera-nameplate,.camera-hardware,.camera-chin { grid-column:1 / -1; }
   .viewfinder-bezel { align-self:center; }
-  .camera-settings,.camera-experience .camera-settings { margin-top:0; grid-template-columns:minmax(86px,1fr) 120px 44px; align-self:center; }
+  .camera-settings { margin-top:0; grid-template-columns:minmax(86px,1fr) 120px 44px; align-self:center; }
   .print-outlet { padding-inline:0; }
   .instant-print { width:var(--desktop-print-width); max-width:100%; }
 }
-
-.camera-backdrop { background:#10140fd6; }
-.camera-home { display:grid; justify-items:center; padding:24px 0 40px; }
-.camera-home .camera-modal.camera-experience { max-height:none; overflow:visible; }
-:is(.camera-backdrop,.camera-home) .camera-experience { --ink:#f5f1e5; --muted:#d1d0c3; --paper:#3b4037; background:var(--paper); color:var(--ink); }
-.camera-backdrop .capture-heading .icon-button { min-width:44px; min-height:44px; align-items:center; justify-content:center; color:var(--ink); }
-:is(.camera-backdrop,.camera-home) .capture-heading .icon-button:hover, :is(.camera-backdrop,.camera-home) .camera-alternatives .text-button:hover, :is(.camera-backdrop,.camera-home) .secondary-button:hover:not(:disabled) { background:#566149; }
-.camera-home h1:focus { outline:none; }
-:is(.camera-backdrop,.camera-home) .camera-experience :focus-visible { outline-color:#d9edb6; }
 
 /* Shared controls keep the same geometry in the display and live camera. */
 .camera-settings { grid-template-areas:"film dials flash"; align-items:center; }
@@ -173,46 +153,24 @@
 .viewfinder-readout > span { display:flex; gap:4px; }
 .viewfinder-status { top:auto; bottom:8px; max-width:calc(100% - 16px); }
 .viewfinder-corners { inset:4px; }
-.camera-backdrop { overflow:hidden; padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left)); }
-.camera-modal.camera-experience { width:min(1028px,100%); max-height:calc(100dvh - 20px); overflow-y:auto; overscroll-behavior:contain; scrollbar-gutter:stable; -webkit-text-size-adjust:100%; }
+
 @media(max-width:799px) {
-  .camera-modal.camera-experience { padding:8px; }
-  .camera-experience .camera-assembly { width:min(320px,calc(100vw - 36px)); max-width:100%; margin-inline:auto; }
-  .camera-experience .instant-camera { padding:16px; }
-  .camera-settings,.camera-experience .camera-settings { grid-template-columns:minmax(78px,1fr) 120px; grid-template-areas:"film dials" "flash dials"; gap:12px; margin-top:20px; }
+  
+  
+  
+  .camera-settings { grid-template-columns:minmax(78px,1fr) 120px; grid-template-areas:"film dials" "flash dials"; gap:12px; margin-top:20px; }
   .camera-settings .flash-control { display:flex; align-items:center; justify-content:center; gap:6px; }
   .camera-settings .film-presets { align-self:end; }
-  .camera-experience .camera-assembly { max-width:min(380px,100%); }
+  
 }
 @media(max-width:370px) {
-  .camera-modal.camera-experience { padding:8px; }
-  .camera-settings,.camera-experience .camera-settings { column-gap:8px; }
+  
+  .camera-settings { column-gap:8px; }
   .camera-settings .film-presets { padding:5px!important; }
   .camera-settings .film-cartridge { width:20px; }
   .viewfinder-readout { padding:6px; font-size:10px; }
 }
 /* The home camera is the hero: a larger object on the camera-green page. */
-@media(min-width:800px) {
-  .start-screen .camera-intro { gap:18px; padding:22px 0 32px; }
-  .start-screen .intro-copy h1 { font-size:clamp(36px,3.4vw,46px); }
-  .start-screen .camera-assembly { --camera-pad:clamp(24px,3vw,36px); }
-  .start-screen .instant-camera {
-    column-gap:clamp(28px,4vw,56px);
-    padding-block:24px 20px;
-    border-color:#53564d;
-    background-image:linear-gradient(125deg,#ffffff12,transparent 38%,#00000014),url('/textures/leather.webp');
-    background-size:auto,340px;
-    box-shadow:inset 0 1px 2px #fff9,inset 1px 0 2px #ffffff36,inset 0 -3px 6px #000b,0 3px 6px #211e1826,0 16px 30px -10px #211e1866,0 42px 64px -28px #211e1866;
-  }
-  .start-screen .camera-nameplate { padding-bottom:20px; }
-  .start-screen .camera-nameplate > span:first-child { font-size:22px; }
-  .start-screen .viewfinder-bezel { box-shadow:inset 0 1px 2px #dce1cf99,0 4px 8px #000a; }
-  .start-screen .camera-settings { grid-template-columns:minmax(100px,1fr) 144px 48px; gap:16px; }
-  .start-screen .camera-settings .film-presets button { font-size:13px; min-height:48px; gap:8px; }
-  .start-screen .shutter { width:76px; height:76px; min-height:76px; background:radial-gradient(circle at 35% 25%,#ff6f61,#ff1e27 48%,#b6111c); box-shadow:0 5px 8px #000b,inset 0 2px 3px #ffd2b8; }
-  .start-screen .shutter:hover:not(:disabled) { background:#d91b25; }
-  .start-screen .camera-start { padding-top:8px; }
-}
 
 /* Lighten/darken ISO bar: white and black arrow plates above a ruler, after the 600-series slider. */
 /* Controls drawn from the POLAROID Illustrator files: load lever, film counter, flash plate and ISO bar. */

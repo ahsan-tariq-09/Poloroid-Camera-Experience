@@ -51,16 +51,15 @@ afterEach(async () => {
   vi.unstubAllGlobals();
 });
 
-it("opens the camera at every size without the Start, Edit, and Finish workflow", () => {
+it("opens the camera at every size", () => {
   expect(host.querySelector("main.mobile-camera")).not.toBeNull();
-  expect(host.querySelector('nav[aria-label="Studio steps"], .site-header')).toBeNull();
-  expect(host.querySelector('a[href="/edit"], a[href="/finish"]')).toBeNull();
+  expect(host.querySelector('.site-header')).toBeNull();
   expect(host.textContent).not.toContain("Made to keep.");
   expect(host.querySelector('a[href="/scrapbook"]')).toBeNull();
 });
 
-it.each(["/edit", "/finish", "/camera", "/unknown"])("returns %s to the camera", async (path) => {
-  await go(path);
+it("returns an unknown path to the camera", async () => {
+  await go("/unknown");
   expect(window.location.pathname).toBe("/");
   expect(host.querySelector("main.mobile-camera")).not.toBeNull();
 });
@@ -76,11 +75,9 @@ it("prints one uploaded photo on the camera", async () => {
   expect(window.location.pathname).toBe("/");
 });
 
-it("keeps the scrapbook without links back into the editor", async () => {
+it("returns from the scrapbook to the camera without reprinting", async () => {
   await go("/scrapbook");
   expect(host.querySelector(".scrapbook-screen")).not.toBeNull();
-  expect(host.textContent).not.toContain("Edit this Polaroid");
-  expect(host.querySelector('nav[aria-label="Studio steps"]')).toBeNull();
   await act(async () => host.querySelector<HTMLAnchorElement>(".wordmark")!.click());
   expect(window.location.pathname).toBe("/");
   // Returning to the camera must not print the earlier upload again.

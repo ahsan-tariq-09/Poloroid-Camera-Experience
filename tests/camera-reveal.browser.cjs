@@ -253,12 +253,7 @@ async function prepareCamera(page, mobile) {
         console.log(JSON.stringify({engine,reducedMotion:true,keyboardSaveFocus:true}));
       }
       assert.deepEqual(errors,[]);
-      // Old editor links return to the camera.
-      for(const old of ['/edit','/finish','/camera']){
-        await page.goto(baseURL+old);await page.waitForURL(baseURL+'/');
-        await page.locator('main.mobile-camera').waitFor();
-      }
-      console.log(JSON.stringify({engine,width,layout,save:true,rollAgain:true,oldLinks:true,errors}));
+      console.log(JSON.stringify({engine,width,layout,save:true,rollAgain:true,errors}));
       await context.close();
     }
     if(process.argv[5]==='inspect')return;

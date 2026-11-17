@@ -36,7 +36,6 @@ beforeEach(() => {
   studio = {
     assets: {},
     composition: initialComposition(),
-    format: "jpeg",
     busy: false,
     exporting: false,
     exportFile: vi.fn().mockResolvedValue(undefined),
@@ -68,7 +67,6 @@ describe("Save Photo", () => {
       expect(mocks.prepareExport).toHaveBeenCalledWith(
         studio.assets,
         studio.composition,
-        "jpeg",
       );
       expect(canShare).toHaveBeenCalledWith({ files: [jpeg] });
       await click();
@@ -100,16 +98,11 @@ describe("Save Photo", () => {
     expect(mocks.prepareExport).not.toHaveBeenCalled();
   });
 
-  it("downloads an unsupported format without changing its bytes or extension", async () => {
-    const svg = new File(["<svg/>"], "my-polaroid.svg", {
-      type: "image/svg+xml",
-    });
-    studio.format = "svg";
-    mocks.prepareExport.mockResolvedValue(svg);
+  it("downloads the JPEG unchanged when the device cannot share it", async () => {
     canShare.mockReturnValue(false);
     await render();
     await click();
-    expect(mocks.download).toHaveBeenCalledWith(svg, svg.name);
+    expect(mocks.download).toHaveBeenCalledWith(jpeg, jpeg.name);
     expect(share).not.toHaveBeenCalled();
   });
 
@@ -137,7 +130,7 @@ describe("Save Photo", () => {
     expect(share).toHaveBeenCalledOnce();
   });
 
-  it("rejects stale preparation when format or artwork changes", async () => {
+  it("rejects stale preparation when the artwork changes", async () => {
     let finishOld!: (file: File) => void;
     mocks.prepareExport.mockImplementationOnce(
       () =>
@@ -149,19 +142,18 @@ describe("Save Photo", () => {
     expect(button().disabled).toBe(true);
     await click();
     expect(share).not.toHaveBeenCalled();
-    const png = new File(["new artwork"], "my-polaroid.png", {
-      type: "image/png",
+    const updated = new File(["new artwork"], "my-polaroid-updated.jpg", {
+      type: "image/jpeg",
     });
-    mocks.prepareExport.mockResolvedValueOnce(png);
+    mocks.prepareExport.mockResolvedValueOnce(updated);
     studio = {
       ...studio,
-      format: "png",
       composition: { ...studio.composition, caption: "Updated" },
     };
     await render();
     await act(async () => finishOld(jpeg));
     await click();
-    expect(share).toHaveBeenCalledWith({ files: [png] });
+    expect(share).toHaveBeenCalledWith({ files: [updated] });
   });
 
   it("can retry a preparation failure through the original download error handling", async () => {
