@@ -21,7 +21,6 @@
 .camera-display > video,.camera-display > img { position:absolute; inset:0; }
 .live-film-preview { position:absolute; inset:0; display:block; width:100%; height:100%; object-fit:cover; }
 .preview-effect-error { position:absolute; inset:40px 8px auto; z-index:2; padding:8px; color:#fff9e9; background:#142012ee; font-size:12px; }
-.camera-nameplate small { font-size:10px; font-weight:600; line-height:1; letter-spacing:.08em; vertical-align:middle; }
 .camera-screw { position:absolute; width:6px; height:6px; background:linear-gradient(45deg,#b5baab 40%,#24291f 42%,#24291f 57%,#b5baab 60%); border-radius:50%; box-shadow:0 1px 2px #000; }
 .screw-tl { top:4px;left:4px; }.screw-tr { top:4px;right:4px; }.screw-bl { bottom:4px;left:4px; }.screw-br { bottom:4px;right:4px; }
 .viewfinder-status { font-size:11px; letter-spacing:.05em; background:#142012dd; padding:5px 7px; top:8px; left:8px; right:auto; }
@@ -116,7 +115,8 @@
 .timer-control:disabled .timer-dial { cursor:default; }
 .timer-dial.turning .timer-rotor,.timer-dial.turning .timer-stop > span,.iso-slider.sliding .iso-pointer { transition:none; }
 .timer-rotor { position:absolute; inset:0; border-radius:50%; background:radial-gradient(circle,#232625 60%,transparent 61%),repeating-conic-gradient(#b5b6ac 0deg 2deg,#282a26 2deg 6deg); box-shadow:0 3px 7px #000,inset 0 0 0 2px #74776e; }
-.timer-rotor,.timer-stop > span { transition:transform var(--dial-duration) var(--ease-smooth-out); }
+/* Ease-out sine keeps the rotor visibly moving through the ratchet recording's last click, so it lands as the sound is cut. */
+.timer-rotor,.timer-stop > span { transition:transform var(--dial-duration) cubic-bezier(.61,1,.88,1); }
 .timer-stop > span { display:block; }
 .timer-stop { position:absolute; width:44px; height:44px; min-height:44px; padding:0; background:none; border:0; border-radius:50%; color:#f8f6ed; font-size:11px; z-index:1; }
 .timer-stop[aria-pressed=true] { color:#ffdb98; font-weight:700; }

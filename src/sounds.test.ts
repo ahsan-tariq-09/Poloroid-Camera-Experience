@@ -47,9 +47,11 @@ it("defaults on, preserves persisted mute, and stores changes", async () => {
 });
 it("preloads all recordings once without starting audio", async () => {
   await sounds.preloadSounds(); await sounds.preloadSounds();
-  expect(fetch).toHaveBeenCalledTimes(5);
+  expect(fetch).toHaveBeenCalledTimes(7);
   expect(fetch).toHaveBeenCalledWith("/audio/iso-click.wav");
   expect(fetch).toHaveBeenCalledWith("/audio/timer-dial.wav");
+  expect(fetch).toHaveBeenCalledWith("/audio/flash-on.wav");
+  expect(fetch).toHaveBeenCalledWith("/audio/flash-off.wav");
   expect(fetch).toHaveBeenCalledWith("/audio/camera-shutter.mp3");
   expect(fetch).toHaveBeenCalledWith("/audio/film-load.mp3");
   expect(fetch).toHaveBeenCalledWith("/audio/shutter.mp3");
@@ -65,6 +67,13 @@ it("cuts the previous detent click of the same kind and keeps other sounds playi
   expect(sources[2].start).toHaveBeenCalledWith();
   sounds.setSoundEnabled(false); await sounds.playDetent("iso");
   expect(sources).toHaveLength(3);
+});
+it("stops the dial recording on request, including one still loading", async () => {
+  await sounds.playDetent("dial");
+  sounds.stopDetent("dial");
+  expect(sources[0].stop).toHaveBeenCalled();
+  const late = sounds.playDetent("dial"); sounds.stopDetent("dial"); await late;
+  expect(sources).toHaveLength(1);
 });
 it("plays the click immediately and schedules printing 480ms later", async () => {
   await sounds.playSound("load");

@@ -1,4 +1,4 @@
-# roid beta
+# rold
 
 A camera-first browser studio with warm paper, a physical-camera interface, upright Polaroids and a scrapbook for collages and photo strips. Built with React, React Router, TypeScript, Vite, WebGPU and a Canvas fallback. The production build supports installation and offline use.
 
@@ -74,7 +74,7 @@ WebGPU runs the actual effect shader in `src/effects.wgsl`. The Canvas implement
 
 The production build registers a service worker and supplies a standalone web-app manifest. Once the interface reports **Ready to use offline on this device**, the app shell, built JavaScript/CSS, HEIC codecs, demo image, icons and self-hosted fonts are cached. Navigation falls back to the cached app when the network is unavailable. Development mode does not install this cache; verify with `pnpm build` and `pnpm preview`.
 
-Install roid uses the browser's install prompt when available and otherwise shows Safari/iOS and Android instructions. The UI headings use self-hosted DM Serif Display, with system sans-serif controls. DM Serif Display, Caveat, Permanent Marker and Lindbergh Baby are precached. The 26 on-demand Google Fonts families still require network access on first use; external fonts and STL downloads are not part of the app's precache. Offline readiness does not save unsaved artwork: use Save on device separately.
+Install rold uses the browser's install prompt when available and otherwise shows Safari/iOS and Android instructions. The UI headings use self-hosted DM Serif Display, with system sans-serif controls. DM Serif Display, Caveat, Permanent Marker and Lindbergh Baby are precached. The 26 on-demand Google Fonts families still require network access on first use; external fonts and STL downloads are not part of the app's precache. Offline readiness does not save unsaved artwork: use Save on device separately.
 
 ## Project structure
 

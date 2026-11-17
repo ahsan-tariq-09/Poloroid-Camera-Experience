@@ -40,7 +40,7 @@ function StudioApp() {
     // A remounted camera must not print an earlier upload again.
     if (!cameraPage) setUpload(null);
     document.title =
-      path === "/scrapbook" ? "Scrapbook · roid beta" : "Instant camera · roid beta";
+      path === "/scrapbook" ? "Scrapbook · rold" : "Instant camera · rold";
     document.querySelector<HTMLElement>("main h1")?.focus();
     window.scrollTo?.(0, 0);
   }, [path, cameraPage]);
@@ -104,7 +104,7 @@ function StudioApp() {
         {!cameraPage && (
           <header className="site-header">
             <Link className="wordmark" to="/">
-              roid <span className="brand-beta">beta</span>
+              rold
             </Link>
             <div className="header-controls">{soundButton(18)}</div>
           </header>
@@ -137,11 +137,11 @@ function StudioApp() {
         {!cameraPage && (
           <footer className="project-about" aria-labelledby="about-title">
             <div>
-              <h2 id="about-title">About roid</h2>
+              <h2 id="about-title">About rold</h2>
             </div>
             <div className="about-copy">
               <p>
-                roid is an instant camera in your browser, inspired by the joy
+                rold is an instant camera in your browser, inspired by the joy
                 of instant photography. Roll the film, take a photo, watch it
                 develop, and keep the moments you love.
               </p>

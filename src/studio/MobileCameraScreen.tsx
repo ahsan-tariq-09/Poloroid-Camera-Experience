@@ -21,7 +21,7 @@ export default function MobileCameraScreen({ containerRef, navigation, viewfinde
   onUpload?: () => void;
 }) {
   return <main className={`mobile-camera ${captured ? "has-print" : ""}`}>
-    <h1 className="sr-only">roid instant camera</h1>
+    <h1 className="sr-only">rold instant camera</h1>
     <div className="mobile-camera-body" ref={containerRef} tabIndex={-1}>
       <InstantCamera printed={captured} print={print} settings={settings}
         navigation={onUpload && <nav aria-label="Camera navigation">{navigation}<button onClick={onUpload} disabled={taking} aria-label="Upload photos"><AddPolaroidIcon/></button><OpenOnPhone/></nav>}

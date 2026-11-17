@@ -1,6 +1,6 @@
 # Archived editor
 
-roid is now camera-first: open camera → roll film and take a photo → shake to reveal → save photo or roll again. The earlier Start → Edit → Finish workflow is disabled but kept in the repository so it can be restored or reused. Git history is not the only copy.
+rold is now camera-first: open camera → roll film and take a photo → shake to reveal → save photo or roll again. The earlier Start → Edit → Finish workflow is disabled but kept in the repository so it can be restored or reused. Git history is not the only copy.
 
 ## What was disabled
 

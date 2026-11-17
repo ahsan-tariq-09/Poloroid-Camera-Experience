@@ -1,5 +1,5 @@
 {
-  "id": "/", "name": "roid beta · Instant photo studio", "short_name": "roid beta",
+  "id": "/", "name": "rold · Instant photo studio", "short_name": "rold",
   "description": "Take instant photos, build scrapbook collages and make photobooth strips on your device.",
   "start_url": "/", "scope": "/", "display": "standalone",
   "background_color": "#eeeadd", "theme_color": "#eeeadd",

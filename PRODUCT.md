@@ -1,4 +1,4 @@
-# roid beta
+# rold
 
 <!-- impeccable:product-schema 1 -->
 
@@ -22,7 +22,7 @@ The production PWA precaches the app shell, built code and codecs, demo image, i
 
 ## Brand Commitments
 
-The brand name is lowercase roid, with a beta label. Polaroid remains the name for the finished photo. The user's Canva camera reference supplies black leather, metallic controls, green viewfinder markings and a red shutter. The requested mood combines nostalgic technology with a restrained modern interface. Specific copy, no fabricated proof, no pricing, and no excessive whitespace.
+The brand name is lowercase rold, with no beta label. Polaroid remains the name for the finished photo. The user's Canva camera reference supplies black leather, metallic controls, green viewfinder markings and a red shutter. The requested mood combines nostalgic technology with a restrained modern interface. Specific copy, no fabricated proof, no pricing, and no excessive whitespace.
 
 ## Evidence on Hand
 

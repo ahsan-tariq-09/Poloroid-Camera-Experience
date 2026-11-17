@@ -2,7 +2,7 @@
 export const FILM_LOAD_MS = 2800;
 export const SHUTTER_SOUND_MS = 2490;
 export const SHUTTER_LEAD_MS = 480;
-const clips = { load: "/audio/film-load.mp3", shutter: "/audio/shutter.mp3", click: "/audio/camera-shutter.mp3", iso: "/audio/iso-click.wav", dial: "/audio/timer-dial.wav" };
+const clips = { load: "/audio/film-load.mp3", shutter: "/audio/shutter.mp3", click: "/audio/camera-shutter.mp3", iso: "/audio/iso-click.wav", dial: "/audio/timer-dial.wav", flashOn: "/audio/flash-on.wav", flashOff: "/audio/flash-off.wav" };
 type Clip = keyof typeof clips;
 let audio: AudioContext | undefined;
 let enabled = true, generation = 0;
@@ -53,14 +53,20 @@ function track(source: AudioScheduledSourceNode, nodes: AudioNode[]) {
   active.set(source, clean);
   source.onended = clean;
 }
-const detents = new Map<Clip, AudioBufferSourceNode>();
-/** One detent click of the ISO bar or timer dial. A new click cuts the last one of its kind, so fast moves never pile up. */
-export async function playDetent(kind: "iso" | "dial") {
+const detents = new Map<Clip, AudioBufferSourceNode>(), cuts = new Map<Clip, number>();
+/** Cuts the playing (or still loading) sound of one control, e.g. when the timer dial settles on its mark. */
+export function stopDetent(kind: "dial") {
+  cuts.set(kind, (cuts.get(kind) ?? 0) + 1);
+  try { detents.get(kind)?.stop(); } catch { /* It may have just ended. */ }
+}
+/** One ISO bar detent, timer dial turn or flash toggle. A new one cuts the last of its kind, so fast moves never pile up. */
+export async function playDetent(kind: "iso" | "dial" | "flashOn" | "flashOff") {
   if (!enabled || document.hidden) return;
-  const token = generation, requested = performance.now(), resumed = unlockSound(), ctx = audio;
+  const token = generation, cut = cuts.get(kind), requested = performance.now(), resumed = unlockSound(), ctx = audio;
   if (!ctx) return;
   try {
     const [, buffer] = await Promise.all([resumed, loadClip(kind, ctx)]);
+    if (cuts.get(kind) !== cut) return;
     // A late click would no longer match the control's movement.
     if (!buffer || !enabled || document.hidden || token !== generation || ctx.state !== "running" || performance.now() - requested > 250) return;
     try { detents.get(kind)?.stop(); } catch { /* The last click may have just ended. */ }
@@ -69,7 +75,7 @@ export async function playDetent(kind: "iso" | "dial") {
   } catch { /* Audio failure never blocks the camera controls. */ }
 }
 /** "eject" is the print leaving the slot without the shutter click, for uploaded photos. */
-export async function playSound(kind: Exclude<Clip, "click" | "iso" | "dial"> | "eject" | "paper" | "tick") {
+export async function playSound(kind: Exclude<Clip, "click" | "iso" | "dial" | "flashOn" | "flashOff"> | "eject" | "paper" | "tick") {
   if (!enabled || document.hidden) return;
   const recording = kind === "load" || kind === "shutter" || kind === "eject";
   if (recording) stopSounds();
