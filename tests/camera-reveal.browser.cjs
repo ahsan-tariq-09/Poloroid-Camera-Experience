@@ -168,11 +168,11 @@ async function prepareCamera(page, mobile) {
       const sound=await page.evaluate(()=>({starts:window.audioStarts,printDelay:performance.now()-window.captureAt}));
       assert(sound.printDelay>=450,JSON.stringify(sound));
       if(sound.starts.length>=2){assert(Math.abs(sound.starts[0].duration-.672)<.01,JSON.stringify(sound));assert(Math.abs(sound.starts[1].when-sound.starts[0].now-.48)<.04,JSON.stringify(sound));}
-      // The print stops moving as the ejection recording ends: the slide lasts the 2490ms clip.
+      // The print stops moving after 2100ms, before the 2490ms ejection recording ends.
       await page.waitForFunction(()=>Math.abs(new DOMMatrixReadOnly(getComputedStyle(document.querySelector('.instant-print')).transform).m42)<.5,null,{polling:'raf'});
       const printStopped=await page.evaluate(()=>performance.now());
       sound.slide=printStopped-await page.evaluate(()=>window.printAt);
-      assert(sound.slide>2300&&sound.slide<2800,JSON.stringify(sound));
+      assert(sound.slide>1900&&sound.slide<2400,JSON.stringify(sound));
       console.log(JSON.stringify({engine,width,sound}));
       await page.screenshot({path:path.join(output,`${engine}-${width}-ejecting.png`)});
       // The print develops on its own: no reveal button, gesture hint or shake text.

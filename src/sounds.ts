@@ -1,6 +1,5 @@
-// Measured from the decoded recordings, including the shutter's film-ejection tail.
+// Measured from the decoded film-load recording.
 export const FILM_LOAD_MS = 2800;
-export const SHUTTER_SOUND_MS = 2490;
 export const SHUTTER_LEAD_MS = 480;
 const clips = { load: "/audio/film-load.mp3", shutter: "/audio/shutter.mp3", click: "/audio/camera-shutter.mp3", iso: "/audio/iso-click.wav", dial: "/audio/timer-dial.wav", flashOn: "/audio/flash-on.wav", flashOff: "/audio/flash-off.wav" };
 type Clip = keyof typeof clips;

@@ -56,7 +56,7 @@ it("preloads all recordings once without starting audio", async () => {
   expect(fetch).toHaveBeenCalledWith("/audio/film-load.mp3");
   expect(fetch).toHaveBeenCalledWith("/audio/shutter.mp3");
   expect(ctx.resume).not.toHaveBeenCalled(); expect(sources).toHaveLength(0);
-  expect(sounds.FILM_LOAD_MS).toBe(2800); expect(sounds.SHUTTER_SOUND_MS).toBe(2490);
+  expect(sounds.FILM_LOAD_MS).toBe(2800);
 });
 it("cuts the previous detent click of the same kind and keeps other sounds playing", async () => {
   await sounds.playDetent("dial"); await sounds.playDetent("iso"); await sounds.playDetent("dial");

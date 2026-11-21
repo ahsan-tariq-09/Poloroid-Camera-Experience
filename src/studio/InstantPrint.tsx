@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { motion } from "motion/react";
-import { SHUTTER_SOUND_MS } from "../sounds";
 
-/** The slide lasts exactly as long as the ejection recording, so the print never moves in silence. */
-export const PRINT_EJECTION_MS = SHUTTER_SOUND_MS;
+/** The slide stops before the 2.49s ejection recording ends; the sound tails off over the still print. */
+export const PRINT_EJECTION_MS = 2100;
 /** The print rests blank this long after it stops moving, then the photo fades in. */
 export const PHOTO_DEVELOPMENT_DELAY_MS = 2500;
 /** From the print stopping to the photo fully showing: the blank rest plus a 9s fade. */

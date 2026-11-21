@@ -9,7 +9,7 @@ async function setup(enabled:boolean,actions?:React.ReactNode){const host=docume
   await render();return {host,reveal,render,close:async()=>{await act(async()=>root.unmount());host.remove();}};}
 
 it("develops on its own: blank while printing, a 2.5s rest, then a 9s fade before the next action",async()=>{
-  expect(PRINT_EJECTION_MS).toBe(2490);
+  expect(PRINT_EJECTION_MS).toBe(2100);
   expect(PHOTO_DEVELOPMENT_DELAY_MS).toBe(2500);
   expect(PHOTO_DEVELOPMENT_MS).toBe(11500);
   vi.useFakeTimers();const s=await setup(true,<button>Save Photo</button>);
